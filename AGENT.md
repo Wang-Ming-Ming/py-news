@@ -1,0 +1,72 @@
+# Agent Context
+
+## Goal
+
+完善当前 Python 金融数据采集项目，使它能作为股票分析系统的新闻数据源，实际采集 3 个网站的数据：
+
+- `ndrc`: 国家发展改革委政策新闻
+- `cls`: 财联社/证券新闻
+- `cninfo`: 巨潮资讯上市公司公告
+
+## Current Findings
+
+- 项目结构完整，已有爬虫、解析器、关键词过滤、去重、存储、增量更新和日志模块。
+- `main.py` 已补充运行参数：`--source`、`--days`、`--log-level`，兼容 README 示例。
+- 实测旧入口均无法抓到数据：
+  - `cls` 请求 `/api/telegraph` 等接口返回 404。
+  - `cninfo` 请求 `/new/announcement/query` 返回 404。
+  - `ndrc` 请求 `/xwdt/index_1.html` 等列表页返回 404。
+- 当前成功判定偏宽松：即使获取 0 条且有接口错误，也可能显示爬虫执行成功。
+
+## Work Needed
+
+1. 确认可用的实时数据入口。
+2. 更新三个爬虫或配置中的 URL/参数。
+3. 保证输出数据字段适合股票分析系统使用：来源、标题、发布时间、正文/摘要、URL、关键词/板块。
+4. 修复成功判定，避免 0 条加错误被当成成功。
+5. 用真实联网运行验证三个数据源至少能抓到数据或给出明确失败原因。
+
+## User Clarification
+
+当前阶段不需要复杂分析、打分或策略，只需要稳定抓取 3 个网站的最新原始新闻/公告数据，作为另一个股票分析系统的新闻源接口。
+
+推荐采集范围：
+
+- `cls`: 财联社滚动电报，适合实时市场消息、公司新闻、产业链消息。
+- `cninfo`: 巨潮资讯公告，适合上市公司公告、回购、并购、担保、诉讼、业绩、股权变动等。
+- `ndrc`: 国家发展改革委新闻发布、通知公告、司局/地方动态，适合政策与产业方向消息。
+
+已完成方向：
+
+- 关闭硬关键词过滤，默认保存原始数据，同时写入 `matched_keywords` 方便下游筛选。
+- 巨潮公告保留 PDF 链接，不在本项目内下载/解析 PDF 正文，由下游 AI 分析系统按需读取。
+- 新增 `news_api.py`，提供轻量 HTTP JSON 接口：
+  - `GET /health`
+  - `GET /news?source=all&limit=100`
+  - `GET /news?source=cls|cninfo|ndrc&limit=50`
+  - `GET /news?keyword=人工智能`
+
+## Retention And Frequency
+
+- 只保留最近 7 天新闻数据。
+- `STORAGE_CONFIG["retention_days"] = 7`。
+- 采集结束后自动清理旧 JSON 文件。
+- `news_api.py` 默认只返回最近 7 天数据。
+
+建议调度：
+
+- `cls`: 每 5-10 分钟采集一次。
+- `cninfo`: 每 30-60 分钟采集一次，交易日盘后可额外采集一次。
+- `ndrc`: 每 2-4 小时采集一次。
+
+不要每分钟全量采集 3 个源，避免网站限制。
+
+当前采用的定时脚本：
+
+- 推荐一键启动：`python run.py`
+- `run.py` 同时启动新闻接口和后台定时采集。
+- `scheduler.py`
+- 默认启动后立即采集一次。
+- 默认间隔：`cls=300s`、`cninfo=3600s`、`ndrc=14400s`。
+- 运行：`python scheduler.py`
+- 只启动接口：`python news_api.py --host 127.0.0.1 --port 8765 --data-dir data_dev`
