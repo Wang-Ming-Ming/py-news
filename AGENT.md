@@ -12,11 +12,9 @@
 
 - 项目结构完整，已有爬虫、解析器、关键词过滤、去重、存储、增量更新和日志模块。
 - `main.py` 已补充运行参数：`--source`、`--days`、`--log-level`，兼容 README 示例。
-- 实测旧入口均无法抓到数据：
-  - `cls` 请求 `/api/telegraph` 等接口返回 404。
-  - `cninfo` 请求 `/new/announcement/query` 返回 404。
-  - `ndrc` 请求 `/xwdt/index_1.html` 等列表页返回 404。
-- 当前成功判定偏宽松：即使获取 0 条且有接口错误，也可能显示爬虫执行成功。
+- `cls` 旧接口 `/nodeapi/telegraphList` 已返回 404；已切换为当前财联社网页端使用的 `/v1/roll/get_roll_list`，并按网页端规则生成 `sign` 参数。
+- `cls` 最新验证结果：`python main.py --source cls --days 1 --log-level INFO` 成功解析 20 条、保存 20 条、错误 0。
+- 财联社返回字段包含 `title`、`content`、`ctime`、`shareurl` 等，已保存为本项目统一新闻字段。
 
 ## Work Needed
 

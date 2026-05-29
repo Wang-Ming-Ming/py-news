@@ -17,6 +17,7 @@
 """
 
 import logging
+import hashlib
 import requests
 import time
 from typing import List, Dict, Any, Optional
@@ -143,6 +144,58 @@ class CLSSpider:
             f"timeout={self.timeout}s, retry_times={retry_times}, "
             f"interval={self.interval}s"
         )
+
+    @staticmethod
+    def _sort_key(value: Any) -> str:
+        return str(value).upper()
+
+    @classmethod
+    def _stringify_sign_value(cls, key: str, value: Any) -> Optional[str]:
+        if value is None:
+            return None
+
+        if isinstance(value, (str, int, float, bool)):
+            return f"{key}={value}"
+
+        if isinstance(value, list):
+            if not value:
+                return f"{key}[]"
+            return "&".join(
+                item
+                for index, child in enumerate(value)
+                for item in [cls._stringify_sign_value(f"{key}[{index}]", child)]
+                if item
+            )
+
+        if isinstance(value, dict):
+            return "&".join(
+                item
+                for child_key in sorted(value.keys(), key=cls._sort_key)
+                for item in [cls._stringify_sign_value(f"{key}[{child_key}]", value[child_key])]
+                if item
+            )
+
+        return f"{key}={value}"
+
+    @classmethod
+    def _build_cls_sign(cls, params: Dict[str, Any]) -> str:
+        query = "&".join(
+            item
+            for key in sorted(params.keys(), key=cls._sort_key)
+            for item in [cls._stringify_sign_value(key, params[key])]
+            if item
+        )
+        sha1_value = hashlib.sha1(query.encode("utf-8")).hexdigest()
+        return hashlib.md5(sha1_value.encode("utf-8")).hexdigest()
+
+    @classmethod
+    def _build_signed_params(cls, params: Dict[str, Any]) -> Dict[str, Any]:
+        signed_params = dict(params)
+        signed_params["os"] = signed_params.get("os", "web")
+        signed_params["sv"] = signed_params.get("sv", "8.7.9")
+        signed_params["app"] = signed_params.get("app", "CailianpressWeb")
+        signed_params["sign"] = cls._build_cls_sign(signed_params)
+        return signed_params
     
     def _make_request(
         self, 
@@ -327,11 +380,11 @@ class CLSSpider:
                 url = f"{self.base_url}{endpoint}"
             
             # 构建请求参数
-            params = {
-                "app": "CailianpressWeb",
-                "os": "web",
-                "sv": "8.4.6",
-            }
+            params = self._build_signed_params({
+                "refresh_type": 1,
+                "rn": limit,
+                "last_time": int(time.time()),
+            })
             
             # 使用重试机制发送请求
             try:
