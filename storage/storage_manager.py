@@ -51,6 +51,18 @@ class StorageManager:
         Path(self.base_path).mkdir(parents=True, exist_ok=True)
         
         self.logger.info(f"存储管理器初始化完成，数据目录: {self.base_path}")
+
+    def _get_unique_key(self, data: Dict[str, Any], source: str) -> str:
+        """
+        生成本地文件内去重键，防止同一条新闻被重复写入 JSON 文件。
+        """
+        if source == "cninfo":
+            return "|".join(str(data.get(field, "")) for field in ("stock_code", "title", "publish_time"))
+
+        if data.get("url"):
+            return str(data["url"])
+
+        return "|".join(str(data.get(field, "")) for field in ("title", "publish_time"))
     
     def _get_file_path(self, source: str, date: datetime) -> str:
         """
@@ -123,6 +135,12 @@ class StorageManager:
                     self.logger.error(f"文件 JSON 格式错误，将重新创建: {file_path}, 错误: {e}")
                     existing_data = []
             
+            existing_keys = {self._get_unique_key(item, source) for item in existing_data if isinstance(item, dict)}
+            data_key = self._get_unique_key(data, source)
+            if data_key in existing_keys:
+                self.logger.debug(f"数据已存在，跳过保存: source={source}, key={data_key[:80]}")
+                return False
+
             # 追加新数据
             existing_data.append(data)
             
@@ -130,6 +148,7 @@ class StorageManager:
             self._atomic_write(file_path, existing_data)
             
             self.logger.debug(f"数据已保存: source={source}, file={file_path}")
+            return True
             
         except Exception as e:
             self.logger.error(f"保存数据失败: source={source}, 错误: {e}", exc_info=True)
@@ -210,14 +229,29 @@ class StorageManager:
                             self.logger.error(f"文件 JSON 格式错误，将重新创建: {file_path}, 错误: {e}")
                             existing_data = []
                     
-                    # 追加新数据
-                    existing_data.extend(date_data)
+                    existing_keys = {
+                        self._get_unique_key(item, source)
+                        for item in existing_data
+                        if isinstance(item, dict)
+                    }
+                    merged_data = list(existing_data)
+                    date_saved = 0
+                    for item in date_data:
+                        item_key = self._get_unique_key(item, source)
+                        if item_key in existing_keys:
+                            continue
+                        existing_keys.add(item_key)
+                        merged_data.append(item)
+                        date_saved += 1
                     
                     # 原子写入
-                    self._atomic_write(file_path, existing_data)
+                    self._atomic_write(file_path, merged_data)
                     
-                    total_saved += len(date_data)
-                    self.logger.debug(f"批量保存: source={source}, date={date_str}, count={len(date_data)}")
+                    total_saved += date_saved
+                    self.logger.debug(
+                        f"批量保存: source={source}, date={date_str}, "
+                        f"incoming={len(date_data)}, saved={date_saved}"
+                    )
                     
                 except Exception as e:
                     self.logger.error(f"保存日期数据失败: date={date_str}, 错误: {e}", exc_info=True)

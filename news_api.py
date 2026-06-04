@@ -17,7 +17,7 @@ from urllib.parse import parse_qs, urlparse
 from config import STORAGE_CONFIG
 
 
-SOURCES = {"cls", "cninfo", "ndrc"}
+SOURCES = {"cls", "cninfo", "ndrc", "eastmoney_global"}
 
 
 def _parse_time(value: Any) -> datetime:

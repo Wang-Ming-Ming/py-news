@@ -24,6 +24,7 @@ def parse_args():
     parser.add_argument("--days", type=int, default=1, help="每次采集最近 N 天范围")
     parser.add_argument("--no-immediate", action="store_true", help="启动后不立即采集，等待第一个周期")
     parser.add_argument("--cls-interval", type=int, default=DEFAULT_INTERVALS["cls"])
+    parser.add_argument("--eastmoney-global-interval", type=int, default=DEFAULT_INTERVALS["eastmoney_global"])
     parser.add_argument("--cninfo-interval", type=int, default=DEFAULT_INTERVALS["cninfo"])
     parser.add_argument("--ndrc-interval", type=int, default=DEFAULT_INTERVALS["ndrc"])
     return parser.parse_args()
@@ -33,6 +34,7 @@ def main():
     args = parse_args()
     intervals = {
         "cls": max(60, args.cls_interval),
+        "eastmoney_global": max(300, args.eastmoney_global_interval),
         "cninfo": max(300, args.cninfo_interval),
         "ndrc": max(900, args.ndrc_interval),
     }

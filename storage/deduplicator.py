@@ -53,7 +53,7 @@ class Deduplicator:
         计算数据的哈希值
         
         不同数据源使用不同的去重逻辑：
-        - NDRC/CLS: 基于 url 字段计算哈希
+        - NDRC/CLS/东方财富全球快讯: 基于 url 字段计算哈希
         - CNInfo: 基于 stock_code + title + publish_time 组合计算哈希
         
         Args:
@@ -67,8 +67,8 @@ class Deduplicator:
             KeyError: 如果数据缺少必需的字段
         """
         try:
-            if source in ["ndrc", "cls"]:
-                # NDRC 和 CLS 使用 URL 作为唯一标识
+            if source in ["ndrc", "cls", "eastmoney_global"]:
+                # 新闻类数据使用 URL 作为唯一标识
                 if "url" not in data:
                     raise KeyError(f"数据源 {source} 缺少必需的 'url' 字段")
                 

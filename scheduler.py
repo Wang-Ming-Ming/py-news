@@ -2,8 +2,9 @@
 """
 定时采集入口。
 
-按固定频率调用 main.py 采集三个新闻源：
+按固定频率调用 main.py 采集新闻源：
 - cls: 5 分钟
+- eastmoney_global: 10 分钟
 - cninfo: 60 分钟
 - ndrc: 4 小时
 """
@@ -19,6 +20,7 @@ from typing import Dict
 
 DEFAULT_INTERVALS = {
     "cls": 5 * 60,
+    "eastmoney_global": 10 * 60,
     "cninfo": 60 * 60,
     "ndrc": 4 * 60 * 60,
 }
@@ -88,6 +90,7 @@ def parse_args():
     parser.add_argument("--days", type=int, default=1, help="每次采集最近 N 天范围")
     parser.add_argument("--no-immediate", action="store_true", help="启动后不立即采集，等待第一个周期")
     parser.add_argument("--cls-interval", type=int, default=DEFAULT_INTERVALS["cls"], help="财联社采集间隔秒数")
+    parser.add_argument("--eastmoney-global-interval", type=int, default=DEFAULT_INTERVALS["eastmoney_global"], help="东方财富全球财经快讯采集间隔秒数")
     parser.add_argument("--cninfo-interval", type=int, default=DEFAULT_INTERVALS["cninfo"], help="巨潮采集间隔秒数")
     parser.add_argument("--ndrc-interval", type=int, default=DEFAULT_INTERVALS["ndrc"], help="发改委采集间隔秒数")
     return parser.parse_args()
@@ -97,6 +100,7 @@ def main():
     args = parse_args()
     intervals = {
         "cls": max(60, args.cls_interval),
+        "eastmoney_global": max(300, args.eastmoney_global_interval),
         "cninfo": max(300, args.cninfo_interval),
         "ndrc": max(900, args.ndrc_interval),
     }

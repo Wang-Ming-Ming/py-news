@@ -40,13 +40,25 @@
 - 重大项目
 - 民营经济、数字经济、新质生产力相关消息
 
+### 东方财富全球财经快讯 `eastmoney_global`
+
+通过 AKShare 抓取东方财富全球财经快讯。
+
+适合做全球重大新闻源，包括：
+
+- 海外市场和宏观消息
+- 央行、利率、汇率、商品相关消息
+- 全球公司重大事件
+- 地缘政治和国际政策消息
+
 ## 是否还需要其他新闻源
 
-当前 3 个源已经能覆盖一个股票分析系统的基础输入：
+当前 4 个源已经能覆盖一个股票分析系统的基础输入：
 
 - `cls` 覆盖实时市场消息
 - `cninfo` 覆盖上市公司公告
 - `ndrc` 覆盖宏观政策方向
+- `eastmoney_global` 覆盖全球重大财经新闻
 
 后续如果要增强，可以再加这些源：
 
@@ -56,7 +68,7 @@
 - 工信部：半导体、AI、机器人、新能源车、工业政策
 - 商务部/财政部：消费、外贸、财政补贴政策
 
-但第一版不建议继续扩，先把这 3 个源稳定跑起来。
+但第一版不建议继续扩，先把这些源稳定跑起来。
 
 ## 安装
 
@@ -68,10 +80,10 @@ pip install -r requirements.txt
 
 ## 采集数据
 
-采集全部 3 个源：
+采集全部 4 个源：
 
 ```bash
-python main.py --source cls cninfo ndrc --days 1
+python main.py --source cls eastmoney_global cninfo ndrc --days 1
 ```
 
 数据默认只保留最近 7 天，超过一周的 JSON 文件会在采集结束后自动清理。
@@ -82,6 +94,7 @@ python main.py --source cls cninfo ndrc --days 1
 
 ```text
 cls      每 5-10 分钟采集一次
+eastmoney_global 每 10-15 分钟采集一次
 cninfo   每 30-60 分钟采集一次，交易日盘后可额外采集一次
 ndrc     每 2-4 小时采集一次
 ```
@@ -90,11 +103,12 @@ ndrc     每 2-4 小时采集一次
 
 ```text
 09:00-15:30  每 10 分钟采集 cls
+全天        每 10-15 分钟采集 eastmoney_global
 09:00-22:00  每 60 分钟采集 cninfo
 08:00-22:00  每 4 小时采集 ndrc
 ```
 
-不要每分钟全量采集 3 个源。财联社是实时源，可以稍微频繁；巨潮和发改委更新没那么高频，低频更合适。
+不要每分钟全量采集所有源。财联社和东方财富快讯可以稍微频繁；巨潮和发改委更新没那么高频，低频更合适。
 
 ## 启动定时采集
 
@@ -108,6 +122,7 @@ python run.py
 
 ```text
 cls      每 5 分钟
+eastmoney_global 每 10 分钟
 cninfo   每 60 分钟
 ndrc     每 4 小时
 ```
@@ -123,13 +138,14 @@ python run.py --no-immediate
 如果需要临时调整频率，可以传秒数：
 
 ```bash
-python run.py --cls-interval 300 --cninfo-interval 3600 --ndrc-interval 14400
+python run.py --cls-interval 300 --eastmoney-global-interval 600 --cninfo-interval 3600 --ndrc-interval 14400
 ```
 
 单独采集某个源：
 
 ```bash
 python main.py --source cls
+python main.py --source eastmoney_global
 python main.py --source cninfo
 python main.py --source ndrc
 ```
@@ -138,6 +154,7 @@ python main.py --source ndrc
 
 ```text
 data_dev/cls/YYYY-MM-DD.json
+data_dev/eastmoney_global/YYYY-MM-DD.json
 data_dev/cninfo/YYYY-MM-DD.json
 data_dev/ndrc/YYYY-MM-DD.json
 ```
@@ -164,6 +181,7 @@ python news_api.py --host 127.0.0.1 --port 8765 --data-dir data_dev --retention-
 GET /health
 GET /news?source=all&limit=100
 GET /news?source=cls&limit=50
+GET /news?source=eastmoney_global&limit=50
 GET /news?source=cninfo&limit=50
 GET /news?source=ndrc&limit=50
 GET /news?keyword=人工智能
@@ -179,7 +197,7 @@ curl "http://127.0.0.1:8765/news?source=all&limit=20"
 
 不同来源字段略有差异，但核心字段保持一致：
 
-- `source`: 来源，`cls` / `cninfo` / `ndrc`
+- `source`: 来源，`cls` / `eastmoney_global` / `cninfo` / `ndrc`
 - `title`: 标题
 - `publish_time`: 发布时间
 - `content`: 正文或摘要，公告源可能为空
@@ -200,7 +218,7 @@ curl "http://127.0.0.1:8765/news?source=all&limit=20"
 main.py          采集入口
 news_api.py      新闻源 HTTP JSON 接口
 config.py        数据源和存储配置
-spiders/         3 个网站的采集逻辑
+spiders/         各新闻源采集逻辑
 parsers/         数据解析逻辑
 storage/         JSON 存储、去重、增量状态
 filters/         关键词标注

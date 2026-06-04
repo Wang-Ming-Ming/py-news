@@ -21,7 +21,7 @@
     python main.py
     
     # 运行指定爬虫
-    python main.py --spiders ndrc cls
+    python main.py --spiders cls eastmoney_global
     
     # 指定配置文件
     python main.py --config config.py
@@ -40,6 +40,7 @@ try:
         NDRC_CONFIG,
         CLS_CONFIG,
         CNINFO_CONFIG,
+        EASTMONEY_GLOBAL_CONFIG,
         STOCK_KEYWORDS,
         CNINFO_KEYWORDS,
         STORAGE_CONFIG,
@@ -58,6 +59,7 @@ except ImportError as e:
 from spiders.ndrc_spider import NDRCSpider
 from spiders.cls_spider import CLSSpider
 from spiders.cninfo_spider import CNInfoSpider
+from spiders.eastmoney_global_spider import EastmoneyGlobalSpider
 
 # 导入解析器
 from parsers.ndrc_parser import NDRCParser
@@ -225,6 +227,21 @@ class DataCollector:
             self.logger.info("  ✓ 证券信息网爬虫初始化成功")
         except Exception as e:
             self.logger.error(f"  ✗ 证券信息网爬虫初始化失败: {e}", exc_info=True)
+
+        # 初始化东方财富全球财经快讯爬虫
+        try:
+            keyword_extractor = KeywordExtractor(self.logger)
+
+            self.spiders["eastmoney_global"] = EastmoneyGlobalSpider(
+                config=EASTMONEY_GLOBAL_CONFIG,
+                logger=self.logger,
+                deduplicator=self.deduplicator,
+                storage_manager=self.storage_manager,
+                keyword_extractor=keyword_extractor
+            )
+            self.logger.info("  ✓ 东方财富全球财经快讯爬虫初始化成功")
+        except Exception as e:
+            self.logger.error(f"  ✗ 东方财富全球财经快讯爬虫初始化失败: {e}", exc_info=True)
         
         self.logger.info(f"爬虫初始化完成，共 {len(self.spiders)} 个爬虫")
     
@@ -266,8 +283,8 @@ class DataCollector:
             )
             
             # 执行采集
-            if source == "cls":
-                # 证券报爬虫使用 run_once 方法
+            if source in ("cls", "eastmoney_global"):
+                # 快讯类爬虫使用 run_once 方法
                 collected_data = spider.run_once()
             else:
                 # 发改委和证券信息网爬虫使用 run 方法
@@ -498,7 +515,7 @@ def parse_arguments():
   python main.py
   
   # 运行指定爬虫
-  python main.py --spiders ndrc cls
+  python main.py --spiders cls eastmoney_global
   
   # 显示版本信息
   python main.py --version
@@ -508,14 +525,14 @@ def parse_arguments():
     parser.add_argument(
         "--spiders",
         nargs="+",
-        choices=["ndrc", "cls", "cninfo"],
+        choices=["ndrc", "cls", "cninfo", "eastmoney_global"],
         help="指定要运行的爬虫（默认运行所有爬虫）"
     )
 
     parser.add_argument(
         "--source",
         nargs="+",
-        choices=["ndrc", "cls", "cninfo"],
+        choices=["ndrc", "cls", "cninfo", "eastmoney_global"],
         help="指定要运行的数据源，等同于 --spiders（兼容 README 示例）"
     )
 
