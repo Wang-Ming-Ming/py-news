@@ -29,6 +29,21 @@ class NewsEnricherTest(unittest.TestCase):
         )
         self.assertEqual(item["publish_time_bj_display"], "2026-06-04 00:00:00")
 
+    def test_crawled_at_latency_is_recorded(self):
+        item = enrich_news_item(
+            {
+                "title": "测试",
+                "publish_time": "2026-06-04T00:40:00Z",
+                "crawled_at": "2026-06-04T08:55:00+08:00",
+                "crawled_at_source": "test",
+            },
+            "cls",
+        )
+        self.assertEqual(item["crawled_at_display"], "2026-06-04 08:55:00")
+        self.assertEqual(item["crawled_at_source"], "test")
+        self.assertEqual(item["latency_minutes"], 15.0)
+        self.assertEqual(item["latency_level"], "normal")
+
     def test_risk_announcement_is_marked(self):
         item = enrich_news_item(
             {

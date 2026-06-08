@@ -2,8 +2,9 @@
 """
 新闻增强模块。
 
-为原始新闻/公告补充三个面向短线分析的结构化字段：
+为原始新闻/公告补充四类面向短线分析的结构化字段：
 - 统一北京时间
+- 本地抓取/入库时间
 - 风险公告标记
 - 新闻影响力评分
 """
@@ -289,6 +290,49 @@ def normalize_publish_time(data: Dict[str, Any], source: str = "") -> Dict[str, 
     return enriched
 
 
+def annotate_crawl_time(
+    data: Dict[str, Any],
+    source: str = "",
+    crawled_at: Any | None = None,
+) -> Dict[str, Any]:
+    """
+    写入本地抓取/入库时间，并计算新闻源发布时间到本地入库的延迟。
+
+    `publish_time*` 表示新闻源发布时间；`crawled_at*` 表示本项目实际抓到并保存前
+    处理的时间。旧数据回填时可传入文件修改时间作为近似值。
+    """
+    enriched = dict(data)
+
+    raw_crawled_at = crawled_at if crawled_at is not None else enriched.get("crawled_at")
+    crawled_dt, crawl_note = _coerce_time_to_beijing(raw_crawled_at)
+    if crawled_dt is None:
+        crawled_dt = datetime.now(BEIJING_TZ)
+        crawl_note = "generated_now"
+
+    enriched["crawled_at"] = crawled_dt.isoformat(timespec="seconds")
+    enriched["crawled_at_display"] = crawled_dt.strftime("%Y-%m-%d %H:%M:%S")
+    enriched["crawled_date_bj"] = crawled_dt.strftime("%Y-%m-%d")
+    enriched["crawl_time_note"] = crawl_note
+    enriched.setdefault("crawled_at_source", "runtime")
+
+    source_name = str(source or enriched.get("source") or "")
+    publish_dt, _ = parse_publish_time_to_beijing(
+        enriched.get("publish_time_bj") or enriched.get("publish_time"),
+        source_name,
+    )
+    if publish_dt is None:
+        enriched["latency_minutes"] = None
+        enriched["latency_level"] = "unknown"
+        enriched["latency_note"] = "missing_or_unparsed_publish_time"
+        return enriched
+
+    latency_minutes = (crawled_dt - publish_dt).total_seconds() / 60
+    enriched["latency_minutes"] = round(latency_minutes, 2)
+    enriched["latency_level"] = _resolve_latency_level(latency_minutes)
+    enriched["latency_note"] = "crawled_at_minus_publish_time"
+    return enriched
+
+
 def detect_risk_flags(data: Dict[str, Any], source: str = "") -> Dict[str, Any]:
     enriched = dict(data)
     text = _combined_text(enriched)
@@ -367,9 +411,61 @@ def enrich_news_item(data: Dict[str, Any], source: str = "") -> Dict[str, Any]:
     enriched = dict(data)
     enriched.setdefault("source", source_name)
     enriched = normalize_publish_time(enriched, source_name)
+    enriched = annotate_crawl_time(enriched, source_name)
     enriched = detect_risk_flags(enriched, source_name)
     enriched = score_news(enriched, source_name)
     return enriched
+
+
+def _coerce_time_to_beijing(value: Any) -> Tuple[datetime | None, str]:
+    if value is None or value == "":
+        return None, "missing_time"
+
+    if isinstance(value, datetime):
+        if value.tzinfo is None:
+            return value.replace(tzinfo=BEIJING_TZ), "datetime_naive_as_beijing"
+        return value.astimezone(BEIJING_TZ), "datetime_converted_to_beijing"
+
+    if isinstance(value, (int, float)):
+        seconds = value / 1000 if value > 10_000_000_000 else value
+        return datetime.fromtimestamp(seconds, tz=UTC_TZ).astimezone(BEIJING_TZ), "epoch_as_utc"
+
+    text = str(value).strip()
+    if not text:
+        return None, "empty_time"
+
+    normalized = text.replace("/", "-")
+    if normalized.endswith("Z"):
+        normalized = f"{normalized[:-1]}+00:00"
+
+    try:
+        dt = datetime.fromisoformat(normalized)
+        if dt.tzinfo is None:
+            return dt.replace(tzinfo=BEIJING_TZ), "naive_as_beijing"
+        return dt.astimezone(BEIJING_TZ), "timezone_converted_to_beijing"
+    except ValueError:
+        pass
+
+    for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M", "%Y-%m-%d"):
+        try:
+            dt = datetime.strptime(normalized, fmt)
+            return dt.replace(tzinfo=BEIJING_TZ), f"parsed_{fmt}_as_beijing"
+        except ValueError:
+            continue
+
+    return None, "unparsed_time"
+
+
+def _resolve_latency_level(latency_minutes: float) -> str:
+    if latency_minutes < -1:
+        return "clock_skew"
+    if latency_minutes <= 10:
+        return "fast"
+    if latency_minutes <= 60:
+        return "normal"
+    if latency_minutes <= 180:
+        return "slow"
+    return "stale"
 
 
 def _combined_text(data: Dict[str, Any]) -> str:
@@ -405,6 +501,7 @@ def _resolve_news_tier(matched_groups: List[str], risk_level: str) -> str:
 
 __all__ = [
     "BEIJING_TZ",
+    "annotate_crawl_time",
     "detect_risk_flags",
     "enrich_news_item",
     "normalize_publish_time",
