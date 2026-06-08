@@ -60,6 +60,12 @@ class NewsItem:
     url: str
     stock_code: str
     stock_name: str
+    news_score: int
+    news_tier: str
+    risk_flags: tuple[str, ...]
+    risk_level: str
+    is_risk_alert: bool
+    is_high_impact: bool
 
     @property
     def text(self) -> str:
@@ -107,7 +113,7 @@ def load_items(data_dir: Path, days: int) -> list[NewsItem]:
             title = str(row.get("title") or "").strip()
             if not title:
                 continue
-            published = parse_time(row.get("publish_time"))
+            published = parse_time(row.get("publish_time_bj") or row.get("publish_time"))
             if published and published < cutoff:
                 continue
             source = str(row.get("source") or path.parent.name)
@@ -125,6 +131,12 @@ def load_items(data_dir: Path, days: int) -> list[NewsItem]:
                     url=url,
                     stock_code=str(row.get("stock_code") or ""),
                     stock_name=str(row.get("stock_name") or ""),
+                    news_score=_safe_int(row.get("news_score")),
+                    news_tier=str(row.get("news_tier") or ""),
+                    risk_flags=tuple(str(flag) for flag in row.get("risk_flags") or ()),
+                    risk_level=str(row.get("risk_level") or "none"),
+                    is_risk_alert=bool(row.get("is_risk_alert")),
+                    is_high_impact=bool(row.get("is_high_impact")),
                 )
             )
 
@@ -146,6 +158,30 @@ def format_time(dt: datetime | None) -> str:
     if not dt:
         return "unknown"
     return dt.astimezone(timezone(timedelta(hours=8))).strftime("%Y-%m-%d %H:%M")
+
+
+def _safe_int(value: Any) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return 0
+
+
+def item_meta(item: NewsItem) -> str:
+    meta: list[str] = []
+    if item.news_score:
+        meta.append(f"score={item.news_score}")
+    if item.news_tier:
+        meta.append(f"tier={item.news_tier}")
+    if item.risk_flags:
+        meta.append(f"risk={','.join(item.risk_flags)}")
+    return f" ({'; '.join(meta)})" if meta else ""
+
+
+def item_line(item: NewsItem) -> str:
+    stock = f" [{item.stock_code} {item.stock_name}]" if item.stock_code or item.stock_name else ""
+    prefix = "【风险】" if item.is_risk_alert else ""
+    return f"- {format_time(item.publish_time)} {item.source}{stock}: {prefix}{item.title}{item_meta(item)}"
 
 
 def print_markdown(items: list[NewsItem], limit: int) -> None:
@@ -175,17 +211,38 @@ def print_markdown(items: list[NewsItem], limit: int) -> None:
     high_impact = [
         item
         for item in items
-        if any(word.lower() in item.text.lower() for word in HIGH_IMPACT_WORDS)
+        if item.is_high_impact
+        or item.news_score >= 65
+        or any(word.lower() in item.text.lower() for word in HIGH_IMPACT_WORDS)
     ]
+    high_impact.sort(
+        key=lambda item: (
+            item.news_score,
+            item.publish_time or datetime.min.replace(tzinfo=timezone.utc),
+        ),
+        reverse=True,
+    )
     for item in high_impact[:limit]:
-        stock = f" [{item.stock_code} {item.stock_name}]" if item.stock_code or item.stock_name else ""
-        print(f"- {format_time(item.publish_time)} {item.source}{stock}: {item.title}")
+        print(item_line(item))
+
+    print()
+    print("## Risk Alerts")
+    risk_items = [item for item in items if item.is_risk_alert or item.risk_flags]
+    risk_items.sort(
+        key=lambda item: (
+            item.risk_level == "high",
+            item.news_score,
+            item.publish_time or datetime.min.replace(tzinfo=timezone.utc),
+        ),
+        reverse=True,
+    )
+    for item in risk_items[:limit]:
+        print(item_line(item))
 
     print()
     print("## Latest Items")
     for item in items[:limit]:
-        stock = f" [{item.stock_code} {item.stock_name}]" if item.stock_code or item.stock_name else ""
-        print(f"- {format_time(item.publish_time)} {item.source}{stock}: {item.title}")
+        print(item_line(item))
 
 
 def print_json(items: list[NewsItem], limit: int) -> None:
@@ -203,8 +260,48 @@ def print_json(items: list[NewsItem], limit: int) -> None:
                 "url": item.url,
                 "stock_code": item.stock_code,
                 "stock_name": item.stock_name,
+                "news_score": item.news_score,
+                "news_tier": item.news_tier,
+                "risk_flags": item.risk_flags,
+                "risk_level": item.risk_level,
             }
             for item in items[:limit]
+        ],
+        "high_impact_items": [
+            {
+                "source": item.source,
+                "title": item.title,
+                "publish_time": format_time(item.publish_time),
+                "news_score": item.news_score,
+                "news_tier": item.news_tier,
+                "risk_flags": item.risk_flags,
+                "url": item.url,
+            }
+            for item in sorted(
+                [row for row in items if row.is_high_impact or row.news_score >= 65],
+                key=lambda row: (row.news_score, row.publish_time or datetime.min.replace(tzinfo=timezone.utc)),
+                reverse=True,
+            )[:limit]
+        ],
+        "risk_alerts": [
+            {
+                "source": item.source,
+                "title": item.title,
+                "publish_time": format_time(item.publish_time),
+                "news_score": item.news_score,
+                "risk_flags": item.risk_flags,
+                "risk_level": item.risk_level,
+                "url": item.url,
+            }
+            for item in sorted(
+                [row for row in items if row.is_risk_alert or row.risk_flags],
+                key=lambda row: (
+                    row.risk_level == "high",
+                    row.news_score,
+                    row.publish_time or datetime.min.replace(tzinfo=timezone.utc),
+                ),
+                reverse=True,
+            )[:limit]
         ],
     }
     print(json.dumps(payload, ensure_ascii=False, indent=2, default=dict))

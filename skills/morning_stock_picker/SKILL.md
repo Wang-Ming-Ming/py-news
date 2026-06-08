@@ -21,6 +21,41 @@ For live trading analysis, use the latest valid data available while the analysi
 
 Do not infer sector leaders from the user's holdings, repeated conversation history, or the user's stated preference. Sector leaders, front-row stocks, capacity cores, and low-position catch-up stocks must be confirmed by current market data: limit-up height, sealing strength, turnover, sector leadership, capital flow, 2-3 day persistence, and policy/news mapping.
 
+The user may expect to buy one or two stocks from the morning plan. Still, do not loosen execution standards: rank five relative candidates and identify the best one or two, but label them watch/trial only when news strength, market confirmation, auction/opening confirmation, or risk-reward is insufficient. Never turn a weak setup into a high-confidence recommendation just because the user plans to trade.
+
+## Message-First Morning Logic
+
+Morning stock picking must be message-first, not yesterday-strength-first. Start from today's newest available catalysts, then map them into themes, industry chains, and tradable stocks.
+
+The first anchor must be today's fresh message flow:
+
+- 最新新闻
+- 政策
+- 公司公告
+- 外围市场
+- 商品、汇率、利率
+- 产业事件
+- 公司级硬催化
+
+Prior-day market action is only validation, not the recommendation anchor. Use yesterday's data to judge capital traces, recognition, liquidity,兑现 pressure, climax, fade, divergence, or退潮. Never assume a sector will continue today just because it was strong yesterday.
+
+Candidate generation order:
+
+1. Build today's message-theme map from fresh news, policy, announcements, overseas markets, commodities, FX/rates, industry events, and company catalysts.
+2. Map those themes to industry-chain nodes and related A-share stocks across the whole market.
+3. Use prior-day market data only to validate whether funds already have a base:辨识度,成交额,涨停/炸板, sector breadth, capital flow, and兑现 pressure.
+4. Use auction/opening data as final confirmation when available.
+5. Output exactly five candidates, then identify only the best 1-2 as execution priorities.
+
+If today's fresh message conflicts with yesterday's strong sector, respect today's new message first. Yesterday's strength becomes a risk check only. Unless 9:15 auction or 9:30 opening data clearly confirms yesterday's main line is still strengthening, do not force recommendations into yesterday's strong direction.
+
+Recommendations must come from the full market and current real data:
+
+- Do not recommend based on the user's holdings.
+- Do not recommend based on stocks repeatedly mentioned in historical chat.
+- Do not cater to the user's subjective preference.
+- Sector leaders, front-row stocks, capacity cores, and low-position catch-up stocks must be confirmed by current data, not assumed.
+
 ## Required Workflow
 
 1. Update or read news first.
@@ -28,22 +63,33 @@ Do not infer sector leaders from the user's holdings, repeated conversation hist
      `venv/bin/python main.py --source cls eastmoney_global cninfo ndrc --days 1 --log-level INFO`
    - Then summarize local data:
      `venv/bin/python skills/overnight_stock_picker/scripts/news_snapshot.py --data-dir data_dev --days 7 --limit 80`
+   - Then generate a market snapshot when AkShare is available:
+     `venv/bin/python market_data/market_snapshot.py --mode morning`
+   - Read the latest market snapshot from `data_market/latest_morning_snapshot.json`.
    - If crawling fails, read the latest saved `data_dev` files and clearly state the newest timestamp used.
    - Filter out news that is later than the user's request time.
 
-2. Determine the likely morning market style.
+2. Build today's message-theme map.
+   - Start with today's newest valid news, policy, company announcements, overseas markets, commodities, FX/rates, industry events, and company-level hard catalysts.
+   - Group messages by theme and grade them by freshness, hardness, market scope, company specificity, and whether they can change expectations today.
+   - Map each strong message theme to industry-chain nodes and related stocks across the whole market.
+   - Do not start by asking which sector was strongest yesterday.
+
+3. Determine the likely morning market style and validate with prior-day data.
    - Before 9:15: use prior-day close, prior-day涨停复盘, sector strength, overnight overseas markets, commodities, policy, company announcements, and morning news.
    - During auction: add auction涨幅, auction volume, one-word limit-up status, weak-to-strong behavior, and whether the strongest theme is being confirmed.
    - After 9:30: add open, early分时承接, sector breadth, active money, and whether the candidate is above its intraday average price.
-   - Before selecting stocks, classify yesterday's strongest themes as continuation, healthy divergence, or fade/rotation risk. Do not simply buy yesterday's strongest sector again without this check.
+   - Before selecting stocks, classify yesterday's strongest themes as continuation, healthy divergence, or fade/rotation risk. This is a validation step only, not the anchor.
+   - If today's message flow points to a new theme while yesterday's strong theme lacks fresh catalysts, prefer the new message theme unless auction/opening confirms yesterday's line.
+   - Use `data_market` to confirm all-market行情, industry/concept strength, fund flow, limit-up/broken-limit pools, and tradable candidate rankings.
 
-3. Build a full-market candidate pool.
+4. Build a full-market candidate pool.
    - Start from the whole A-share market and all sectors, then filter by the user's tradability rules.
-   - Prefer stocks in the strongest 1-3 themes, with high recognition, company-level catalysts, prior-day money traces, or clear policy/news mapping.
+   - Prefer stocks mapped from today's strongest message themes, with high recognition, company-level catalysts, prior-day money traces, or clear policy/news mapping.
    - Recommend exactly five ranked candidates, but mark the best 1-2 as the only execution priorities.
    - If the strongest stock is sealed limit-up or not realistically buyable, use it only as a sector flag and recommend a buyable same-theme alternative.
 
-4. Apply hard filters.
+5. Apply hard filters.
    - By default, do not recommend ChiNext/Growth Enterprise Market stocks such as `300/301` tickers, unless the user explicitly asks to include them.
    - Do not recommend stocks requiring a 500K RMB permission threshold, such as STAR Market `688/689` stocks or Beijing Stock Exchange-style restricted tickers, unless the user explicitly says they can trade them.
    - Avoid ST, delisting-risk, major negative公告, obvious fraud/regulatory-risk, or severe减持 pressure.
@@ -51,12 +97,15 @@ Do not infer sector leaders from the user's holdings, repeated conversation hist
    - Avoid pure social-media concepts without news/policy/board strength support.
    - Avoid prior-day blow-off distribution, large bearish candle with heavy volume, or candidates with obvious sell-off risk unless the plan is explicitly a weak-to-strong reversal setup.
 
-5. Score candidates.
+6. Score candidates.
    - Read `references/strategy.md` when detailed scoring, auction logic, or output rules are needed.
-   - Rank by score and practical tradability, not by theoretical涨停 probability alone.
+   - Rank by message-first score and practical tradability, not by theoretical涨停 probability alone.
+   - New message > old strength. Prior-day strength can lift confidence only after today's message and auction/opening logic are valid.
+   - If no candidate reaches execution quality, still give five ranked relative candidates, but state that the best 1-2 require small trial position, auction confirmation, or no trade if the trigger fails.
 
-6. Output in Chinese, concise and decision-oriented.
+7. Output in Chinese, concise and decision-oriented.
    - Include the data scope: live latest data or the explicit historical cutoff used.
+   - Include today's main message themes and their stock mapping.
    - Include the continuation/divergence/fade judgment for yesterday's strongest themes.
    - Give exactly five ranked stocks.
    - For each stock include: stock name/code, reference price/current available price, theme, score, reason, auction/opening condition, buy trigger, abandon condition, and position size.

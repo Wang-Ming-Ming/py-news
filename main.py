@@ -307,19 +307,19 @@ class DataCollector:
             saved_count = spider_stats.get("saved_count", 0)
             error_count = spider_stats.get("error_count", 0)
             
-            # 更新增量更新时间戳
-            self.incremental_updater.set_last_update_time(source, datetime.now())
-            self.incremental_updater.increment_collected_count(
-                source,
-                spider_stats.get("saved_count", 0)
-            )
-            
             if fetched_count == 0 and saved_count == 0 and error_count > 0:
                 self.logger.error(
                     f"数据源 {source} 未获取到有效数据且发生 {error_count} 个错误，判定为失败"
                 )
                 self.failure_tracker.record_failure(source)
                 return False
+
+            # 只有成功完成采集流程后才推进增量时间，避免网络失败时跳过后续补拉窗口。
+            self.incremental_updater.set_last_update_time(source, datetime.now())
+            self.incremental_updater.increment_collected_count(
+                source,
+                spider_stats.get("saved_count", 0)
+            )
 
             # 记录成功
             self.failure_tracker.record_success(source)

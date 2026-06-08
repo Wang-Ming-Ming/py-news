@@ -50,6 +50,9 @@ data/*/*.json
 data/.dedup_index.json
 data/.incremental_state.json
 data_dev/
+data_market/**/*.json
+data_market/latest_*.json
+!data_market/.gitkeep
 
 # OS
 .DS_Store

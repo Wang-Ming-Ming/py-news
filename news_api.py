@@ -8,7 +8,7 @@
 
 import argparse
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any, Dict, List
@@ -18,15 +18,23 @@ from config import STORAGE_CONFIG
 
 
 SOURCES = {"cls", "cninfo", "ndrc", "eastmoney_global"}
+BEIJING_TZ = timezone(timedelta(hours=8))
 
 
 def _parse_time(value: Any) -> datetime:
     if not value:
         return datetime.min
     try:
-        return datetime.fromisoformat(str(value).replace("Z", "+00:00")).replace(tzinfo=None)
+        dt = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        if dt.tzinfo is None:
+            return dt
+        return dt.astimezone(BEIJING_TZ).replace(tzinfo=None)
     except ValueError:
         return datetime.min
+
+
+def _item_time(item: Dict[str, Any]) -> datetime:
+    return _parse_time(item.get("publish_time_bj") or item.get("publish_time"))
 
 
 def _repair_mojibake(value: str) -> str:
@@ -91,7 +99,7 @@ def load_news(
                     continue
                 items.append(normalized)
 
-    items.sort(key=lambda item: _parse_time(item.get("publish_time")), reverse=True)
+    items.sort(key=_item_time, reverse=True)
     return items[:limit]
 
 

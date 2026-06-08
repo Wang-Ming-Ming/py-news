@@ -21,6 +21,8 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, List, Any, Optional
 
+from filters.news_enricher import enrich_news_item
+
 
 class StorageManager:
     """
@@ -63,6 +65,34 @@ class StorageManager:
             return str(data["url"])
 
         return "|".join(str(data.get(field, "")) for field in ("title", "publish_time"))
+
+    def _prepare_for_storage(self, data: Dict[str, Any], source: str) -> Dict[str, Any]:
+        """
+        保存前补充北京时间、风险标记和影响力评分。
+        """
+        return enrich_news_item(data, source)
+
+    def _get_date_key(self, data: Dict[str, Any], source: str) -> str:
+        """
+        获取数据归档日期，优先使用标准化后的北京时间日期。
+        """
+        publish_date_bj = str(data.get("publish_date_bj") or "").strip()
+        if publish_date_bj:
+            try:
+                datetime.strptime(publish_date_bj, "%Y-%m-%d")
+                return publish_date_bj
+            except ValueError:
+                self.logger.warning(f"北京时间日期格式异常，使用发布时间兜底: {publish_date_bj}")
+
+        publish_time_str = data.get("publish_time", "")
+        if publish_time_str:
+            try:
+                publish_time = datetime.fromisoformat(str(publish_time_str).replace('Z', '+00:00'))
+                return publish_time.strftime("%Y-%m-%d")
+            except (ValueError, AttributeError) as e:
+                self.logger.warning(f"无法解析发布时间，使用当前日期: {publish_time_str}, 错误: {e}")
+
+        return datetime.now().strftime("%Y-%m-%d")
     
     def _get_file_path(self, source: str, date: datetime) -> str:
         """
@@ -103,6 +133,8 @@ class StorageManager:
             IOError: 磁盘空间不足或写入失败
         """
         try:
+            data = self._prepare_for_storage(data, source)
+
             # 检查磁盘空间
             available_space = self.check_disk_space()
             if available_space < self.min_disk_space:
@@ -112,8 +144,9 @@ class StorageManager:
                 )
                 self.logger.warning(warning_msg)
             
-            # 获取文件路径（使用当前日期）
-            current_date = datetime.now()
+            # 获取文件路径（使用北京时间归档日期）
+            date_key = self._get_date_key(data, source)
+            current_date = datetime.strptime(date_key, "%Y-%m-%d")
             file_path = self._get_file_path(source, current_date)
             
             # 确保目录存在
@@ -179,24 +212,13 @@ class StorageManager:
                 )
                 self.logger.warning(warning_msg)
             
-            # 按日期分组数据
+            prepared_list = [self._prepare_for_storage(data, source) for data in data_list]
+
+            # 按北京时间日期分组数据
             data_by_date: Dict[str, List[Dict[str, Any]]] = {}
             
-            for data in data_list:
-                # 从数据中提取发布时间
-                publish_time_str = data.get("publish_time", "")
-                
-                if publish_time_str:
-                    try:
-                        # 解析 ISO 8601 格式的时间
-                        publish_time = datetime.fromisoformat(publish_time_str.replace('Z', '+00:00'))
-                        date_key = publish_time.strftime("%Y-%m-%d")
-                    except (ValueError, AttributeError) as e:
-                        self.logger.warning(f"无法解析发布时间，使用当前日期: {publish_time_str}, 错误: {e}")
-                        date_key = datetime.now().strftime("%Y-%m-%d")
-                else:
-                    # 如果没有发布时间，使用当前日期
-                    date_key = datetime.now().strftime("%Y-%m-%d")
+            for data in prepared_list:
+                date_key = self._get_date_key(data, source)
                 
                 if date_key not in data_by_date:
                     data_by_date[date_key] = []

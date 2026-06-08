@@ -226,6 +226,8 @@ class NDRCSpider:
                 f"{self.base_url}/xwdt/dt/dfdt/",
             ]
             
+            list_page_error_count = 0
+
             for list_url in list_urls:
                 try:
                     # 使用重试机制发送请求
@@ -247,16 +249,21 @@ class NDRCSpider:
                     
                 except NetworkException as e:
                     self.logger.warning(f"获取列表页失败: {list_url}, 错误: {e}")
+                    list_page_error_count += 1
                     continue
                 
                 except ParseException as e:
                     self.logger.warning(f"解析列表页失败: {list_url}, 错误: {e}")
+                    list_page_error_count += 1
                     continue
             
             # 去重
             all_links = list(set(all_links))
             
             self.logger.info(f"获取新闻列表完成，共 {len(all_links)} 个链接")
+
+            if list_page_error_count:
+                self.stats["error_count"] += list_page_error_count
             
             return all_links
             
