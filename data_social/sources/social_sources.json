@@ -1,0 +1,51 @@
+[
+  {
+    "platform": "douyin",
+    "source_name": "Douyin source 1",
+    "source_type": "profile",
+    "source_url": "https://v.douyin.com/v3vr7nQTR1Y/",
+    "focus": "recent_trend",
+    "max_videos": 8,
+    "skip_irrelevant": true,
+    "notes": "User-provided Douyin creator/video link; extract recent market trend only."
+  },
+  {
+    "platform": "douyin",
+    "source_name": "Douyin source 2",
+    "source_type": "profile",
+    "source_url": "https://v.douyin.com/TOYzqFydDiI/",
+    "focus": "recent_trend",
+    "max_videos": 8,
+    "skip_irrelevant": true,
+    "notes": "User-provided Douyin creator/video link; extract recent market trend only."
+  },
+  {
+    "platform": "douyin",
+    "source_name": "Douyin source 3",
+    "source_type": "profile",
+    "source_url": "https://v.douyin.com/aCNxbskbbMg/",
+    "focus": "recent_trend",
+    "max_videos": 8,
+    "skip_irrelevant": true,
+    "notes": "User-provided Douyin creator/video link; extract recent market trend only."
+  },
+  {
+    "platform": "douyin",
+    "source_name": "Douyin source 4",
+    "source_type": "profile",
+    "source_url": "https://v.douyin.com/mgxCSro2_pk/",
+    "focus": "recent_trend",
+    "max_videos": 8,
+    "skip_irrelevant": true,
+    "notes": "User-provided Douyin creator/video link; extract recent market trend only."
+  },
+  {
+    "platform": "xiaohongshu",
+    "source_name": "A博众证券",
+    "source_type": "profile",
+    "source_url": "https://xhslink.com/m/8CcI6Xlipg1",
+    "focus": "recent_trend",
+    "max_notes": 5,
+    "notes": "User-provided Xiaohongshu creator profile; extract recent market trend only."
+  }
+]

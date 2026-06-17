@@ -6,9 +6,9 @@ market data so the two data domains stay separate.
 
 from __future__ import annotations
 
+import json
 import math
 import os
-import json
 import subprocess
 import time
 from datetime import date, datetime
@@ -21,11 +21,20 @@ import requests
 
 
 _ORIGINAL_SESSION_INIT = requests.Session.__init__
+PROXY_ENV_KEYS = (
+    "HTTP_PROXY",
+    "HTTPS_PROXY",
+    "ALL_PROXY",
+    "http_proxy",
+    "https_proxy",
+    "all_proxy",
+)
+LOCAL_ADAPTER_DEFAULT_URL = "http://127.0.0.1:8000"
 
 EASTMONEY_SPOT_URL = "https://82.push2.eastmoney.com/api/qt/clist/get"
 EASTMONEY_SPOT_PARAMS = {
     "pn": "1",
-    "pz": "100",
+    "pz": "10000",
     "po": "1",
     "np": "1",
     "ut": "bd1d9ddb04089700cf9c27f6f7426281",
@@ -87,29 +96,58 @@ EASTMONEY_BOARD_FUND_FIELDS = (
 )
 
 
-def _configure_requests_for_direct_network() -> None:
-    """Avoid inherited proxy settings that can break Eastmoney/AkShare calls."""
-    for key in (
-        "HTTP_PROXY",
-        "HTTPS_PROXY",
-        "ALL_PROXY",
-        "http_proxy",
-        "https_proxy",
-        "all_proxy",
-    ):
-        os.environ.pop(key, None)
-    os.environ["NO_PROXY"] = "*"
-    os.environ["no_proxy"] = "*"
+def _network_mode() -> str:
+    return str(os.getenv("MARKET_NETWORK_MODE") or "system_proxy").strip().lower()
 
-    def _session_init_without_proxy(self, *args: Any, **kwargs: Any) -> None:
+
+def _custom_proxy() -> str:
+    return str(
+        os.getenv("MARKET_PROXY")
+        or os.getenv("MARKET_HTTPS_PROXY")
+        or os.getenv("MARKET_HTTP_PROXY")
+        or ""
+    ).strip()
+
+
+def _configure_requests_network() -> None:
+    """Configure proxy behavior for market data.
+
+    Modes:
+    - system_proxy: keep environment proxy settings and let requests/curl use them.
+    - custom_proxy: set MARKET_PROXY/MARKET_HTTP_PROXY/MARKET_HTTPS_PROXY.
+    - direct: bypass proxy explicitly.
+    - local_adapter: use local adapter for stock_spot and system proxy for fallbacks.
+    """
+    mode = _network_mode()
+    if mode == "direct":
+        for key in PROXY_ENV_KEYS:
+            os.environ.pop(key, None)
+        os.environ["NO_PROXY"] = "*"
+        os.environ["no_proxy"] = "*"
+        trust_env = False
+    elif mode == "custom_proxy":
+        proxy = _custom_proxy()
+        if proxy:
+            os.environ["HTTP_PROXY"] = proxy
+            os.environ["HTTPS_PROXY"] = proxy
+            os.environ["http_proxy"] = proxy
+            os.environ["https_proxy"] = proxy
+        os.environ["NO_PROXY"] = "127.0.0.1,localhost"
+        os.environ["no_proxy"] = "127.0.0.1,localhost"
+        trust_env = True
+    else:
+        trust_env = True
+
+    def _session_init(self, *args: Any, **kwargs: Any) -> None:
         _ORIGINAL_SESSION_INIT(self, *args, **kwargs)
-        self.trust_env = False
-        self.proxies.clear()
+        self.trust_env = trust_env
+        if not trust_env:
+            self.proxies.clear()
 
-    requests.Session.__init__ = _session_init_without_proxy
+    requests.Session.__init__ = _session_init
 
 
-_configure_requests_for_direct_network()
+_configure_requests_network()
 
 
 def _json_safe(value: Any) -> Any:
@@ -186,8 +224,6 @@ def _eastmoney_get_json(url: str, params: dict[str, Any]) -> dict[str, Any]:
             "--silent",
             "--show-error",
             "--location",
-            "--noproxy",
-            "*",
             "--ipv4",
             "--max-time",
             "30",
@@ -197,6 +233,11 @@ def _eastmoney_get_json(url: str, params: dict[str, Any]) -> dict[str, Any]:
             "user-agent: Mozilla/5.0",
             full_url,
         ]
+        mode = _network_mode()
+        if mode == "direct":
+            command[4:4] = ["--noproxy", "*"]
+        elif mode == "custom_proxy" and _custom_proxy():
+            command[4:4] = ["--proxy", _custom_proxy()]
         try:
             completed = subprocess.run(
                 command,
@@ -255,6 +296,50 @@ def load_eastmoney_spot_df() -> pd.DataFrame:
         EASTMONEY_SPOT_PARAMS,
         EASTMONEY_FIELD_MAP,
     )
+
+
+def load_local_adapter_spot_df() -> pd.DataFrame:
+    """Load A-share spot data from the optional local AKShare adapter."""
+    base_url = str(os.getenv("MARKET_LOCAL_ADAPTER_URL") or LOCAL_ADAPTER_DEFAULT_URL).rstrip("/")
+    session = requests.Session()
+    session.trust_env = False
+    response = session.get(f"{base_url}/quotes/snapshot", timeout=30)
+    response.raise_for_status()
+    payload = response.json()
+    rows = payload.get("quotes") or []
+    if not rows:
+        raise RuntimeError("Local adapter returned no quotes")
+
+    records: list[dict[str, Any]] = []
+    for item in rows:
+        raw = item.get("raw") or {}
+        records.append(
+            {
+                "代码": item.get("code"),
+                "名称": item.get("name"),
+                "最新价": item.get("latestPrice"),
+                "涨跌幅": item.get("changePercent"),
+                "涨跌额": item.get("change"),
+                "成交量": item.get("volume"),
+                "成交额": item.get("turnover"),
+                "振幅": item.get("amplitude"),
+                "换手率": item.get("turnoverRate"),
+                "市盈率-动态": item.get("pe"),
+                "量比": item.get("volumeRatio"),
+                "最高": item.get("high"),
+                "最低": item.get("low"),
+                "今开": item.get("open"),
+                "昨收": item.get("previousClose"),
+                "总市值": raw.get("totalMarketCap"),
+                "流通市值": raw.get("circulatingMarketCap"),
+                "市净率": item.get("pb"),
+                "60日涨跌幅": raw.get("change60d"),
+                "年初至今涨跌幅": raw.get("changeYtd"),
+                "涨速": raw.get("speed"),
+                "5分钟涨跌": raw.get("change5m"),
+            }
+        )
+    return pd.DataFrame(records)
 
 
 def load_eastmoney_board_df(kind: str) -> pd.DataFrame:
@@ -348,6 +433,13 @@ def load_eastmoney_sector_fund_flow_df(sector_type: str = "行业资金流") -> 
 
 def load_stock_spot_df() -> pd.DataFrame:
     """Load full A-share spot data with direct Eastmoney first, AkShare fallback."""
+    local_adapter_error = None
+    if _network_mode() == "local_adapter":
+        try:
+            return load_local_adapter_spot_df()
+        except Exception as exc:
+            local_adapter_error = exc
+
     direct_error = None
     try:
         return load_eastmoney_spot_df()
@@ -365,6 +457,7 @@ def load_stock_spot_df() -> pd.DataFrame:
     except Exception as exc:
         raise RuntimeError(
             "Spot data providers failed: "
+            f"local_adapter={local_adapter_error}; "
             f"eastmoney_direct={direct_error}; "
             f"stock_zh_a_spot_em={akshare_em_error}; "
             f"stock_zh_a_spot={exc}"

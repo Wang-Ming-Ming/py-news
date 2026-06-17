@@ -127,6 +127,21 @@ cninfo   每 60 分钟
 ndrc     每 4 小时
 ```
 
+同时也会在交易日自动生成市场快照：
+
+```text
+09:20 morning
+09:30 morning
+10:30 midday
+13:30 midday
+14:30 overnight
+14:45 overnight
+14:55 overnight
+```
+
+如果市场数据拉取失败，只会写入 `*_failed_snapshot.json`，不会覆盖上一份有效的
+`latest_*_snapshot.json`。
+
 启动后会先立即采集一次，然后按频率循环。停止整个服务时按 `Ctrl+C`。
 
 如果不想启动后立即采集：
@@ -139,6 +154,28 @@ python run.py --no-immediate
 
 ```bash
 python run.py --cls-interval 300 --eastmoney-global-interval 600 --cninfo-interval 3600 --ndrc-interval 14400
+```
+
+如果只想启动新闻源，不跑市场数据定时快照：
+
+```bash
+python run.py --no-market
+```
+
+市场数据网络模式默认使用系统代理环境，不再强制直连。可选模式：
+
+```bash
+# 系统代理/服务器环境变量，默认
+MARKET_NETWORK_MODE=system_proxy python market_data/market_snapshot.py --mode overnight
+
+# 强制直连
+MARKET_NETWORK_MODE=direct python market_data/market_snapshot.py --mode overnight
+
+# 指定代理
+MARKET_NETWORK_MODE=custom_proxy MARKET_PROXY=http://127.0.0.1:7890 python market_data/market_snapshot.py --mode overnight
+
+# 使用本地 adapter 兜底全 A 行情
+MARKET_NETWORK_MODE=local_adapter MARKET_LOCAL_ADAPTER_URL=http://127.0.0.1:8000 python market_data/market_snapshot.py --mode overnight
 ```
 
 单独采集某个源：

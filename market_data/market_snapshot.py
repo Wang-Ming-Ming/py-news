@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shutil
 import sys
 from datetime import datetime, timedelta, timezone
@@ -30,6 +31,15 @@ def write_json(path: Path, payload: dict[str, Any]) -> None:
     temp_path = path.with_suffix(path.suffix + ".tmp")
     temp_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
     temp_path.replace(path)
+
+
+def is_valid_snapshot(snapshot: dict[str, Any]) -> bool:
+    summary = snapshot.get("derived", {}).get("summary", {})
+    source_status = snapshot.get("source_status", {})
+    stock_spot_ok = bool(source_status.get("stock_spot", {}).get("ok"))
+    stock_count = int(summary.get("stock_count") or 0)
+    tradeable_count = int(summary.get("tradeable_stock_count") or 0)
+    return stock_spot_ok and stock_count > 1000 and tradeable_count > 500
 
 
 def cleanup_old_snapshots(output_dir: Path, retention_days: int) -> list[str]:
@@ -66,6 +76,8 @@ def build_snapshot(args: argparse.Namespace) -> dict[str, Any]:
             "mode": args.mode,
             "captured_at": captured_at.isoformat(),
             "market_date": market_date,
+            "network_mode": os.getenv("MARKET_NETWORK_MODE") or "system_proxy",
+            "local_adapter_url": os.getenv("MARKET_LOCAL_ADAPTER_URL"),
             "allow_chinext": args.allow_chinext,
             "retention_days": args.retention_days,
             "notes": "Market data only. News/policy/announcements remain in data_dev.",
@@ -128,15 +140,22 @@ def main() -> None:
     captured_at = datetime.fromisoformat(snapshot["metadata"]["captured_at"])
     date_dir = output_dir / captured_at.strftime("%Y-%m-%d")
     snapshot_path = date_dir / f"{args.mode}_snapshot.json"
+    failed_snapshot_path = date_dir / f"{args.mode}_failed_snapshot.json"
     latest_path = output_dir / f"latest_{args.mode}_snapshot.json"
-    write_json(snapshot_path, snapshot)
-    write_json(latest_path, snapshot)
+    snapshot_valid = is_valid_snapshot(snapshot)
+    if snapshot_valid:
+        write_json(snapshot_path, snapshot)
+        write_json(latest_path, snapshot)
+    else:
+        write_json(failed_snapshot_path, snapshot)
     removed = cleanup_old_snapshots(output_dir, args.retention_days)
 
     summary = snapshot["derived"]["summary"]
     print(json.dumps({
-        "snapshot_path": str(snapshot_path),
+        "snapshot_path": str(snapshot_path) if snapshot_valid else None,
+        "failed_snapshot_path": None if snapshot_valid else str(failed_snapshot_path),
         "latest_path": str(latest_path),
+        "latest_updated": snapshot_valid,
         "stock_count": summary["stock_count"],
         "tradeable_stock_count": summary["tradeable_stock_count"],
         "limit_up_count": summary["limit_up_count"],

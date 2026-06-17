@@ -12,7 +12,13 @@ import threading
 
 from config import STORAGE_CONFIG
 from news_api import create_server
-from scheduler import DEFAULT_INTERVALS, run_scheduler
+from scheduler import (
+    DEFAULT_INTERVALS,
+    DEFAULT_MARKET_SNAPSHOT_SCHEDULE,
+    parse_market_schedule,
+    run_market_snapshot_scheduler,
+    run_scheduler,
+)
 
 
 def parse_args():
@@ -27,6 +33,14 @@ def parse_args():
     parser.add_argument("--eastmoney-global-interval", type=int, default=DEFAULT_INTERVALS["eastmoney_global"])
     parser.add_argument("--cninfo-interval", type=int, default=DEFAULT_INTERVALS["cninfo"])
     parser.add_argument("--ndrc-interval", type=int, default=DEFAULT_INTERVALS["ndrc"])
+    parser.add_argument("--no-market", action="store_true", help="不启动市场数据定时快照")
+    parser.add_argument(
+        "--market-times",
+        default=",".join(f"{time_text}={mode}" for time_text, mode in DEFAULT_MARKET_SNAPSHOT_SCHEDULE),
+        help="市场快照时间，格式 HH:MM=mode,HH:MM=mode",
+    )
+    parser.add_argument("--market-output-dir", default="data_market", help="市场快照输出目录")
+    parser.add_argument("--market-retention-days", type=int, default=30, help="市场快照保留天数")
     return parser.parse_args()
 
 
@@ -57,8 +71,24 @@ def main():
     )
     scheduler_thread.start()
 
+    market_thread = None
+    if not args.no_market:
+        market_thread = threading.Thread(
+            target=run_market_snapshot_scheduler,
+            kwargs={
+                "schedule": parse_market_schedule(args.market_times),
+                "output_dir": args.market_output_dir,
+                "retention_days": args.market_retention_days,
+            },
+            daemon=True,
+        )
+        market_thread.start()
+
     print(f"新闻源接口已启动: http://{args.host}:{args.port}/news")
-    print("定时采集已在后台启动，按 Ctrl+C 停止服务")
+    if market_thread:
+        print("新闻采集和市场数据定时快照已在后台启动，按 Ctrl+C 停止服务")
+    else:
+        print("新闻采集已在后台启动，按 Ctrl+C 停止服务")
 
     try:
         server.serve_forever()

@@ -66,9 +66,12 @@
 当前采用的定时脚本：
 
 - 推荐一键启动：`python run.py`
-- `run.py` 同时启动新闻接口和后台定时采集。
+- `run.py` 同时启动新闻接口、后台新闻定时采集、交易日市场快照定时采集。
 - `scheduler.py`
 - 默认启动后立即采集一次。
 - 默认间隔：`cls=300s`、`eastmoney_global=600s`、`cninfo=3600s`、`ndrc=14400s`。
+- 市场快照默认时间：`09:20`、`09:30`、`10:30`、`13:30`、`14:30`、`14:45`、`14:55`。
+- 市场快照拉取失败只写 `*_failed_snapshot.json`，不覆盖上一份有效 `latest_*_snapshot.json`。
+- 市场数据网络模式：默认 `MARKET_NETWORK_MODE=system_proxy`；可选 `direct`、`custom_proxy`、`local_adapter`。
 - 运行：`python scheduler.py`
 - 只启动接口：`python news_api.py --host 127.0.0.1 --port 8765 --data-dir data_dev`

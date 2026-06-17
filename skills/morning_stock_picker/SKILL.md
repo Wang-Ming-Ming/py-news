@@ -49,6 +49,57 @@ Candidate generation order:
 
 If today's fresh message conflicts with yesterday's strong sector, respect today's new message first. Yesterday's strength becomes a risk check only. Unless 9:15 auction or 9:30 opening data clearly confirms yesterday's main line is still strengthening, do not force recommendations into yesterday's strong direction.
 
+## Analyst-First Full-Market Scan
+
+Do not let a system-generated candidate pool decide the recommendation list. Candidate pools, rankings, and scores are only secondary review tools after the analyst-first scan.
+
+The real selection path is:
+
+1. Identify the hardest fresh message themes: price increases, orders, policy landing, overseas mapping, supply-demand change, or direct company catalysts.
+2. Map each theme into industry-chain nodes and all related A-share stocks.
+3. Search the full tradable market for leaders, front-row names, capacity cores, low-position catch-ups, and under-recognized hard-catalyst stocks.
+4. Filter by the user's realistic tradability: ordinary A-share stocks that do not require a 500K RMB permission threshold. Prefer main-board stocks; exclude STAR Market `688/689`, Beijing Stock Exchange-style restricted names, and other 500K-threshold names unless the user explicitly allows them. Keep default caution on `300/301`.
+5. Use market snapshots, rankings,涨停池,强势池,板块热度,成交额,资金流, and auction/opening data only to validate or reject the analyst list.
+
+A stock absent from local candidate rankings can still enter the final five if it has a hard fresh catalyst, a clear industry-chain position, market recognition, and a buyable execution setup. A stock inside the candidate rankings can be rejected if it is crowded, old-theme, over-priced, or lacks next-buyer logic.
+
+## Hard Catalyst Execution Upgrade
+
+The highest-quality morning setups usually come from fresh, under-priced hard catalysts plus fast capital confirmation. Treat the following as priority rules:
+
+1. Fresh hard catalyst window comes first. Give extra priority to messages released after the prior trading day's close and before today's open, especially company公告, major orders, bid wins, performance changes, buybacks, policy landing details, or industry events that the market has not fully priced.
+2. Grade catalyst hardness. Direct company-level hard catalyst > policy landing > industry event with clear beneficiaries > overseas/commodity/rate mapping > repeated old theme or media imagination.
+3. Grade beneficiary uniqueness. Direct beneficiary with amount/counterparty/date > industry-chain capacity core > sector front-row sentiment stock > low-position catch-up > loose follower. Do not treat all same-theme stocks equally.
+4. In weak markets, raise the bar. If breadth is weak or risk appetite is poor, only the hardest 1-2 setups can be execution priorities. The other three candidates are watchlist only unless auction/opening data confirms them.
+5. Capital confirmation decides execution. A hard catalyst can override a weak sector for candidate selection, but it still needs auction/opening or live market confirmation: strong amount, relative strength, main-fund recognition, sector/chain support, or clear逆板块 strength.
+
+Do not reject a direct company-level catalyst only because the broader sector is weak. However, if the stock cannot show relative strength or资金承接 after the open, downgrade it immediately.
+
+## Professional Execution Gate
+
+Separate analyst-quality ideas from trader-quality entries. A stock can rank high in the research candidate pool because the news is hard, fresh, and direct, but it cannot become an execution priority until the price, tradability, and opening承接 still offer a favorable risk-reward.
+
+Apply these gates before naming the final 1-2 execution priorities:
+
+1. Market regime first. Classify the morning as risk-on, weak repair, rotation, risk-off, retreat/fade, or consensus cash-out before ranking execution names. Weak breadth, high broken-limit pressure, fast rotation, or negative overseas markets automatically lower position size and raise the execution bar.
+2. Catalyst is not enough. Grade whether the catalyst is under-priced at the current opening level. If a stock gaps up enough to consume most of the news value, downgrade it from "buy trigger" to "priced-in/兑现 test" until it proves承接.
+3. Candidate rank is not execution rank. Research rank answers "which story matters"; execution rank answers "which stock can be bought at a good price with confirmed demand". A rank-1 research catalyst can become only a sector flag if it opens too high, cannot be bought, or fails承接.
+4. Unbuyable strength is a flag, not a trade. One-word limit-up, sealed limit-up, or instant boards should be used to confirm the theme and locate buyable alternatives; do not list them as final execution recommendations.
+5. High open needs gap classification. Judge whether a gap is breakaway/continuation, common, or exhaustion. In a weak or cash-out market, a prior-day weak stock that gaps sharply on news and makes the open its high should be treated as an exhaustion/兑现 risk unless it reclaims VWAP and expands volume on a second push.
+6. Always identify the next buyer. For each execution name, state who is likely to buy after the user: fresh-policy buyers, event-driven buyers, sector relay funds, capacity-core allocators, front-row substitution demand, or weak-to-strong traders. If the next buyer cannot be identified, downgrade.
+7. Execution requires a two-step confirmation. A high open is only the market seeing the news; confirmation is opening hold, VWAP/average-price support, sector synchronization, and a second volume push. Without that, the setup is observation only.
+
+## Pre-Auction Plan Mode
+
+The user may ask before 9:15, when there is no auction data. In that case, output a pre-auction plan, not a final confirmed buy list.
+
+- Clearly label the data scope as "竞价前，无竞价数据" or equivalent.
+- Use latest news, policy,公告, overseas markets, commodities/FX/rates, and prior-day market data.
+- Give five ranked candidates and the best 1-2 provisional priorities, but each must have 9:15/9:25/9:30 confirmation triggers.
+- Scores before auction should reflect pending confirmation. Do not write "已确认" or high-confidence execution language before auction data exists.
+- If a candidate's logic is strong but depends on auction confirmation, mark it as "盘前第一预案 / 等竞价确认", not "直接买".
+- If auction becomes available during analysis, update the plan and clearly say the auction data has been added.
+
 Recommendations must come from the full market and current real data:
 
 - Do not recommend based on the user's holdings.
@@ -81,11 +132,13 @@ Recommendations must come from the full market and current real data:
    - After 9:30: add open, early分时承接, sector breadth, active money, and whether the candidate is above its intraday average price.
    - Before selecting stocks, classify yesterday's strongest themes as continuation, healthy divergence, or fade/rotation risk. This is a validation step only, not the anchor.
    - If today's message flow points to a new theme while yesterday's strong theme lacks fresh catalysts, prefer the new message theme unless auction/opening confirms yesterday's line.
-   - Use `data_market` to confirm all-market行情, industry/concept strength, fund flow, limit-up/broken-limit pools, and tradable candidate rankings.
+   - Use `data_market` to confirm all-market行情, industry/concept strength, fund flow, limit-up/broken-limit pools, and ranking warnings. Do not use rankings as the source of recommendations.
 
-4. Build a full-market candidate pool.
+4. Build an analyst-first full-market list.
    - Start from the whole A-share market and all sectors, then filter by the user's tradability rules.
+   - Do not start from the local candidate pool. Build the list from fresh hard messages, industry-chain mapping, and all buyable stocks under the user's permission threshold.
    - Prefer stocks mapped from today's strongest message themes, with high recognition, company-level catalysts, prior-day money traces, or clear policy/news mapping.
+   - If a hard-logic stock is not in the generated candidate pool, still evaluate it manually by theme strength, board position, trend, liquidity, and execution risk.
    - Recommend exactly five ranked candidates, but mark the best 1-2 as the only execution priorities.
    - If the strongest stock is sealed limit-up or not realistically buyable, use it only as a sector flag and recommend a buyable same-theme alternative.
 
@@ -115,7 +168,9 @@ Recommendations must come from the full market and current real data:
 
 Do not only chase high opens.
 
-- 高开 2%-6%: standard strong setup; buy only if auction volume and opening承接 confirm.
+- 高开 0%-3%: usually the most comfortable range for fresh hard catalysts, but still requires auction/opening volume and sector confirmation.
+- 高开 3%-5%: acceptable only after回踩不破均价/VWAP or second volume push confirms承接.
+- 高开 5%-7%: default "priced-in/兑现 test" zone in weak, rotating, or risk-off markets. Do not chase the open; wait for a clear second confirmation.
 - 高开 7%-9%: high兑现 risk; do not chase unless sector is extremely strong and the stock quickly seals or holds承接.
 - 一字涨停 or sealed limit-up: sector flag only; not a final buy recommendation.
 - 平开/小高开 0%-2%: acceptable when news is hard and the stock quickly放量上攻.

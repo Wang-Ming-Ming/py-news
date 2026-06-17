@@ -1,0 +1,17 @@
+{
+  "generated_at": "2026-06-17T00:36:32+08:00",
+  "sources_path": "data_social/sources/social_sources.json",
+  "raw_path": "data_social/raw/2026-06-17/raw_fetches.jsonl",
+  "extracted_path": "data_social/extracted/2026-06-17.jsonl",
+  "latest_path": "data_social/latest_social_signals.json",
+  "total_sources": 5,
+  "status_counts": {
+    "profile_pending_backend": 4,
+    "success": 1
+  },
+  "tool_availability": {
+    "mcporter": true,
+    "xhs": true,
+    "curl": true
+  }
+}
