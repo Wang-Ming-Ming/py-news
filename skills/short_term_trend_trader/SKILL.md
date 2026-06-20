@@ -42,11 +42,16 @@ Before analysis, use the newest valid local data available:
    `venv/bin/python skills/overnight_stock_picker/scripts/news_snapshot.py --data-dir data_dev --days 7 --limit 120`
 3. Read social market signals when available:
    `data_social/latest_social_signals.json`
-4. Read the latest valid market snapshot:
+4. Read Serenity hard-logic research cache when available:
+   - `data_research/serenity/latest_watchlist.json`
+   - `data_research/serenity/latest_report.md`
+   - `data_research/serenity/rejected_candidates.md`
+   Treat it as supplemental knowledge, not a closed universe. It helps identify hard-logic trend names and rejected weak logic, but every recommendation must still pass full-market trend and capital confirmation.
+5. Read the latest valid market snapshot:
    - Prefer `data_market/latest_custom_snapshot.json` if it is the freshest valid file.
    - Otherwise use `data_market/latest_morning_snapshot.json` or `data_market/latest_overnight_snapshot.json`.
    - Never use failed snapshots or `stock_count=0` as market truth.
-5. Review recent market history when available: the latest 3-7 trading days under `data_market/YYYY-MM-DD/` and any `data_market/research/` files.
+6. Review recent market history when available: the latest 3-7 trading days under `data_market/YYYY-MM-DD/` and any `data_market/research/` files.
 
 If fresh data collection fails, use the latest saved files and clearly state the data timestamp.
 
@@ -61,6 +66,34 @@ Build candidates in this order:
 3. Filter by tradability: default exclude STAR Market `688/689`, Beijing Stock Exchange-style restricted names, ST/delisting risk, and names requiring 500K RMB permission. Keep caution on `300/301` unless the user allows them.
 4. Evaluate trend health and position: early trend, confirmed trend, acceleration, healthy pullback, climax, or broken trend.
 5. Validate with current market data: sector strength, leader confirmation, turnover, fund flow, limit-up anchors, relative strength, and recent support.
+
+## Bottleneck Research Gate
+
+This skill should use `serenity-bottleneck` as the main hard-logic research companion, especially for several-day trend trades.
+
+The stock universe remains full-market. The bottleneck pass is used to decide whether a trend stock has a real industrial reason to keep attracting funds, not to create a closed list.
+
+If `data_research/serenity/latest_watchlist.json` exists, use it as a hard-logic supplement after reading the one-week news flow and before final trend ranking. Do not rank only this file. Merge its names with full-market trend candidates confirmed by price, volume, sector behavior, and fund path.
+
+Trend trading can hold future expectations before earnings are confirmed. Classify each Serenity-related trend stock:
+
+- `current_hard_logic`: current business/order/revenue/price evidence exists.
+- `future_expectation`: validation, sample, capacity, customer import, price-rise, or order expectation exists and the tape confirms funds are pricing it.
+- `pure_concept`: only label similarity or explicit company denial.
+
+Do not delete `future_expectation` stocks only because orders are not yet visible. They can be bought/held for several days when the theme is still fermenting and the trend is healthy. However, if they lose trend support or fresh announcements kill the expectation, sell quickly because there is no current earnings cushion.
+
+Workflow:
+
+1. Start with one-week message flow and full-market stock data.
+2. For supply-chain themes, apply Serenity-style analysis: anchor the event, draw the chain, find the scarce node, identify direct beneficiaries, and reject loose concept followers.
+3. Build a hard-logic trend watchlist from the bottleneck result: direct beneficiaries, capacity cores, pre-ignition trend stocks, and low-/middle-position extensions.
+4. Merge that watchlist with market-confirmed trend names from the full market.
+5. Rank only after trend health, capital acceptance, price position, announcement risk, and invalidation levels are checked.
+
+A stock can be held or bought for several days only when both sides agree: the industrial thesis is still alive and the trend tape has not broken. If the bottleneck thesis is strong but the trend breaks, sell. If the chart is strong but the business/chokepoint logic is weak, downgrade to technical speculation.
+
+For future-expectation trades, the industrial thesis means "expectation still has room to be repriced", not "orders have already landed". Track whether the next verification step is approaching and whether money is still accumulating.
 
 ## Holding Decisions
 

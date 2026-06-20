@@ -1,11 +1,11 @@
 ---
 name: morning_stock_picker
-description: Use this skill when the user asks for a pre-market or opening-session A-share stock-picking plan, usually around 8:40-9:30 China time: recommend five ranked stocks for short-term intraday/early-session trading using py-study news, policy catalysts, prior-day market data, available auction/opening data, and top short-term trader discipline.
+description: Use this skill when the user asks for a pre-market or opening-session A-share stock-picking plan, usually around 8:40-9:30 China time: recommend seven ranked stocks for short-term intraday/early-session trading, including five main candidates plus one quiet ignition candidate and one strongest-limit low-position acceptance candidate, using py-study news, policy catalysts, prior-day market data, available auction/opening data, and top short-term trader discipline.
 ---
 
 # Morning Stock Picker
 
-This skill builds a morning A-share trading plan. The mindset is a top financial analyst plus elite short-term stock trader: identify the five stocks with the highest relative probability of being attacked by active funds after the open, then give concrete execution conditions.
+This skill builds a morning A-share trading plan. The mindset is a top financial analyst plus elite short-term stock trader: identify five main stocks with the highest relative probability of being attacked by active funds after the open, then add two special candidates that may be calmer at first but have quiet ignition or strongest-limit relay potential. Give concrete execution conditions for all seven.
 
 The recommendation is a trading plan, not a promise. Use probability language such as "相对最优", "更容易被资金攻击", "竞价确认后再执行", and "不满足条件就放弃".
 
@@ -21,7 +21,7 @@ For live trading analysis, use the latest valid data available while the analysi
 
 Do not infer sector leaders from the user's holdings, repeated conversation history, or the user's stated preference. Sector leaders, front-row stocks, capacity cores, and low-position catch-up stocks must be confirmed by current market data: limit-up height, sealing strength, turnover, sector leadership, capital flow, 2-3 day persistence, and policy/news mapping.
 
-The user may expect to buy one or two stocks from the morning plan. Still, do not loosen execution standards: rank five relative candidates and identify the best one or two, but label them watch/trial only when news strength, market confirmation, auction/opening confirmation, or risk-reward is insufficient. Never turn a weak setup into a high-confidence recommendation just because the user plans to trade.
+The user may expect to buy one or two stocks from the morning plan. Still, do not loosen execution standards: rank seven relative candidates, identify the best one or two, and mark ranks 6-7 as real special candidates only when they pass their gates. Label them watch/trial when news strength, market confirmation, auction/opening confirmation, or risk-reward is insufficient. Never turn a weak setup into a high-confidence recommendation just because the user plans to trade.
 
 ## Message-First Morning Logic
 
@@ -45,7 +45,7 @@ Candidate generation order:
 2. Map those themes to industry-chain nodes and related A-share stocks across the whole market.
 3. Use prior-day market data only to validate whether funds already have a base:辨识度,成交额,涨停/炸板, sector breadth, capital flow, and兑现 pressure.
 4. Use auction/opening data as final confirmation when available.
-5. Output exactly five candidates, then identify only the best 1-2 as execution priorities.
+5. Output exactly seven candidates: five main candidates plus two special candidates, then identify only the best 1-2 as execution priorities.
 
 If today's fresh message conflicts with yesterday's strong sector, respect today's new message first. Yesterday's strength becomes a risk check only. Unless 9:15 auction or 9:30 opening data clearly confirms yesterday's main line is still strengthening, do not force recommendations into yesterday's strong direction.
 
@@ -61,7 +61,37 @@ The real selection path is:
 4. Filter by the user's realistic tradability: ordinary A-share stocks that do not require a 500K RMB permission threshold. Prefer main-board stocks; exclude STAR Market `688/689`, Beijing Stock Exchange-style restricted names, and other 500K-threshold names unless the user explicitly allows them. Keep default caution on `300/301`.
 5. Use market snapshots, rankings,涨停池,强势池,板块热度,成交额,资金流, and auction/opening data only to validate or reject the analyst list.
 
-A stock absent from local candidate rankings can still enter the final five if it has a hard fresh catalyst, a clear industry-chain position, market recognition, and a buyable execution setup. A stock inside the candidate rankings can be rejected if it is crowded, old-theme, over-priced, or lacks next-buyer logic.
+A stock absent from local candidate rankings can still enter the final seven if it has a hard fresh catalyst, a clear industry-chain position, market recognition, and a buyable execution setup. A stock inside the candidate rankings can be rejected if it is crowded, old-theme, over-priced, or lacks next-buyer logic.
+
+## Full-Market + Bottleneck Research Gate
+
+Keep the recommendation universe open. `serenity-bottleneck` is a research gate, not a replacement candidate pool.
+
+When nightly Serenity research files exist, read them as important supplemental knowledge before final ranking:
+
+- `data_research/serenity/latest_watchlist.json`
+- `data_research/serenity/latest_report.md`
+- `data_research/serenity/rejected_candidates.md`
+
+Treat these files as a hard-logic research cache, not as the recommendation入口. The morning scan still starts from the full tradable A-share market and today's real data. Use the cache to add evidence, identify chokepoint names, and avoid already-rejected weak logic, then verify everything against today's news increment, auction/opening behavior, and market snapshot.
+
+Do not over-delete expectation trades. In short-term A-share trading, funds often buy future expectation before orders or earnings fully appear. Separate every Serenity-related name into:
+
+- `current_hard_logic`: current business/order/revenue/price evidence exists.
+- `future_expectation`: sample, certification, capacity buildout, customer validation, or order expectation exists; not yet earnings-confirmed, but the theme is being actively priced.
+- `pure_concept`: only label similarity or company has clearly denied the business/product/order.
+
+`future_expectation` names can enter the morning seven when auction/opening and same-chain leaders confirm them, but label them as expectation trades, lower hard-logic confidence, and require stricter buy/abandon triggers. Do not write them as already-verified hard chokepoint beneficiaries.
+
+Use this sequence when fresh news, policy, price-rise, supply shortage, order, AI hardware, semiconductor material, industrial material, power equipment, or other supply-chain messages appear:
+
+1. Start from the full tradable A-share market, not from local candidate pools and not only from a Serenity output list.
+2. Apply the Serenity chokepoint method to the strongest message themes: anchor the event, draw the industry chain, locate the scarce physical/industrial node, and separate true beneficiaries from loose concept followers.
+3. Convert the chokepoint result into a hard-logic watchlist: direct beneficiaries, capacity cores, pre-ignition trend stocks, and buyable substitutes when front-row names are sealed.
+4. Run the morning trader gate on that watchlist plus any full-market market-confirmed opportunities: auction/opening strength, board synchronization, liquidity, price position, and cash-out risk.
+5. Pure emotion leaders can still enter the final seven when market data proves leadership, but they must be labeled as emotion/front-row trades rather than hard chokepoint trades.
+
+Never narrow the search to "only stocks found by Serenity". The desired workflow is: full-market news and data -> chokepoint research -> full-market validation -> morning execution ranking.
 
 ## Hard Catalyst Execution Upgrade
 
@@ -89,13 +119,45 @@ Apply these gates before naming the final 1-2 execution priorities:
 6. Always identify the next buyer. For each execution name, state who is likely to buy after the user: fresh-policy buyers, event-driven buyers, sector relay funds, capacity-core allocators, front-row substitution demand, or weak-to-strong traders. If the next buyer cannot be identified, downgrade.
 7. Execution requires a two-step confirmation. A high open is only the market seeing the news; confirmation is opening hold, VWAP/average-price support, sector synchronization, and a second volume push. Without that, the setup is observation only.
 
+## Morning Seven-Candidate Structure
+
+The morning output must contain exactly seven ranked candidates. Ranks 1-5 are the main morning attack list. Ranks 6-7 are extra special candidates, similar to the overnight skill, and must not be casual filler.
+
+Use this structure:
+
+1. Rank 1: strongest executable morning setup after message-first and trading gates.
+2. Rank 2: second executable setup or replacement for rank 1.
+3. Rank 3: main-theme capacity/core stock or strong front-row alternative.
+4. Rank 4: hard-logic trend or low-/middle-position candidate that has not fully priced the story.
+5. Rank 5: higher-elasticity candidate or backup theme, only when risk is controlled.
+6. Rank 6: quiet ignition candidate. This is a stock that may look stable, flat, or only modestly strong before/at the open, but has a fresh or continuing hard catalyst, same-chain confirmation, and a realistic chance to be repriced after the opening confirmation.
+7. Rank 7: strongest-limit logic low-position acceptance candidate. First identify the strongest sealed/limit-up or high-recognition logic, then find the buyable same-chain low-/middle-position stock that may relay,冲板, or涨停 if the anchor logic confirms.
+
+Ranks 6-7 are for the user's request: two extra stocks that are relatively stable first, then may be attacked or even board later. They can become execution candidates when they are stronger than ranks 3-5 on tradability, confirmation, and risk-reward. If the market is weak or the setup lacks confirmation, label them "观察/试错", not priority buys.
+
+Do not promise a stock will涨停. For rank 7, write "具备冲板/涨停预期" only when the same-chain anchor is strong, the candidate is genuinely related, the opening tape confirms, and the price has not already consumed the risk-reward.
+
+## Quiet-Ignition Anti-Distribution Gate
+
+Rank 6 "企稳点火票" and rank 7 "低位承接票" must first prove they are not high-position distribution/rebound traps. A hard catalyst plus a small prior-day gain is not enough.
+
+Before labeling any stock as quiet ignition, check the last 10-15 trading days when local data exists:
+
+- Short-term position: if the stock has already risen roughly 25%-30% or more from the recent swing low, it is not automatically low-position or stable.
+- Volume pressure: if the last 2-4 sessions show repeated huge turnover, blow-off volume, or heavy distribution after a limit-up/large candle, treat modest red/green action as a possible rebound or self-rescue, not accumulation.
+- Price structure: if the stock recently failed near a high, produced long upper shadows, opened near the session high, or could not make smooth new highs after a limit-up, downgrade.
+- Opening behavior: if today's open becomes the intraday high, or the stock drops quickly below prior close/VWAP after a gap, cancel the setup immediately.
+- Sector support: if the hard-news theme is not being confirmed by same-chain leaders, do not promote the stock just because the news is real.
+
+Hard rule: a high-position, high-turnover stock with heavy profit inventory cannot be called "企稳点火" unless it has clearly rebuilt a base through multiple controlled pullbacks, lower turnover, higher lows, and renewed same-chain confirmation. Otherwise label it "兑现风险/观察", or remove it from the final seven.
+
 ## Pre-Auction Plan Mode
 
 The user may ask before 9:15, when there is no auction data. In that case, output a pre-auction plan, not a final confirmed buy list.
 
 - Clearly label the data scope as "竞价前，无竞价数据" or equivalent.
 - Use latest news, policy,公告, overseas markets, commodities/FX/rates, and prior-day market data.
-- Give five ranked candidates and the best 1-2 provisional priorities, but each must have 9:15/9:25/9:30 confirmation triggers.
+- Give seven ranked candidates and the best 1-2 provisional priorities, but each must have 9:15/9:25/9:30 confirmation triggers.
 - Scores before auction should reflect pending confirmation. Do not write "已确认" or high-confidence execution language before auction data exists.
 - If a candidate's logic is strong but depends on auction confirmation, mark it as "盘前第一预案 / 等竞价确认", not "直接买".
 - If auction becomes available during analysis, update the plan and clearly say the auction data has been added.
@@ -114,6 +176,9 @@ Recommendations must come from the full market and current real data:
      `venv/bin/python main.py --source cls eastmoney_global cninfo ndrc --days 1 --log-level INFO`
    - Then summarize local data:
      `venv/bin/python skills/overnight_stock_picker/scripts/news_snapshot.py --data-dir data_dev --days 7 --limit 80`
+   - Read Serenity research cache when available:
+     `data_research/serenity/latest_watchlist.json`, `data_research/serenity/latest_report.md`, and `data_research/serenity/rejected_candidates.md`.
+   - Use the Serenity cache only as hard-logic background. Check its timestamp/news window. If it is stale or missing, say so and continue with the full-market scan plus a quick chokepoint pass.
    - Then generate a market snapshot when AkShare is available:
      `venv/bin/python market_data/market_snapshot.py --mode morning`
    - Read the latest market snapshot from `data_market/latest_morning_snapshot.json`.
@@ -124,6 +189,10 @@ Recommendations must come from the full market and current real data:
    - Start with today's newest valid news, policy, company announcements, overseas markets, commodities, FX/rates, industry events, and company-level hard catalysts.
    - Group messages by theme and grade them by freshness, hardness, market scope, company specificity, and whether they can change expectations today.
    - Map each strong message theme to industry-chain nodes and related stocks across the whole market.
+   - For supply-chain or industrial hard themes, run a bottleneck/chokepoint pass before stock ranking: identify the scarce node, direct beneficiaries, capacity cores, and possible substitutes. Use `serenity-bottleneck` when available; otherwise apply the same chain-mapping logic manually.
+   - Treat the bottleneck output as a hard-logic watchlist, not as a closed recommendation universe.
+   - Merge Serenity hard-logic names with full-market market-confirmed names. A stock can rank only after current data confirms its catalyst relevance, tradability, liquidity, price position, and morning execution setup.
+   - If a stock is a future-expectation trade rather than current hard logic, keep it eligible only when the market is actively pricing the expectation through auction strength, same-chain confirmation, and opening承接.
    - Do not start by asking which sector was strongest yesterday.
 
 3. Determine the likely morning market style and validate with prior-day data.
@@ -137,9 +206,10 @@ Recommendations must come from the full market and current real data:
 4. Build an analyst-first full-market list.
    - Start from the whole A-share market and all sectors, then filter by the user's tradability rules.
    - Do not start from the local candidate pool. Build the list from fresh hard messages, industry-chain mapping, and all buyable stocks under the user's permission threshold.
+   - Combine two sources: (a) full-market stocks mapped from the strongest message themes and chokepoints; (b) pure market-confirmed leaders/capacity cores from current real data. Do not let either source become the only universe.
    - Prefer stocks mapped from today's strongest message themes, with high recognition, company-level catalysts, prior-day money traces, or clear policy/news mapping.
    - If a hard-logic stock is not in the generated candidate pool, still evaluate it manually by theme strength, board position, trend, liquidity, and execution risk.
-   - Recommend exactly five ranked candidates, but mark the best 1-2 as the only execution priorities.
+   - Recommend exactly seven ranked candidates: five main candidates plus rank 6 quiet ignition and rank 7 strongest-limit low-position acceptance, but mark the best 1-2 as the only execution priorities.
    - If the strongest stock is sealed limit-up or not realistically buyable, use it only as a sector flag and recommend a buyable same-theme alternative.
 
 5. Apply hard filters.
@@ -149,20 +219,22 @@ Recommendations must come from the full market and current real data:
    - Avoid one-word sealed limit-up stocks as final buy recommendations because the user cannot realistically enter.
    - Avoid pure social-media concepts without news/policy/board strength support.
    - Avoid prior-day blow-off distribution, large bearish candle with heavy volume, or candidates with obvious sell-off risk unless the plan is explicitly a weak-to-strong reversal setup.
+   - For rank 6 and rank 7, reject "fake quiet" structures: recent large run-up, consecutive huge turnover, post-limit-up failure, long upper shadows, or opening-as-high selling pressure. Do not let a fresh price-rise/news headline override visible high-position distribution.
 
 6. Score candidates.
    - Read `references/strategy.md` when detailed scoring, auction logic, or output rules are needed.
    - Rank by message-first score and practical tradability, not by theoretical涨停 probability alone.
    - New message > old strength. Prior-day strength can lift confidence only after today's message and auction/opening logic are valid.
-   - If no candidate reaches execution quality, still give five ranked relative candidates, but state that the best 1-2 require small trial position, auction confirmation, or no trade if the trigger fails.
+   - If no candidate reaches execution quality, still give seven ranked relative candidates, but state that the best 1-2 require small trial position, auction confirmation, or no trade if the trigger fails.
 
 7. Output in Chinese, concise and decision-oriented.
    - Include the data scope: live latest data or the explicit historical cutoff used.
    - Include today's main message themes and their stock mapping.
    - Include the continuation/divergence/fade judgment for yesterday's strongest themes.
-   - Give exactly five ranked stocks.
+   - Give exactly seven ranked stocks.
    - For each stock include: stock name/code, reference price/current available price, theme, score, reason, auction/opening condition, buy trigger, abandon condition, and position size.
-   - End with the final execution priority: "只重点买第几名/哪两只", plus the key no-buy conditions.
+   - Explicitly label rank 6 as "企稳点火票" and rank 7 as "最强涨停逻辑低位承接票".
+   - End with the final execution priority: "只重点买第几名/哪两只", plus the key no-buy conditions. If rank 6 or rank 7 is better than ranks 3-5, explain why it can enter the execution pair.
 
 ## Morning Execution Logic
 
@@ -180,7 +252,7 @@ Do not only chase high opens.
 ## Position Discipline
 
 - Morning plans should not imply full position.
-- Normally recommend 1-2 execution stocks from the five, with small-to-medium position per stock.
+- Normally recommend 1-2 execution stocks from the seven, with small-to-medium position per stock.
 - If market style is weak or candidates are mainly high-open兑现 setups, lower position size.
 - If the user already holds related stocks, mention concentration risk and avoid adding too much of the same weak theme.
 

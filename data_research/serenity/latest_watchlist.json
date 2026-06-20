@@ -1,0 +1,515 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-06-17T23:12:04+08:00",
+  "skill": "serenity-bottleneck",
+  "purpose": "hard_logic_research_cache",
+  "important_rule": "This file is supplemental research knowledge only. Morning, overnight, and short-term recommendation skills must still scan the full tradable A-share market, read same-day news increment, read the latest valid market snapshot, and merge this hard-logic pool with full-market market-confirmed opportunities.",
+  "classification_rule": {
+    "current_hard_logic": "Current business/order/revenue/price evidence exists. Can be treated as hard-logic candidate after market confirmation.",
+    "future_expectation": "Sample, certification, capacity buildout, customer validation, price-rise, or order expectation exists but is not yet earnings-confirmed. Can be traded in short-term mode when market confirmation and next-buyer logic are strong, but must be labeled as expectation trade.",
+    "pure_concept": "Only label similarity, or the company clearly denies product/business/order. Can only be used as emotion/front-row/market signal, not hard-logic recommendation.",
+    "downgrade_note": "Hard-logic downgrade does not mean the stock cannot rise. It means order/earnings evidence is not yet enough. Trading skills may restore trading score through auction, late-session acceptance, same-chain confirmation, and expectation spread, but cannot restore hard-logic score without new evidence."
+  },
+  "data_scope": {
+    "news_window": "2026-06-10 23:49 to 2026-06-17 23:04",
+    "news_items_deduped": 4532,
+    "news_sources": {
+      "eastmoney_global": 2343,
+      "cninfo": 1878,
+      "cls": 293,
+      "ndrc": 18
+    },
+    "news_refresh_result": "2026-06-17 23:08 run succeeded: 4/4 sources, fetched 625, saved 513, errors 0",
+    "market_snapshot": {
+      "path": "data_market/latest_overnight_snapshot.json",
+      "captured_at": "2026-06-17T23:08:21.301441+08:00",
+      "market_date": "20260617",
+      "stock_count": 5527,
+      "tradeable_stock_count": 3028,
+      "up_count": 1723,
+      "down_count": 3733,
+      "market_breadth": 0.3158,
+      "limit_up_count": 86,
+      "broken_limit_count": 28,
+      "broken_limit_ratio": 0.2456
+    },
+    "data_limitations": [
+      "industry_boards, concept_boards, and fund-flow endpoints failed because the Eastmoney proxy connection was closed.",
+      "Raw all-market stock quotes, limit-up pool, strong pool, broken-limit pool, and prior-limit pool are valid.",
+      "Social source file exists, but current Douyin profile extraction is mostly unavailable; social signals are not used as hard evidence."
+    ]
+  },
+  "theme_map": [
+    {
+      "theme": "AI data center infrastructure",
+      "message_strength": "high",
+      "fresh_evidence": [
+        "VULTR selected HPE and NVIDIA for next-generation AI cloud-scale data center infrastructure.",
+        "NVIDIA announced AI infrastructure expansion plans.",
+        "NDRC price monitoring center researched computing-center electricity supply and pricing.",
+        "ByteDance increased domestic chip procurement; domestic AI infrastructure news remained active."
+      ],
+      "serenity_chokepoint_nodes": [
+        "high-speed PCB and CCL",
+        "optical interconnect and CPO chain",
+        "AI server power and thermal/power electronics",
+        "data-center operation/maintenance automation"
+      ],
+      "confidence": "high"
+    },
+    {
+      "theme": "semiconductor equipment, materials, and memory",
+      "message_strength": "high",
+      "fresh_evidence": [
+        "US semiconductor equipment/materials stocks strengthened; Applied Materials, ASML, and Lam Research hit records.",
+        "Memory/storage concept strengthened overseas and locally.",
+        "DRAM/data-center memory bottleneck stories continued during the week."
+      ],
+      "serenity_chokepoint_nodes": [
+        "memory controller/storage module",
+        "semiconductor equipment",
+        "advanced packaging and testing",
+        "electronic chemicals and specialty gases"
+      ],
+      "confidence": "medium_high"
+    },
+    {
+      "theme": "PCB, CCL, glass substrate, electronic cloth",
+      "message_strength": "high_but_crowded",
+      "fresh_evidence": [
+        "PCB and CPO concepts led intraday.",
+        "TSMC glass-substrate progress and high-end CCL/electronic-cloth stories were widely discussed.",
+        "Multiple companies issued clarification or risk notices after sharp moves."
+      ],
+      "serenity_chokepoint_nodes": [
+        "mature high-end PCB capacity",
+        "CCL/electronic resin/copper foil with real orders",
+        "glass-substrate validation is future optionality, not current confirmed earnings"
+      ],
+      "confidence": "medium",
+      "warning": "This theme contains many pseudo-chokepoint names. Business verification and order evidence are mandatory."
+    },
+    {
+      "theme": "robots and intelligent operation",
+      "message_strength": "medium",
+      "fresh_evidence": [
+        "Shenhao Technology disclosed an 11.67bn yuan computing-center intelligent O&M robot order.",
+        "Beijing and Jinan policy/news flow supported embodied intelligence and robotics applications."
+      ],
+      "serenity_chokepoint_nodes": [
+        "industrial O&M robot with real orders",
+        "robot execution components only when revenue is current, not concept-stage"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "theme": "passive components and capacitor price rise",
+      "message_strength": "medium",
+      "fresh_evidence": [
+        "Nichicon announced broad aluminum capacitor price increases.",
+        "TrendForce said CSP self-developed ASIC could cause structural shortage of high-end special MLCC products in H2."
+      ],
+      "serenity_chokepoint_nodes": [
+        "high-end aluminum capacitor",
+        "high-end MLCC and ceramic substrate",
+        "film/materials with actual scale, not tiny revenue share"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "theme": "oil, shipping, gold, and strategic resources",
+      "message_strength": "medium_high",
+      "fresh_evidence": [
+        "WTI crude rose about 4%; Brent touched 80 USD/bbl.",
+        "Gold and silver strengthened; global central-bank gold reserve demand remained in news.",
+        "Middle East/Hormuz-related headlines increased oil-shipping and energy-security sensitivity."
+      ],
+      "serenity_chokepoint_nodes": [
+        "oil shipping capacity during geopolitical supply shock",
+        "gold miners during safe-haven repricing",
+        "tungsten/rare-metal resources with real reserves and pricing power"
+      ],
+      "confidence": "medium"
+    }
+  ],
+  "watchlist": [
+    {
+      "rank": 1,
+      "code": "002916",
+      "name": "深南电路",
+      "status": "hard_logic_watch",
+      "theme": "AI data center PCB / high-speed interconnect",
+      "chokepoint_node": "high-end PCB capacity and AI server interconnect",
+      "serenity_reason": "The current AI infrastructure story points to physical interconnect and high-end PCB capacity, not only downstream AI applications. The stock was limit-up with 51.95bn yuan turnover, showing market confirmation on the same chokepoint.",
+      "market_confirmation": {
+        "price": 444.27,
+        "pct": 10.0005,
+        "amount_billion_yuan": 51.95,
+        "pool": "limit_up_pool"
+      },
+      "evidence_level": "B/C",
+      "confidence": 82,
+      "required_follow_up": [
+        "Verify current AI/server PCB order visibility and revenue share from latest reports.",
+        "Check whether next-day price has already overdrawn the catalyst."
+      ],
+      "risk_notes": [
+        "High price and limit-up status may make execution difficult.",
+        "This is a research watch name, not an automatic buy."
+      ]
+    },
+    {
+      "rank": 2,
+      "code": "600183",
+      "name": "生益科技",
+      "status": "hard_logic_watch",
+      "theme": "CCL / AI server PCB upstream",
+      "chokepoint_node": "high-end CCL and electronic material supply",
+      "serenity_reason": "If AI server PCB remains the market path, upstream CCL/material supply is a more Serenity-style bottleneck than broad PCB concept names. The stock had 212.44bn yuan turnover while closing only +0.42%, making it a capacity-core watch rather than a pure emotion chase.",
+      "market_confirmation": {
+        "price": 180.15,
+        "pct": 0.418,
+        "amount_billion_yuan": 212.44,
+        "pool": "top_amount"
+      },
+      "evidence_level": "B/C",
+      "confidence": 80,
+      "required_follow_up": [
+        "Verify high-end CCL order/revenue contribution and latest capacity utilization.",
+        "Compare with direct PCB leaders to judge whether funds choose upstream or downstream."
+      ],
+      "risk_notes": [
+        "Large turnover with small gain can mean absorption or distribution; needs next-session confirmation.",
+        "Do not rank automatically above stronger market-confirmed names without price confirmation."
+      ]
+    },
+    {
+      "rank": 3,
+      "code": "002463",
+      "name": "沪电股份",
+      "status": "hard_logic_watch",
+      "theme": "AI server PCB / CPO chain",
+      "chokepoint_node": "high-speed PCB with current AI server demand",
+      "serenity_reason": "The market repeatedly confirmed high-speed PCB as a real physical bottleneck for AI data centers. The stock had 144.61bn yuan turnover and closed +4.20%, acting as a liquid capacity core.",
+      "market_confirmation": {
+        "price": 146.55,
+        "pct": 4.202,
+        "amount_billion_yuan": 144.61,
+        "pool": "top_amount"
+      },
+      "evidence_level": "B/C",
+      "confidence": 78,
+      "required_follow_up": [
+        "Verify whether current move is early continuation or late-stage consensus.",
+        "Check announcement/risk notices before using in trading skills."
+      ],
+      "risk_notes": [
+        "Crowding risk is high after repeated PCB strength.",
+        "Needs pullback absorption or next-day continuation confirmation."
+      ]
+    },
+    {
+      "rank": 4,
+      "code": "603986",
+      "name": "兆易创新",
+      "status": "market_confirmed_hard_logic",
+      "theme": "memory / semiconductor cycle",
+      "chokepoint_node": "memory and storage semiconductor capacity/pricing",
+      "serenity_reason": "Memory and storage were supported by global headlines and local market action. The stock was the highest turnover name in the snapshot and closed limit-up, giving strong market confirmation.",
+      "market_confirmation": {
+        "price": 586.04,
+        "pct": 10.0008,
+        "amount_billion_yuan": 315.99,
+        "pool": "top_amount_and_limit_up"
+      },
+      "evidence_level": "B/C",
+      "confidence": 77,
+      "required_follow_up": [
+        "Confirm whether the move is earnings-cycle driven or emotion-driven memory beta.",
+        "Check valuation and whether a high open would consume the edge."
+      ],
+      "risk_notes": [
+        "Already limit-up and extremely high turnover; next-day cash-out risk must be evaluated by trading skills."
+      ]
+    },
+    {
+      "rank": 5,
+      "code": "600487",
+      "name": "亨通光电",
+      "status": "capacity_core_watch",
+      "theme": "optical communication / AI data center infrastructure",
+      "chokepoint_node": "optical fiber/cable and data-center optical infrastructure capacity",
+      "serenity_reason": "AI data center expansion continues to map to optical communication infrastructure. The stock had 232.70bn yuan turnover and closed +3.26%, making it a liquid capacity-core watch rather than a small concept name.",
+      "market_confirmation": {
+        "price": 111.0,
+        "pct": 3.256,
+        "amount_billion_yuan": 232.7,
+        "pool": "top_amount"
+      },
+      "evidence_level": "B/C",
+      "confidence": 74,
+      "required_follow_up": [
+        "Separate optical infrastructure orders from broad communication concept.",
+        "Use sector confirmation from CPO/optical leaders before trading."
+      ],
+      "risk_notes": [
+        "Large-cap/capacity-core behavior may lag small high-beta names.",
+        "Needs market continuation rather than pure news mapping."
+      ]
+    },
+    {
+      "rank": 6,
+      "code": "002384",
+      "name": "东山精密",
+      "status": "hard_logic_watch",
+      "theme": "PCB / silicon photonics / consumer electronics",
+      "chokepoint_node": "AI hardware interconnect and silicon photonics extension",
+      "serenity_reason": "News flow mentioned the company has CW laser chip R&D capability and cooperation/layout in silicon photonics. Market turnover was 251.96bn yuan with +3.16%, showing strong liquidity.",
+      "market_confirmation": {
+        "price": 256.92,
+        "pct": 3.156,
+        "amount_billion_yuan": 251.96,
+        "pool": "top_amount"
+      },
+      "evidence_level": "C",
+      "confidence": 72,
+      "required_follow_up": [
+        "Verify company-level silicon photonics revenue/order status from official sources.",
+        "Distinguish mature PCB business from future silicon photonics optionality."
+      ],
+      "risk_notes": [
+        "If silicon photonics is not current revenue, treat as optionality rather than core chokepoint.",
+        "Needs six-piece verification before hard ranking."
+      ]
+    },
+    {
+      "rank": 7,
+      "code": "002851",
+      "name": "麦格米特",
+      "status": "hard_logic_watch",
+      "theme": "AI server power electronics",
+      "chokepoint_node": "power supply and power electronics for AI/data-center hardware",
+      "serenity_reason": "AI infrastructure expansion requires power conversion and reliability hardware. The stock closed +9.33% with 109.40bn yuan turnover, suggesting market recognition of power-electronics scarcity.",
+      "market_confirmation": {
+        "price": 178.9,
+        "pct": 9.325,
+        "amount_billion_yuan": 109.4,
+        "pool": "top_amount"
+      },
+      "evidence_level": "B/C",
+      "confidence": 72,
+      "required_follow_up": [
+        "Verify data-center/AI power-supply exposure and revenue contribution.",
+        "Check whether the move is already near short-term exhaustion."
+      ],
+      "risk_notes": [
+        "High same-day gain; trading skill must avoid chasing an exhausted gap."
+      ]
+    },
+    {
+      "rank": 8,
+      "code": "600584",
+      "name": "长电科技",
+      "status": "capacity_core_watch",
+      "theme": "advanced packaging / semiconductor capacity",
+      "chokepoint_node": "packaging and testing capacity in semiconductor upcycle",
+      "serenity_reason": "Semiconductor equipment/materials and memory strength can transmit to packaging/testing capacity. The stock closed +6.28% on 180.16bn yuan turnover, confirming large-fund participation.",
+      "market_confirmation": {
+        "price": 81.76,
+        "pct": 6.278,
+        "amount_billion_yuan": 180.16,
+        "pool": "top_amount"
+      },
+      "evidence_level": "B/C",
+      "confidence": 71,
+      "required_follow_up": [
+        "Verify whether the move is memory/advanced-packaging revenue driven.",
+        "Check if there are post-close risk notices."
+      ],
+      "risk_notes": [
+        "Capacity core, but not necessarily the scarcest node; needs relative-strength confirmation."
+      ]
+    },
+    {
+      "rank": 9,
+      "code": "002281",
+      "name": "光迅科技",
+      "status": "hard_logic_watch",
+      "theme": "optical modules / CPO chain",
+      "chokepoint_node": "optical device and module supply for AI networking",
+      "serenity_reason": "AI data-center infrastructure maps directly to optical interconnect. The stock had 119.46bn yuan turnover and closed +5.21%, giving market confirmation without being a sealed limit-up.",
+      "market_confirmation": {
+        "price": 242.0,
+        "pct": 5.213,
+        "amount_billion_yuan": 119.46,
+        "pool": "top_amount"
+      },
+      "evidence_level": "B/C",
+      "confidence": 70,
+      "required_follow_up": [
+        "Compare with Zhongji Innolight, Eoptolink, Tianfu, and Huagong for leader/core status.",
+        "Check if the optical chain is extending or becoming crowded."
+      ],
+      "risk_notes": [
+        "CPO/optical chain is already heavily watched; avoid treating it as unknown bottleneck without fresh evidence."
+      ]
+    },
+    {
+      "rank": 10,
+      "code": "600378",
+      "name": "昊华科技",
+      "status": "hard_logic_watch_needs_verification",
+      "theme": "chemical new materials / electronic specialty materials",
+      "chokepoint_node": "specialty chemical/material supply",
+      "serenity_reason": "The stock was limit-up with 69.60bn yuan turnover and belongs to chemical materials, a sector where true chokepoints can exist in electronics, fluorine chemistry, and specialty materials. It needs official business/revenue verification before being treated as a hard-core Serenity name.",
+      "market_confirmation": {
+        "price": 63.8,
+        "pct": 10.0,
+        "amount_billion_yuan": 69.6,
+        "pool": "limit_up_and_strong_pool"
+      },
+      "evidence_level": "C/D",
+      "confidence": 68,
+      "required_follow_up": [
+        "Verify exact product link to current electronic specialty gas/material shortage.",
+        "Run six-piece verification before any high-confidence recommendation."
+      ],
+      "risk_notes": [
+        "Currently more market-confirmed than evidence-confirmed.",
+        "Do not promote to rank 1-2 without company-level proof."
+      ]
+    },
+    {
+      "rank": 11,
+      "code": "300853",
+      "name": "申昊科技",
+      "status": "company_hard_catalyst_watch",
+      "theme": "computing-center intelligent O&M robot",
+      "chokepoint_node": "AI/data-center operation automation with real order",
+      "serenity_reason": "The company disclosed an 11.67bn yuan computing-center intelligent O&M robot order, which is more concrete than generic robotics narrative. It maps to a service/maintenance bottleneck in large computing-center operation.",
+      "market_confirmation": {
+        "price": null,
+        "pct": null,
+        "amount_billion_yuan": null,
+        "pool": "news_company_event"
+      },
+      "evidence_level": "B/C",
+      "confidence": 67,
+      "required_follow_up": [
+        "Read the original announcement and contract terms.",
+        "Check abnormal-volatility notice and whether revenue recognition is near-term."
+      ],
+      "risk_notes": [
+        "Abnormal-volatility/risk announcement exists; trading skill must downgrade if price is already overheated.",
+        "ChiNext stock, use only if user trading permissions allow."
+      ]
+    },
+    {
+      "rank": 12,
+      "code": "301308",
+      "name": "江波龙",
+      "status": "market_confirmed_watch",
+      "theme": "memory / storage",
+      "chokepoint_node": "storage module and memory-cycle beneficiary",
+      "serenity_reason": "Memory/storage was supported by global news and A-share turnover. The stock closed +5.82% on 143.91bn yuan turnover.",
+      "market_confirmation": {
+        "price": 571.68,
+        "pct": 5.822,
+        "amount_billion_yuan": 143.91,
+        "pool": "top_amount"
+      },
+      "evidence_level": "B/C",
+      "confidence": 66,
+      "required_follow_up": [
+        "Verify whether demand is company-specific or broad storage beta.",
+        "Check valuation and next-day crowding."
+      ],
+      "risk_notes": [
+        "ChiNext stock and high price; do not use automatically if permission/risk constraints apply."
+      ]
+    },
+    {
+      "rank": 13,
+      "code": "600026",
+      "name": "中远海能",
+      "status": "macro_chokepoint_watch",
+      "theme": "oil shipping / geopolitical energy shock",
+      "chokepoint_node": "oil shipping capacity during crude/Hormuz stress",
+      "serenity_reason": "WTI/Brent and Middle East/Hormuz headlines created a physical logistics chokepoint. The stock was limit-up with 20.28bn yuan turnover.",
+      "market_confirmation": {
+        "price": 19.69,
+        "pct": 10.0,
+        "amount_billion_yuan": 20.28,
+        "pool": "limit_up_pool"
+      },
+      "evidence_level": "C",
+      "confidence": 65,
+      "required_follow_up": [
+        "Verify whether crude shipping rates or war-risk premiums are actually moving.",
+        "Check if the next day is likely oil-shipping continuation or geopolitical headline fade."
+      ],
+      "risk_notes": [
+        "Macro headline trades can reverse quickly if ceasefire/de-escalation appears."
+      ]
+    },
+    {
+      "rank": 14,
+      "code": "600549",
+      "name": "厦门钨业",
+      "status": "resource_chokepoint_watch",
+      "theme": "tungsten / strategic resources",
+      "chokepoint_node": "strategic metal resource and materials pricing",
+      "serenity_reason": "Resource-price and strategic-material themes stayed active. The stock had 133.07bn yuan turnover and closed +3.10%, showing large-cap resource participation without a limit-up chase.",
+      "market_confirmation": {
+        "price": 80.84,
+        "pct": 3.099,
+        "amount_billion_yuan": 133.07,
+        "pool": "top_amount"
+      },
+      "evidence_level": "B/C",
+      "confidence": 64,
+      "required_follow_up": [
+        "Verify actual tungsten/rare-earth price trend and company exposure.",
+        "Compare with Jiangxi Tungsten Equipment and other same-chain names."
+      ],
+      "risk_notes": [
+        "Could be resource beta rather than hidden chokepoint alpha."
+      ]
+    },
+    {
+      "rank": 15,
+      "code": "000636",
+      "name": "风华高科",
+      "status": "downgraded_watch",
+      "theme": "MLCC / passive components",
+      "chokepoint_node": "high-end MLCC only if product/customer evidence is verified",
+      "serenity_reason": "MLCC structural shortage appeared in news, but the company stated NVIDIA has not carried out product certification with it. This keeps it on watch as a passive-component line, not as a direct NVIDIA beneficiary.",
+      "market_confirmation": {
+        "price": 74.06,
+        "pct": 4.886,
+        "amount_billion_yuan": 119.24,
+        "pool": "top_amount"
+      },
+      "evidence_level": "C",
+      "confidence": 58,
+      "required_follow_up": [
+        "Verify current high-end MLCC revenue, customer certification, and order data.",
+        "Do not call it NVIDIA supply-chain direct beneficiary unless official evidence appears."
+      ],
+      "risk_notes": [
+        "Fresh clarification weakens direct-catalyst confidence.",
+        "Can be market-confirmed watch only, not hard-core main recommendation."
+      ]
+    }
+  ],
+  "rejected_or_downgraded_summary": [
+    "Glass-substrate and electronic-cloth concept names need strict downgrade unless current orders/revenue are confirmed.",
+    "Several stocks issued clarification notices: no certification, no orders, business too small, or no direct product involvement.",
+    "High same-day strength is not enough to qualify as a Serenity bottleneck beneficiary."
+  ],
+  "usage_for_recommendation_skills": {
+    "morning_stock_picker": "Use this watchlist as hard-logic background. Re-rank only after same-day news increment and auction/opening confirmation.",
+    "overnight_stock_picker": "Use this watchlist to search for next-day discoverable hard-logic names, but require late-session acceptance and clean announcement risk.",
+    "short_term_trend_trader": "Use this watchlist to find 2-7 day trend candidates; hold only while both thesis and trend remain valid."
+  }
+}

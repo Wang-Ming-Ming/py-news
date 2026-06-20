@@ -9,6 +9,23 @@ This skill recommends exactly seven ranked A-share candidates for an overnight t
 
 The core question is: **why would someone buy this stock from the user at a higher price tomorrow, and in which time window?** Overnight selection is not about finding the strongest stock today; it is about finding a tradable stock that still has a next-day buyer story and a realistic premium path. News and policy provide tomorrow's story, market data confirms whether money already believes it, late-session price action confirms whether funds are willing to hold overnight, and sell discipline captures the premium on the next trading day.
 
+## Trading Calendar Gate
+
+Before any overnight recommendation, confirm the next A-share trading day. Do not assume the next calendar day is tradable. Check the current date, weekday, weekend, exchange holiday schedule, and any known special market closure. In the output, state the exact next trading day when the trade will be sold.
+
+Calendar confirmation must come from a reliable trading-calendar source: prefer an exchange holiday notice or a valid local/API A-share trade calendar, and use weekday inference only as a final consistency check. Record the current date, the last completed trading day, the exact next trading day, and the number of non-trading nights carried. If the next trading day cannot be confirmed, do not issue an executable overnight recommendation, buy range, or normal position size; provide a research-only watchlist and state that calendar confirmation is missing.
+
+If the next calendar day is not a trading day, the setup is no longer a normal one-night overnight trade. Treat it as a cross-weekend or cross-holiday inventory trade:
+
+- replace "tomorrow" with "next trading day" and use the exact date when possible;
+- reduce confidence and position size because the user must carry extra nights of announcement, policy, overseas-market, commodity, exchange-rate, and sentiment risk;
+- require a harder buyer story that can survive the closure period, such as a multi-day hard main line, still-fermenting policy/industry catalyst, confirmed capacity core, or unavailable front-row substitution demand;
+- downgrade crowded high-gain stocks, late-session抢筹, high-position distribution, and pure emotion even more aggressively, because no next-morning liquidity exists to exit quickly;
+- avoid making rank 1-2 execution picks unless their next-trading-day red/positive exit probability remains strong after the extra holding period;
+- if the market is weak or the trade depends on immediate next-morning momentum, say clearly that the plan is not suitable for a normal position and only allows tiny trial size or no trade.
+
+For holiday/weekend gaps, the key question becomes: **who will still want to buy this stock on the next trading day after several non-trading days, and what holiday-period news path can keep the story alive?**
+
 ## Primary Objective: Red-Exit Probability
 
 For this user, the first objective of rank 1-2 is not theoretical upside or limit-up imagination. It is the probability that tomorrow gives a tradable **red/positive exit window**: a high open, opening rush, red-to-green repair, or intraday continuation above the late-session cost area. A pick that may be conceptually correct but is likely to open weak and never give a red exit is a bad overnight recommendation for this strategy.
@@ -161,6 +178,40 @@ Allowed market facts from the snapshot:
 
 The final seven must come from analyst-first full-market reasoning: latest hard news -> industry-chain map -> all tradable A-share scan -> trend/hard-logic targets -> quiet ignition scan -> strongest-limit low-position scan -> late-session acceptance -> announcement risk.
 
+## Full-Market + Bottleneck Research Gate
+
+For overnight trades, `serenity-bottleneck` is used to improve hard-logic discovery, not to restrict the stock universe.
+
+When nightly Serenity research files exist, read them as supplemental hard-logic context:
+
+- `data_research/serenity/latest_watchlist.json`
+- `data_research/serenity/latest_report.md`
+- `data_research/serenity/rejected_candidates.md`
+
+These files are not a candidate pool to rank mechanically. The overnight recommendation must still scan the full tradable A-share market, read today's news/announcement increment, read the latest valid market snapshot, and then merge Serenity hard-logic names with full-market capital-confirmed names.
+
+For overnight trades, do not confuse "hard-logic downgrade" with "cannot rise". A-shares often reprice future expectations before orders, certifications, or earnings appear. Classify Serenity-related stocks as:
+
+- `current_hard_logic`: direct current business/order/revenue/price evidence.
+- `future_expectation`: validation, sample, capacity, customer, price-rise, or order expectation that funds are starting to price.
+- `pure_concept`: only label similarity, or the company clearly denies the product/business/order.
+
+`future_expectation` names can rank when the market is actively discovering them and tomorrow's buyer source is clear. They must be labeled as expectation trades, sized smaller, and checked for crowding/cash-out risk. Never describe them as already-verified hard chokepoint beneficiaries.
+
+Use a two-engine workflow:
+
+1. Full-market engine: scan all ordinary tradable A-shares from news, policy, announcements, sector strength, limit-up logic, amount leaders, quiet trend structures, and late-session acceptance.
+2. Bottleneck engine: for supply-chain hard themes, apply the Serenity method to locate the scarce node and true beneficiaries. This is especially useful for AI hardware, PCB/CCL, glass substrate, MLCC, semiconductor materials, electronic specialty gases, optical communication materials, power equipment, resource price-rise chains, and other industrial bottlenecks.
+
+Then merge the results:
+
+- Stocks confirmed by bottleneck research become hard-logic candidates, especially pre-ignition trend names and quiet acceptance names.
+- Stocks confirmed only by market action can still rank when they are true leaders/capacity cores and tomorrow's buyer source is clear.
+- Stocks found by bottleneck research but not confirmed by market data stay watchlist unless late-session acceptance and next-day buyer logic appear.
+- Stocks found by market action but failing bottleneck/business verification must be labeled emotion/front-row trades, not hard-logic trades.
+
+Never replace one closed pool with another. The correct path is: full-market scan -> bottleneck/chokepoint research -> full-market market validation -> next-day buyer ranking.
+
 ## Hidden Trend Hard-Logic Targets
 
 Some of the best overnight winners are not the hottest names at 14:45. They are trend stocks inside a hard catalyst chain that are still buyable before the market fully prices the next-day continuation. The skill must actively search for these targets.
@@ -217,6 +268,20 @@ For each candidate that fits this pattern, state what will make tomorrow's money
 
 Do not over-promote quiet stocks with no catalyst. A calm chart without hard logic is only a technical guess. Quiet acceptance becomes rank 1-2 material only when hard logic, theme confirmation, and next-day buyer source are all present.
 
+## High-Position Distribution Trap Filter
+
+Quiet ignition is not the same as "not up much today". A stock can be red, flat, or only slightly green today and still be a high-position distribution trap if recent profit inventory is too heavy.
+
+Before ranking any stock as rank 6, rank 7, or an execution priority, inspect the recent 10-15 trading days when local data exists:
+
+- If the stock has already risen roughly 25%-30% or more from a recent swing low, it is not a low-position setup by default.
+- If it has 2-4 consecutive high-turnover sessions, blow-off volume, post-limit-up failure, long upper shadows, or repeated intraday highs that are sold down, assume profit inventory is heavy.
+- If today's "small gain" follows a large recent run and huge turnover, treat it as possible rebound/self-rescue rather than quiet accumulation.
+- If the current session opens near the high, loses VWAP, cannot reclaim the prior close, or shows large sell volume into every repair, cancel quiet-ignition status.
+- If the hard catalyst is real but same-chain leaders are not confirming, do not use the headline to override weak tape.
+
+Hard rule: rank 6 must show real stabilization, not just a lower same-day gain. Real stabilization means higher lows or a rebuilt base, controlled volume, VWAP/late-session acceptance, and a clear next-day buyer source. If recent data shows high-position heavy selling pressure, label the stock "兑现风险型/观察" or remove it, even when the industry news is hard.
+
 ## Seven-Candidate Structure
 
 The overnight output must contain exactly seven candidates, and ranks 6-7 are real execution candidates when they pass their gates, not casual bonus ideas.
@@ -247,6 +312,7 @@ Required traits for rank 6:
 - It has a hard catalyst: fresh news, policy, order, price rise, supply-demand change, capacity/project progress, industry event, or a company-level announcement.
 - The theme or same-chain leaders are already confirmed by market data, so tomorrow's funds have a reason to discover the stock.
 - It has clean announcement risk.
+- It must pass the high-position distribution trap filter: no recent blow-off run with repeated huge turnover, no post-limit-up failure, no heavy profit inventory that is likely to sell into tomorrow's repair.
 
 Rank 6 can be a real buy. Provide an entry area, abandon condition, suggested position, and next-day sell plan. If it lacks market confirmation, keep it as "观察/小仓试错" and do not put it into the three-stock execution combination.
 
@@ -267,11 +333,19 @@ Rank 7 can also be bought when it is stronger than ranks 3-5 on execution qualit
 
 ## Required Workflow
 
+0. Confirm the trading calendar before collecting candidates.
+   - Record the current date/time, latest completed A-share trading date, exact next A-share trading date, closed dates in between, and total calendar nights carried.
+   - Label the setup as normal overnight or cross-weekend/cross-holiday inventory.
+   - If the calendar is not confirmed by a reliable source, stop the executable workflow and output research-only observations.
+
 1. Update or read news first.
    - From the project root, run current news collection when network is available:
      `venv/bin/python main.py --source cls eastmoney_global cninfo ndrc --days 1 --log-level INFO`
    - Then summarize local data:
      `venv/bin/python skills/overnight_stock_picker/scripts/news_snapshot.py --data-dir data_dev --days 7 --limit 80`
+   - Read Serenity research cache when available:
+     `data_research/serenity/latest_watchlist.json`, `data_research/serenity/latest_report.md`, and `data_research/serenity/rejected_candidates.md`.
+   - Use the Serenity cache only as hard-logic background. Check its timestamp/news window and rejected reasons. If it is stale or missing, say so and continue with full-market analysis.
    - Then generate a market snapshot when AkShare is available:
      `venv/bin/python market_data/market_snapshot.py --mode overnight`
    - Read the latest valid market snapshot from `data_market/latest_overnight_snapshot.json`. If `data_market/latest_custom_snapshot.json` is newer, valid, and more relevant to the current late-session decision, use it instead and clearly label the data scope.
@@ -300,6 +374,9 @@ Rank 7 can also be bought when it is stronger than ranks 3-5 on execution qualit
 3. Build candidates only from the strongest themes.
    - Prefer front-row stocks, high-recognition stocks, sector leaders, comeback leaders, or capacity leaders with visible capital inflow.
    - Do not mechanically map every news item to stocks. Use news to build theme hypotheses, expand only high-impact and market-confirmed themes into full-market stock maps, and let current market data decide which stocks are leaders, cores, low-position catch-ups, or weak followers.
+   - For supply-chain hard themes, run a Serenity-style bottleneck pass before final ranking: identify the scarce industrial node, direct beneficiaries, capacity cores, and buyable substitutes. Treat the result as a hard-logic research list, not as the final universe.
+   - Merge the Serenity hard-logic layer with the full-market capital-confirmation layer. A Serenity name without late-session acceptance stays watchlist; a non-Serenity name with strong next-day buyer logic can still rank.
+   - Keep future-expectation names eligible when they have a clear next-day buyer path: tonight's story will ferment, front-row names are sealed, same-chain leaders confirm, or the stock shows quiet acceptance before full market discovery.
    - Add a reverse-scan step: for each fresh hard-news theme, search the full stock universe and board leaders. A stock that leads a relevant board, has steady gains, and has a fresh hard catalyst can be promoted into the seven-candidate list after execution checks.
    - Add a hidden-trend scan: search all tradable stocks in the same hard catalyst chain for trend names that did not rank high but are quietly strengthening. Give special attention to buyable equipment/material suppliers when the direct front row is sealed. A stock with moderate gain today can be a better overnight candidate than a crowded high-score name if tomorrow's buyer source is clearer.
    - Add a pre-ignition trend scan: search all tradable stocks for hard-logic names with 5/10/20-day trend alignment, higher lows, steady volume, and sector/theme confirmation. The goal is to catch Jin'an Guoji-style trend stocks before they become obvious limit-up names.
@@ -331,7 +408,9 @@ Rank 7 can also be bought when it is stronger than ranks 3-5 on execution qualit
 
 5. Output in Chinese, concise and decision-oriented.
    - Give exactly seven ranked candidate stocks.
-   - Start with the data scope: current time, latest market snapshot timestamp, whether board/fund endpoints were complete, which local historical market data was used, and how many recent trading days were compared.
+   - Start with a mandatory calendar header: current date/time, latest completed trading date, exact next trading date, closed dates in between, total calendar nights carried, and normal-overnight versus cross-weekend/cross-holiday classification.
+   - Then give the data scope: latest market snapshot timestamp, whether board/fund endpoints were complete, which local historical market data was used, and how many recent trading days were compared.
+   - In cross-weekend/cross-holiday output, use the exact next trading date instead of "tomorrow" throughout the execution and sell plan.
    - Include: stock name/code, current price and change, theme, analyst score, execution quality label, recommendation rank, premium type, overnight three-question judgment, tomorrow incremental-money source, red-exit path, red-exit failure signal, announcement-risk check, late-session acceptance in the actual observed window, multi-day market/trend evidence, why someone may buy it from the user tomorrow, suggested position, late-session entry area, and next-day sell plan.
    - If the stock is a pre-ignition trend logic target, explicitly state the trend evidence, catalyst path, and what would invalidate the pre-launch thesis.
    - Explicitly label rank 6 as "企稳点火票" and rank 7 as "最强涨停逻辑低位承接票".
