@@ -86,12 +86,14 @@ curl -H "Authorization: Bearer ${TOKEN}" http://127.0.0.1:8765/v1/manifest
 
 ## 本地连接服务器
 
-本地项目设置：
+客户端统一读取项目根目录 `.env`：
 
-```bash
-export STOCK_DATA_SERVER='http://服务器IP:8765'
-export STOCK_DATA_TOKEN='服务器 DATA_API_TOKEN'
+```dotenv
+STOCK_DATA_SERVER="http://服务器IP:8765"
+STOCK_DATA_TOKEN="服务器 DATA_API_TOKEN"
 ```
+
+该文件可随仓库同步。更换服务器时只需修改这里；进程环境变量仍可临时覆盖 `.env`。
 
 然后测试任意一个模式；三个 skill 共用同一份本地服务器缓存，不需要为了初始化连续运行三遍：
 

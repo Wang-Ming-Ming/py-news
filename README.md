@@ -216,6 +216,17 @@ GET /v1/market/snapshots/{snapshot_id}/export
 curl -H "Authorization: Bearer ${DATA_API_TOKEN}" "http://127.0.0.1:8765/v1/manifest"
 ```
 
+## 客户端服务器配置
+
+客户端和三个选股 skill 统一读取项目根目录的 `.env`：
+
+```dotenv
+STOCK_DATA_SERVER="http://服务器IP:8765"
+STOCK_DATA_TOKEN="服务器 DATA_API_TOKEN"
+```
+
+配置读取顺序为：进程环境变量、项目 `.env`、旧用户目录 JSON、默认本机地址。更换服务器时直接修改 `.env` 即可。
+
 ## 数据字段
 
 不同来源字段略有差异，但核心字段保持一致：
