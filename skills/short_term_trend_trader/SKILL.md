@@ -1,6 +1,6 @@
 ---
 name: short_term_trend_trader
-description: Use this skill when the user wants A-share short-term trend trading or position management over several trading days: decide what to buy, hold, add, reduce, or sell based on latest news, one-week message flow, market/sector strength, trend health, capital acceptance, and strict turn-weak sell discipline. This is for swing-like short-term trades, not same-day scalping or one-night-only overnight trades.
+description: 'Use this skill when the user wants A-share short-term trend trading or position management over several trading days: decide what to buy, hold, add, reduce, or sell based on latest news, one-week message flow, market/sector strength, trend health, capital acceptance, and strict turn-weak sell discipline. This is for swing-like short-term trades, not same-day scalping or one-night-only overnight trades.'
 ---
 
 # Short-Term Trend Trader
@@ -10,6 +10,14 @@ This skill handles the user's new short-term mode: hold a strong stock for sever
 The core question is: **is this stock still in a tradable short-term uptrend with a valid reason for funds to keep buying over the next 1-5 trading days?**
 
 This is not a promise of profit. Use probability language such as "趋势仍健康", "转弱信号未出现", "只适合小仓试错", "跌破关键位就退出", and "不满足触发条件不买".
+
+## Objective Server Data Boundary
+
+The server has no AI and supplies objective data only. It must not determine trend state, announcement risk, industry logic, candidates, or trades. At the start of analysis run:
+
+`venv/bin/python skills/short_term_trend_trader/scripts/server_context.py`
+
+This sync is mandatory and must be the first data action even when a local cache already exists. Connection settings resolve from `STOCK_DATA_SERVER`/`STOCK_DATA_TOKEN` first, then `~/.config/stock-data-client/config.json`. All three stock skills share the single `data_server_cache` directory and `data_server_cache/latest_context.json`; never create a skill-specific objective-data cache. Verify health/calendar/snapshot time, expected counts, `sync_duration_seconds`, `using_cached_data`, and that the context `mode` matches this run, then query objective multi-day fields and fetch relevant original news/announcement text by ID. Keep all trend, thesis, risk, and position decisions in Codex. If the server is unavailable, use a complete local cache only with an explicit timestamp warning.
 
 ## Strategy Boundary
 
@@ -34,26 +42,21 @@ Do not recommend based on the user's holdings, historical chat, or preference. F
 
 ## Data Workflow
 
-Before analysis, use the newest valid local data available:
+Before analysis, use the newest valid server-backed local cache available:
 
-1. Read/update news when network is available:
-   `venv/bin/python main.py --source cls eastmoney_global cninfo ndrc --days 7 --log-level INFO`
-2. Summarize local news:
-   `venv/bin/python skills/overnight_stock_picker/scripts/news_snapshot.py --data-dir data_dev --days 7 --limit 120`
-3. Read social market signals when available:
+1. Run `venv/bin/python skills/short_term_trend_trader/scripts/server_context.py` and verify the resulting context, health, calendar, and snapshot version.
+2. Use only the server-backed news/announcement indexes under `data_server_cache` and fetch relevant original text by ID. Do not run local collectors or read `data_dev`.
+4. Read social market signals when available:
    `data_social/latest_social_signals.json`
-4. Read Serenity hard-logic research cache when available:
+5. Read Serenity hard-logic research cache when available:
    - `data_research/serenity/latest_watchlist.json`
    - `data_research/serenity/latest_report.md`
    - `data_research/serenity/rejected_candidates.md`
    Treat it as supplemental knowledge, not a closed universe. It helps identify hard-logic trend names and rejected weak logic, but every recommendation must still pass full-market trend and capital confirmation.
-5. Read the latest valid market snapshot:
-   - Prefer `data_market/latest_custom_snapshot.json` if it is the freshest valid file.
-   - Otherwise use `data_market/latest_morning_snapshot.json` or `data_market/latest_overnight_snapshot.json`.
-   - Never use failed snapshots or `stock_count=0` as market truth.
-6. Review recent market history when available: the latest 3-7 trading days under `data_market/YYYY-MM-DD/` and any `data_market/research/` files.
+6. Read the latest valid snapshot, features, and pools referenced by `data_server_cache/latest_context.json`; never use legacy local `data_market` files.
+7. Review recent objective market history only from `data_server_cache/archive/YYYY-MM-DD/market/`.
 
-If fresh data collection fails, use the latest saved files and clearly state the data timestamp.
+If server sync fails, use only the latest complete context already under `data_server_cache`, clearly state its timestamp and age, and lower confidence when stale.
 
 ## Full-Market Selection
 
@@ -66,6 +69,16 @@ Build candidates in this order:
 3. Filter by tradability: default exclude STAR Market `688/689`, Beijing Stock Exchange-style restricted names, ST/delisting risk, and names requiring 500K RMB permission. Keep caution on `300/301` unless the user allows them.
 4. Evaluate trend health and position: early trend, confirmed trend, acceleration, healthy pullback, climax, or broken trend.
 5. Validate with current market data: sector strength, leader confirmation, turnover, fund flow, limit-up anchors, relative strength, and recent support.
+
+## Pre-Board and Source-Coverage Pass
+
+Use [pre-board discovery](../references/pre_board_discovery.md) before final ranking.
+
+- Track scheduled catalysts by both publication date and event date, and re-surface them near T-3/T-1/T0.
+- When a first/second-board anchor confirms a product or bottleneck, reverse-map ordinary tradable companies with pre-cutoff evidence of real capacity or customers at that node.
+- Check issuer official news, investor interactions, and industry-event notices for leading trend candidates when the server feed may be incomplete.
+- Keep low-position weak-tape peers in a scout lane until trend, volume, and sector confirmation appear.
+- A later announcement can validate future continuation but cannot be backfilled to claim an earlier move was predicted.
 
 ## Bottleneck Research Gate
 

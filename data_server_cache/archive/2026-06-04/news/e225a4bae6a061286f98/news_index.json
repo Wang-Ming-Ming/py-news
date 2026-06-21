@@ -1,0 +1,23 @@
+{
+  "dataset_version": "e225a4bae6a061286f98",
+  "market_date": "2026-06-04",
+  "expected_count": 1,
+  "actual_count": 1,
+  "is_complete": true,
+  "data": [
+    {
+      "id": "0adc16eabdc77b6f844c0761",
+      "source": "ndrc",
+      "title": "2026年6月4日国内成品油价格调整",
+      "publish_time": "2026-06-04T10:23:50Z",
+      "publish_time_bj": "2026-06-04T10:23:50+08:00",
+      "source_time": "2026-06-04T10:23:50+08:00",
+      "crawled_at": "2026-06-20T23:54:25+08:00",
+      "collected_at": "2026-06-20T23:54:25+08:00",
+      "url": "https://www.ndrc.gov.cn/xwdt/xwfb/202606/t20260604_1405695.html",
+      "source_urls": [
+        "https://www.ndrc.gov.cn/xwdt/xwfb/202606/t20260604_1405695.html"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "snapshot_id": "20260525_historical_eb1380649b56203e",
+  "dataset": "features",
+  "etag": "\"e8e4517cb99029da764ed2e1e43f1505ac5772ae107c1b433432ff72da61709c\"",
+  "checksum": "e8e4517cb99029da764ed2e1e43f1505ac5772ae107c1b433432ff72da61709c",
+  "expected_count": 5189,
+  "actual_count": 5189,
+  "size_bytes": 468319,
+  "path": "/Users/bawangchajiyouxiangongsi/Desktop/py-study/data_server_cache/archive/2026-05-25/market/20260525_historical_eb1380649b56203e/features.ndjson.gz",
+  "reused": false
+}

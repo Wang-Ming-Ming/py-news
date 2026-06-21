@@ -1,0 +1,23 @@
+{
+  "dataset_version": "689ff46fd716b05e2476",
+  "market_date": "2026-05-26",
+  "expected_count": 1,
+  "actual_count": 1,
+  "is_complete": true,
+  "data": [
+    {
+      "id": "0f79b65823616cfcdedec66f",
+      "source": "ndrc",
+      "title": "国家发展改革委国民经济综合司关于2026年度研究课题入选单位的公告",
+      "publish_time": "2026-05-26T15:36:01Z",
+      "publish_time_bj": "2026-05-26T15:36:01+08:00",
+      "source_time": "2026-05-26T15:36:01+08:00",
+      "crawled_at": "2026-06-20T23:54:39+08:00",
+      "collected_at": "2026-06-20T23:54:39+08:00",
+      "url": "https://www.ndrc.gov.cn/xwdt/tzgg/202605/t20260526_1405475.html",
+      "source_urls": [
+        "https://www.ndrc.gov.cn/xwdt/tzgg/202605/t20260526_1405475.html"
+      ]
+    }
+  ]
+}

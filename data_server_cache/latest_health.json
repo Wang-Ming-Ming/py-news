@@ -1,0 +1,241 @@
+{
+  "status": "ok",
+  "server_time": "2026-06-21T13:20:22+08:00",
+  "timezone": "Asia/Shanghai",
+  "calendar": {
+    "current_time": "2026-06-21T13:20:22+08:00",
+    "current_date": "2026-06-21",
+    "is_trade_day": false,
+    "previous_trade_day": "2026-06-18",
+    "next_trade_day": "2026-06-22",
+    "calendar": {
+      "available": true,
+      "source": "akshare.tool_trade_date_hist_sina",
+      "fetched_at": "2026-06-20T23:51:38+08:00",
+      "trade_date_count": 8797,
+      "first_trade_date": "1990-12-19",
+      "last_trade_date": "2026-12-31",
+      "error": null
+    },
+    "override": {
+      "path": "/opt/stock-data/market_calendar_overrides.json",
+      "covered_years": [
+        2026
+      ],
+      "closed_date_count": 19,
+      "open_date_count": 0
+    }
+  },
+  "sources": {
+    "cls": {
+      "files": 16,
+      "items": 6711,
+      "newest_publish_time": "2026-06-21T12:53:05+08:00",
+      "coverage_start_date": "2026-06-06",
+      "coverage_end_date": "2026-06-21",
+      "covered_calendar_days": 16,
+      "newest_file_mtime": "2026-06-21T12:56:29+08:00",
+      "last_success_at": "2026-06-21T13:11:30+08:00",
+      "consecutive_failures": 0,
+      "last_error": null,
+      "paused_until": null,
+      "age_minutes": 8.88,
+      "stale_after_minutes": 30,
+      "missing": false,
+      "is_stale": false
+    },
+    "cninfo": {
+      "files": 14,
+      "items": 17830,
+      "newest_publish_time": "2026-06-19T00:00:00+08:00",
+      "coverage_start_date": "2026-06-06",
+      "coverage_end_date": "2026-06-19",
+      "covered_calendar_days": 14,
+      "newest_file_mtime": "2026-06-21T11:37:58+08:00",
+      "last_success_at": "2026-06-21T12:39:26+08:00",
+      "consecutive_failures": 0,
+      "last_error": null,
+      "paused_until": null,
+      "age_minutes": 40.95,
+      "stale_after_minutes": 180,
+      "missing": false,
+      "is_stale": false
+    },
+    "eastmoney_global": {
+      "files": 16,
+      "items": 8869,
+      "newest_publish_time": "2026-06-21T12:53:34+08:00",
+      "coverage_start_date": "2026-06-06",
+      "coverage_end_date": "2026-06-21",
+      "covered_calendar_days": 16,
+      "newest_file_mtime": "2026-06-21T13:06:40+08:00",
+      "last_success_at": "2026-06-21T13:06:40+08:00",
+      "consecutive_failures": 0,
+      "last_error": null,
+      "paused_until": null,
+      "age_minutes": 13.71,
+      "stale_after_minutes": 60,
+      "missing": false,
+      "is_stale": false
+    },
+    "ndrc": {
+      "files": 8,
+      "items": 36,
+      "newest_publish_time": "2026-06-18T16:41:53+08:00",
+      "coverage_start_date": "2026-06-06",
+      "coverage_end_date": "2026-06-18",
+      "covered_calendar_days": 13,
+      "newest_file_mtime": "2026-06-20T23:55:38+08:00",
+      "last_success_at": "2026-06-21T11:41:20+08:00",
+      "consecutive_failures": 0,
+      "last_error": null,
+      "paused_until": null,
+      "age_minutes": 99.05,
+      "stale_after_minutes": 480,
+      "missing": false,
+      "is_stale": false
+    }
+  },
+  "collector": {
+    "schema_version": "1.0",
+    "updated_at": "2026-06-21T13:11:30+08:00",
+    "sources": {
+      "cls": {
+        "consecutive_failures": 0,
+        "last_attempt_at": "2026-06-21T13:11:30+08:00",
+        "last_success_at": "2026-06-21T13:11:30+08:00",
+        "last_failure_at": null,
+        "last_error": null,
+        "paused_until": null
+      },
+      "eastmoney_global": {
+        "consecutive_failures": 0,
+        "last_attempt_at": "2026-06-21T13:06:40+08:00",
+        "last_success_at": "2026-06-21T13:06:40+08:00",
+        "last_failure_at": null,
+        "last_error": null,
+        "paused_until": null
+      },
+      "cninfo": {
+        "consecutive_failures": 0,
+        "last_attempt_at": "2026-06-21T12:39:26+08:00",
+        "last_success_at": "2026-06-21T12:39:26+08:00",
+        "last_failure_at": null,
+        "last_error": null,
+        "paused_until": null
+      },
+      "ndrc": {
+        "consecutive_failures": 0,
+        "last_attempt_at": "2026-06-21T11:41:20+08:00",
+        "last_success_at": "2026-06-21T11:41:20+08:00",
+        "last_failure_at": null,
+        "last_error": null,
+        "paused_until": null
+      }
+    }
+  },
+  "history_bootstrap": {
+    "schema_version": "1.0",
+    "status": "complete",
+    "started_at": "2026-06-21T11:26:18+08:00",
+    "updated_at": "2026-06-21T11:26:18+08:00",
+    "requested_trading_days": 20,
+    "minimum_required_days": 15,
+    "target_dates": [
+      "2026-05-22",
+      "2026-05-25",
+      "2026-05-26",
+      "2026-05-27",
+      "2026-05-28",
+      "2026-05-29",
+      "2026-06-01",
+      "2026-06-02",
+      "2026-06-03",
+      "2026-06-04",
+      "2026-06-05",
+      "2026-06-08",
+      "2026-06-09",
+      "2026-06-10",
+      "2026-06-11",
+      "2026-06-12",
+      "2026-06-15",
+      "2026-06-16",
+      "2026-06-17",
+      "2026-06-18"
+    ],
+    "completed_dates": [
+      "2026-05-22",
+      "2026-05-25",
+      "2026-05-26",
+      "2026-05-27",
+      "2026-05-28",
+      "2026-05-29",
+      "2026-06-01",
+      "2026-06-02",
+      "2026-06-03",
+      "2026-06-04",
+      "2026-06-05",
+      "2026-06-08",
+      "2026-06-09",
+      "2026-06-10",
+      "2026-06-11",
+      "2026-06-12",
+      "2026-06-15",
+      "2026-06-16",
+      "2026-06-17",
+      "2026-06-18"
+    ],
+    "missing_dates": [],
+    "stock_universe_count": 0,
+    "stocks_processed": 0,
+    "stocks_downloaded": 0,
+    "stocks_from_cache": 0,
+    "stock_errors": [],
+    "history_provider_config": "auto",
+    "history_provider_active": null,
+    "history_provider_counts": {},
+    "is_ready": true,
+    "available_complete_dates": [
+      "2026-05-22",
+      "2026-05-25",
+      "2026-05-26",
+      "2026-05-27",
+      "2026-05-28",
+      "2026-05-29",
+      "2026-06-01",
+      "2026-06-02",
+      "2026-06-03",
+      "2026-06-04",
+      "2026-06-05",
+      "2026-06-08",
+      "2026-06-09",
+      "2026-06-10",
+      "2026-06-11",
+      "2026-06-12",
+      "2026-06-15",
+      "2026-06-16",
+      "2026-06-17",
+      "2026-06-18"
+    ],
+    "available_complete_day_count": 20
+  },
+  "latest_market": {
+    "morning": null,
+    "midday": null,
+    "overnight": null,
+    "custom": null
+  },
+  "market_status": {
+    "latest_source_time": null,
+    "latest_stock_count": 0,
+    "delay_minutes": null,
+    "missing": true,
+    "source_status": {},
+    "missing_interfaces": []
+  },
+  "storage": {
+    "total_bytes": 63290032128,
+    "used_bytes": 5378101248,
+    "free_bytes": 55211098112
+  }
+}

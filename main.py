@@ -31,6 +31,7 @@ import sys
 import argparse
 import logging
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import List, Dict, Any, Optional
 
 # 导入配置
@@ -76,7 +77,7 @@ from storage.storage_manager import StorageManager
 from storage.incremental_updater import IncrementalUpdater
 
 # 导入工具
-from utils.logger import get_logger, log_statistics
+from utils.logger import cleanup_old_logs, get_logger, log_statistics
 from utils.retry import FailureTracker
 from utils.exceptions import DataCollectorException
 
@@ -111,6 +112,10 @@ class DataCollector:
         
         # 创建必要的目录
         create_directories()
+        cleanup_old_logs(
+            LOGGING_CONFIG.get("log_dir", "./logs"),
+            int(LOGGING_CONFIG.get("retention_days", 30)),
+        )
         
         # 初始化日志系统
         self.logger = get_logger(__name__)
@@ -279,13 +284,45 @@ class DataCollector:
             # 获取采集时间范围
             start_date, end_date = self.incremental_updater.get_time_range(
                 source,
-                default_days=self.default_days or INCREMENTAL_CONFIG.get("default_days", 7)
+                default_days=self.default_days or INCREMENTAL_CONFIG.get("default_days", 15)
             )
+
+            history_days = self.default_days or INCREMENTAL_CONFIG.get("default_days", 15)
+            requested_start = datetime.now() - timedelta(days=history_days)
+            source_dir = Path(self.storage_manager.base_path) / source
+            if source in {"cls", "eastmoney_global", "cninfo", "ndrc"}:
+                archived_dates = []
+                for path in source_dir.glob("20??-??-??.json") if source_dir.exists() else []:
+                    try:
+                        archived_dates.append(datetime.strptime(path.stem, "%Y-%m-%d").date())
+                    except ValueError:
+                        continue
+                if not archived_dates or min(archived_dates) > (requested_start + timedelta(days=1)).date():
+                    start_date = requested_start
             
             # 执行采集
-            if source in ("cls", "eastmoney_global"):
-                # 快讯类爬虫使用 run_once 方法
-                collected_data = spider.run_once()
+            if source == "cls":
+                collected_data = spider.run_once(start_date=start_date)
+            elif source == "eastmoney_global":
+                collected_data = spider.run_once(start_date=start_date)
+            elif source == "cninfo":
+                collected_data = []
+                aggregate_stats = {
+                    "total_fetched": 0,
+                    "filtered_count": 0,
+                    "duplicate_count": 0,
+                    "saved_count": 0,
+                    "error_count": 0,
+                }
+                current_day = start_date.date()
+                while current_day <= end_date.date():
+                    day_value = datetime.combine(current_day, datetime.min.time())
+                    collected_data.extend(spider.run(day_value, day_value, max_pages=500))
+                    day_stats = spider.get_stats()
+                    for key in aggregate_stats:
+                        aggregate_stats[key] += int(day_stats.get(key, 0))
+                    current_day += timedelta(days=1)
+                spider.stats = aggregate_stats
             else:
                 # 发改委和证券信息网爬虫使用 run 方法
                 collected_data = spider.run(start_date, end_date)
@@ -352,7 +389,7 @@ class DataCollector:
             self.failure_tracker.record_failure(source)
             return False
     
-    def run_all_spiders(self, spider_names: Optional[List[str]] = None):
+    def run_all_spiders(self, spider_names: Optional[List[str]] = None) -> bool:
         """
         运行所有爬虫或指定的爬虫
         
@@ -371,7 +408,7 @@ class DataCollector:
             if invalid_names:
                 self.logger.error(f"无效的爬虫名称: {', '.join(invalid_names)}")
                 self.logger.info(f"可用的爬虫: {', '.join(self.spiders.keys())}")
-                return
+                return False
         
         self.logger.info(f"准备运行 {len(spider_names)} 个爬虫: {', '.join(spider_names)}")
         
@@ -400,6 +437,7 @@ class DataCollector:
         
         # 输出最终统计信息
         self._print_final_statistics(success_count, len(spider_names))
+        return success_count == len(spider_names)
     
     def _save_state(self):
         """
@@ -423,7 +461,7 @@ class DataCollector:
         """
         清理超过保留天数的数据文件。
         """
-        retention_days = STORAGE_CONFIG.get("retention_days", 7)
+        retention_days = STORAGE_CONFIG.get("retention_days", 0)
         try:
             self.storage_manager.cleanup_old_files(retention_days)
         except Exception as e:
@@ -541,6 +579,11 @@ def parse_arguments():
         type=int,
         help="首次运行或无增量状态时，默认采集最近 N 天的数据"
     )
+
+    parser.add_argument(
+        "--data-dir",
+        help="覆盖新闻、公告、增量状态和去重索引的数据目录",
+    )
     
     parser.add_argument(
         "--config",
@@ -582,16 +625,22 @@ def main():
         LOGGING_CONFIG["console_level"] = args.log_level
         config.LOGGING_CONFIG["log_level"] = args.log_level
         config.LOGGING_CONFIG["console_level"] = args.log_level
+
+    if args.data_dir:
+        data_dir = str(Path(args.data_dir))
+        STORAGE_CONFIG["base_path"] = data_dir
+        config.STORAGE_CONFIG["base_path"] = data_dir
+        INCREMENTAL_CONFIG["state_file"] = str(Path(data_dir) / ".incremental_state.json")
+        DEDUP_CONFIG["index_file"] = str(Path(data_dir) / ".dedup_index.json")
     
     try:
         # 创建数据采集器
         collector = DataCollector(default_days=args.days)
         
         # 运行爬虫
-        collector.run_all_spiders(spider_names=spider_names)
+        success = collector.run_all_spiders(spider_names=spider_names)
         
-        # 正常退出
-        sys.exit(0)
+        sys.exit(0 if success else 2)
         
     except KeyboardInterrupt:
         print("\n收到中断信号，正在退出...")

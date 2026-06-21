@@ -1,0 +1,37 @@
+{
+  "dataset_version": "5e41d1d03d9b8429dfb6",
+  "market_date": "2026-05-28",
+  "expected_count": 2,
+  "actual_count": 2,
+  "is_complete": true,
+  "data": [
+    {
+      "id": "9cf08ede79a267362c030204",
+      "source": "ndrc",
+      "title": "国家发展改革委区域开放司主要负责同志 拜会莫桑比克驻华大使",
+      "publish_time": "2026-05-28T10:38:46Z",
+      "publish_time_bj": "2026-05-28T10:38:46+08:00",
+      "source_time": "2026-05-28T10:38:46+08:00",
+      "crawled_at": "2026-06-20T23:54:10+08:00",
+      "collected_at": "2026-06-20T23:54:10+08:00",
+      "url": "https://www.ndrc.gov.cn/fzggw/jgsj/kfs/sjdt/202605/t20260528_1405522.html",
+      "source_urls": [
+        "https://www.ndrc.gov.cn/fzggw/jgsj/kfs/sjdt/202605/t20260528_1405522.html"
+      ]
+    },
+    {
+      "id": "6443c3f885108a3b3c082244",
+      "source": "ndrc",
+      "title": "关于印发贯彻实施民营经济促进法典型案例(第一批)的通知",
+      "publish_time": "2026-05-28T09:25:10Z",
+      "publish_time_bj": "2026-05-28T09:25:10+08:00",
+      "source_time": "2026-05-28T09:25:10+08:00",
+      "crawled_at": "2026-06-20T23:54:55+08:00",
+      "collected_at": "2026-06-20T23:54:55+08:00",
+      "url": "https://www.ndrc.gov.cn/xwdt/tzgg/202605/t20260528_1405519.html",
+      "source_urls": [
+        "https://www.ndrc.gov.cn/xwdt/tzgg/202605/t20260528_1405519.html"
+      ]
+    }
+  ]
+}

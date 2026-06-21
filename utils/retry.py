@@ -101,7 +101,23 @@ class RetryHandler:
                     )
                 
                 return result
-                
+            except APIException as e:
+                last_exception = e
+                if e.status_code in (403, 429):
+                    self.logger.warning(
+                        f"上游返回 HTTP {e.status_code}，本轮不继续重试，交由来源级退避处理"
+                    )
+                    raise
+                if attempt < self.max_retries:
+                    delay = self.delays[attempt]
+                    self.logger.warning(
+                        f"执行失败: {func.__name__} "
+                        f"(第 {attempt + 1}/{self.max_retries + 1} 次尝试) "
+                        f"| 错误: {str(e)} | {delay} 秒后重试..."
+                    )
+                    time.sleep(delay)
+                else:
+                    self.logger.error(f"执行失败，已达最大重试次数: {func.__name__}")
             except Exception as e:
                 last_exception = e
                 

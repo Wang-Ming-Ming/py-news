@@ -1,0 +1,23 @@
+{
+  "market_date": "2026-06-02",
+  "archive_date_dir": "/Users/bawangchajiyouxiangongsi/Desktop/py-study/data_server_cache/archive/2026-06-02",
+  "snapshot_count": 1,
+  "snapshots": [
+    {
+      "snapshot_id": "20260602_historical_4576f46d48a9b3b5",
+      "path": "/Users/bawangchajiyouxiangongsi/Desktop/py-study/data_server_cache/archive/2026-06-02/market/20260602_historical_4576f46d48a9b3b5/stocks.ndjson.gz",
+      "size_bytes": 262015,
+      "checksum": "b767f9475af69bf3aa77c96f7e8ce9eb69f77b34def3a3caa034322d3c593d9c",
+      "expected_count": 5189
+    }
+  ],
+  "news_count": 2,
+  "announcement_count": 0,
+  "news_archive_dirs": [
+    "/Users/bawangchajiyouxiangongsi/Desktop/py-study/data_server_cache/archive/2026-06-02/news/be84776254e8cdfec9b5"
+  ],
+  "announcement_archive_dirs": [
+    "/Users/bawangchajiyouxiangongsi/Desktop/py-study/data_server_cache/archive/2026-06-02/news/e3b0c44298fc1c149afb"
+  ],
+  "is_complete": true
+}

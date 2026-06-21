@@ -1,0 +1,16 @@
+{
+  "snapshot_id": "20260604_historical_371de3b98d674ddf",
+  "mode": "historical",
+  "captured_at": "2026-06-21T10:45:03+08:00",
+  "source_time": "2026-06-04T15:00:00+08:00",
+  "market_date": "20260604",
+  "window_valid": true,
+  "stock_count": 5193,
+  "tradeable_stock_count": 3027,
+  "expected_count": 5193,
+  "actual_count": 5193,
+  "is_complete": true,
+  "size_bytes": 3160556,
+  "checksum": "763c79e50726e194c07995e254b2e217644bdcf94f92e035d04deb79cbdd9a6b",
+  "download_url": "/v1/market/snapshots/20260604_historical_371de3b98d674ddf/export?dataset=stocks"
+}

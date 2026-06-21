@@ -1,0 +1,20 @@
+[Unit]
+Description=Initial A-share historical market data backfill
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=__SERVICE_USER__
+WorkingDirectory=__APP_DIR__
+EnvironmentFile=/etc/stock-data.env
+ExecStart=__APP_DIR__/venv/bin/python __APP_DIR__/market_data/history_bootstrap.py --output-dir __APP_DIR__/data_market --calendar-cache __APP_DIR__/data_market/trading_calendar.json --trading-days ${MARKET_BOOTSTRAP_TRADING_DAYS} --minimum-days ${MARKET_BOOTSTRAP_MINIMUM_DAYS}
+TimeoutStartSec=infinity
+RemainAfterExit=yes
+Restart=on-failure
+RestartSec=300
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

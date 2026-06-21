@@ -1,0 +1,51 @@
+{
+  "dataset_version": "8ebbcda7971a5ecbdf99",
+  "market_date": "2026-05-29",
+  "expected_count": 3,
+  "actual_count": 3,
+  "is_complete": true,
+  "data": [
+    {
+      "id": "652ae0f3087ff7255d05e29a",
+      "source": "ndrc",
+      "title": "沈竹林副主任会见欧洲议会对华关系代表团团长埃罗格鲁一行",
+      "publish_time": "2026-05-29T17:09:04Z",
+      "publish_time_bj": "2026-05-29T17:09:04+08:00",
+      "source_time": "2026-05-29T17:09:04+08:00",
+      "crawled_at": "2026-06-20T23:54:47+08:00",
+      "collected_at": "2026-06-20T23:54:47+08:00",
+      "url": "https://www.ndrc.gov.cn/xwdt/xwfb/202605/t20260529_1405549.html",
+      "source_urls": [
+        "https://www.ndrc.gov.cn/xwdt/xwfb/202605/t20260529_1405549.html"
+      ]
+    },
+    {
+      "id": "405b58bf8ec0633285089e8f",
+      "source": "ndrc",
+      "title": "周海兵副主任会见德国联邦经济和能源部部长赖歇",
+      "publish_time": "2026-05-29T09:37:16Z",
+      "publish_time_bj": "2026-05-29T09:37:16+08:00",
+      "source_time": "2026-05-29T09:37:16+08:00",
+      "crawled_at": "2026-06-20T23:54:41+08:00",
+      "collected_at": "2026-06-20T23:54:41+08:00",
+      "url": "https://www.ndrc.gov.cn/xwdt/xwfb/202605/t20260529_1405536.html",
+      "source_urls": [
+        "https://www.ndrc.gov.cn/xwdt/xwfb/202605/t20260529_1405536.html"
+      ]
+    },
+    {
+      "id": "d64e1955939ea3dc408a8027",
+      "source": "ndrc",
+      "title": "周海兵副主任会见莫桑比克规划和发展部部长瓦拉",
+      "publish_time": "2026-05-29T09:30:18Z",
+      "publish_time_bj": "2026-05-29T09:30:18+08:00",
+      "source_time": "2026-05-29T09:30:18+08:00",
+      "crawled_at": "2026-06-20T23:54:00+08:00",
+      "collected_at": "2026-06-20T23:54:00+08:00",
+      "url": "https://www.ndrc.gov.cn/xwdt/xwfb/202605/t20260529_1405535.html",
+      "source_urls": [
+        "https://www.ndrc.gov.cn/xwdt/xwfb/202605/t20260529_1405535.html"
+      ]
+    }
+  ]
+}

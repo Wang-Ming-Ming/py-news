@@ -27,6 +27,7 @@ from filters.keyword_filter import KeywordFilter
 from storage.deduplicator import Deduplicator
 from storage.storage_manager import StorageManager
 from utils.retry import RetryHandler
+from utils.request_pacer import RequestPacer
 from utils.exceptions import NetworkException, APIException, ParseException
 
 
@@ -106,6 +107,8 @@ class CNInfoSpider:
         self.keyword_filter = keyword_filter
         self.deduplicator = deduplicator
         self.storage_manager = storage_manager
+        self.session = requests.Session()
+        self.request_pacer = RequestPacer(config.get("min_request_interval", 1.0))
         
         # 初始化重试处理器
         retry_times = config.get("retry_times", 3)
@@ -182,10 +185,11 @@ class CNInfoSpider:
                 default_headers.update(headers)
             
             self.logger.debug(f"发送请求: {method} {url}")
+            self.request_pacer.wait()
             
             # 发送请求
             if method.upper() == "GET":
-                response = requests.get(
+                response = self.session.get(
                     url,
                     params=params,
                     headers=default_headers,
@@ -193,7 +197,7 @@ class CNInfoSpider:
                     allow_redirects=True
                 )
             elif method.upper() == "POST":
-                response = requests.post(
+                response = self.session.post(
                     url,
                     params=params,
                     data=data,
@@ -519,7 +523,7 @@ class CNInfoSpider:
         start_date: datetime,
         end_date: datetime,
         stock_code: Optional[str] = None,
-        max_pages: int = 10
+        max_pages: int = 500
     ) -> List[Dict[str, Any]]:
         """
         执行完整的采集流程
@@ -560,6 +564,7 @@ class CNInfoSpider:
         
         try:
             # 遍历多个页面
+            seen_pages: set[str] = set()
             for page_num in range(1, max_pages + 1):
                 self.logger.info(f"处理第 {page_num} 页")
                 
@@ -576,6 +581,14 @@ class CNInfoSpider:
                     if not announcements:
                         self.logger.info(f"第 {page_num} 页没有公告，停止翻页")
                         break
+                    page_identity = "|".join(
+                        str(item.get("announcement_id") or item.get("url") or item.get("title"))
+                        for item in announcements
+                    )
+                    if page_identity in seen_pages:
+                        self.logger.warning("巨潮公告页面重复，停止翻页")
+                        break
+                    seen_pages.add(page_identity)
                     
                     # 处理每条公告
                     for announcement_data in announcements:
@@ -622,6 +635,10 @@ class CNInfoSpider:
                             f"{announcement_data.get('stock_code', 'N/A')} - "
                             f"{announcement_data.get('title', 'N/A')[:30]}..."
                         )
+
+                    if len(announcements) < 30:
+                        self.logger.info("巨潮公告已到最后一页")
+                        break
                 
                 except Exception as e:
                     self.logger.error(

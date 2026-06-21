@@ -91,7 +91,7 @@ def _pool_record_by_code(records: list[dict[str, Any]]) -> dict[str, dict[str, A
     return {get_code(record): record for record in records if get_code(record)}
 
 
-def _pool_industry_heat(
+def _pool_industry_counts(
     limit_up_records: list[dict[str, Any]],
     previous_limit_records: list[dict[str, Any]],
     strong_records: list[dict[str, Any]],
@@ -100,7 +100,6 @@ def _pool_industry_heat(
     industries: dict[str, dict[str, Any]] = defaultdict(
         lambda: {
             "name": "",
-            "score": 0,
             "limit_up_count": 0,
             "previous_limit_count": 0,
             "strong_count": 0,
@@ -109,7 +108,7 @@ def _pool_industry_heat(
         }
     )
 
-    def add(records: list[dict[str, Any]], field: str, score: int) -> None:
+    def add(records: list[dict[str, Any]], field: str) -> None:
         for record in records:
             industry = text(record, ["所属行业", "行业", "板块名称"])
             if not industry:
@@ -117,7 +116,6 @@ def _pool_industry_heat(
             item = industries[industry]
             item["name"] = industry
             item[field] += 1
-            item["score"] += score
             if len(item["leaders"]) < 8:
                 item["leaders"].append(
                     {
@@ -127,11 +125,20 @@ def _pool_industry_heat(
                     }
                 )
 
-    add(limit_up_records, "limit_up_count", 10)
-    add(previous_limit_records, "previous_limit_count", 5)
-    add(strong_records, "strong_count", 3)
-    add(broken_limit_records, "broken_limit_count", -4)
-    return sorted(industries.values(), key=lambda item: item["score"], reverse=True)[:50]
+    add(limit_up_records, "limit_up_count")
+    add(previous_limit_records, "previous_limit_count")
+    add(strong_records, "strong_count")
+    add(broken_limit_records, "broken_limit_count")
+    return sorted(
+        industries.values(),
+        key=lambda item: (
+            item["limit_up_count"],
+            item["previous_limit_count"],
+            item["strong_count"],
+            -item["broken_limit_count"],
+        ),
+        reverse=True,
+    )[:100]
 
 
 def _score_overnight_candidate(
@@ -399,90 +406,28 @@ def derive_snapshot(frames: dict[str, dict[str, Any]], allow_chinext: bool = Fal
     previous_limit_records = frames.get("previous_limit_up_pool", {}).get("records", [])
     strong_records = frames.get("strong_pool", {}).get("records", [])
     broken_limit_records = frames.get("broken_limit_pool", {}).get("records", [])
-    pool_industry_heat = _pool_industry_heat(
+    pool_industry_counts = _pool_industry_counts(
         limit_up_records,
         previous_limit_records,
         strong_records,
         broken_limit_records,
     )
-    pool_industry_heat_by_name = {item["name"]: item for item in pool_industry_heat}
 
     gainers = [_compact_stock(record) for record in top(tradeable, ["涨跌幅"], n=50)]
     by_amount = [_compact_stock(record) for record in top(tradeable, ["成交额"], n=50)]
     by_turnover = [_compact_stock(record) for record in top(tradeable, ["换手率"], n=50)]
     by_volume_ratio = [_compact_stock(record) for record in top(tradeable, ["量比"], n=50)]
-    active_candidates = [
-        _compact_stock(record)
-        for record in tradeable
-        if -3 <= number(record, ["涨跌幅"]) <= 9.7
-        and number(record, ["成交额"]) >= 100_000_000
-        and (number(record, ["量比"]) >= 1 or number(record, ["量比"]) == 0)
-    ]
-    active_candidates.sort(
-        key=lambda item: (
-            item["pct"] * 2
-            + min(item["turnover"], 30) * 0.2
-            + min(item["volume_ratio"], 10) * 0.8
-            + min(item["amount"] / 1_000_000_000, 10)
-        ),
-        reverse=True,
-    )
-
     industry_boards = frames.get("industry_boards", {}).get("records", [])
     concept_boards = frames.get("concept_boards", {}).get("records", [])
     industry_funds = frames.get("industry_fund_flow_today", {}).get("records", [])
     concept_funds = frames.get("concept_fund_flow_today", {}).get("records", [])
     stock_funds = frames.get("individual_fund_flow_today", {}).get("records", [])
-    fund_by_code = _fund_flow_by_code(stock_funds)
-    limit_up_codes = _code_set(limit_up_records)
-    previous_limit_by_code = _pool_record_by_code(previous_limit_records)
-    strong_by_code = _pool_record_by_code(strong_records)
-    broken_by_code = _pool_record_by_code(broken_limit_records)
     up_count = sum(1 for record in stock_records if number(record, ["涨跌幅"]) > 0)
     down_count = sum(1 for record in stock_records if number(record, ["涨跌幅"]) < 0)
     limit_up_count = len(limit_up_records)
     broken_limit_count = len(broken_limit_records)
     market_breadth = round(up_count / max(up_count + down_count, 1), 4)
     broken_limit_ratio = round(broken_limit_count / max(limit_up_count + broken_limit_count, 1), 4)
-    market_context = {
-        "market_breadth": market_breadth,
-        "broken_limit_ratio": broken_limit_ratio,
-    }
-
-    overnight_candidates = []
-    for record in tradeable:
-        code = get_code(record)
-        if not code or code in limit_up_codes:
-            continue
-        pct = number(record, ["涨跌幅"])
-        amount = number(record, ["成交额"])
-        if not (-2.5 <= pct <= 9.3 and amount >= 80_000_000):
-            continue
-        if not is_tradeable_main_market(record, allow_chinext=allow_chinext):
-            continue
-        stock = _compact_stock(record)
-        overnight_candidates.append(
-            _score_overnight_candidate(
-                stock,
-                fund_by_code.get(code),
-                previous_limit_by_code.get(code),
-                strong_by_code.get(code),
-                broken_by_code.get(code),
-                pool_industry_heat_by_name,
-                market_context,
-            )
-        )
-
-    overnight_candidates.sort(
-        key=lambda item: (
-            item["market_score"] * 0.30
-            + item["next_day_accept_score"] * 0.25
-            + item["high_open_score"] * 0.45,
-            item["amount"],
-        ),
-        reverse=True,
-    )
-
     return {
         "summary": {
             "stock_count": len(stock_records),
@@ -499,11 +444,9 @@ def derive_snapshot(frames: dict[str, dict[str, Any]], allow_chinext: bool = Fal
             "top_amount": by_amount,
             "top_turnover": by_turnover,
             "top_volume_ratio": by_volume_ratio,
-            "active_candidates": active_candidates[:120],
-            "overnight_candidates": overnight_candidates[:150],
             "top_industries": [_compact_board(record) for record in top(industry_boards, ["涨跌幅"], n=30)],
             "top_concepts": [_compact_board(record) for record in top(concept_boards, ["涨跌幅"], n=50)],
-            "pool_industry_heat": pool_industry_heat,
+            "pool_industry_counts": pool_industry_counts,
             "top_industry_fund_flow": [_compact_fund_flow(record) for record in top(industry_funds, ["今日主力净流入-净额", "主力净流入-净额", "净额"], n=30)],
             "top_concept_fund_flow": [_compact_fund_flow(record) for record in top(concept_funds, ["今日主力净流入-净额", "主力净流入-净额", "净额"], n=50)],
             "top_stock_fund_flow": [_compact_fund_flow(record) for record in top(stock_funds, ["今日主力净流入-净额", "主力净流入-净额", "净额"], n=80)],

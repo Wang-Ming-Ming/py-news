@@ -1,0 +1,37 @@
+{
+  "dataset_version": "d78804ab1f043a2f804c",
+  "market_date": "2026-06-05",
+  "expected_count": 2,
+  "actual_count": 2,
+  "is_complete": true,
+  "data": [
+    {
+      "id": "82613890619d459f7b8210d9",
+      "source": "ndrc",
+      "title": "国家发展改革委发展战略和规划司研究课题入选公告",
+      "publish_time": "2026-06-05T18:55:26Z",
+      "publish_time_bj": "2026-06-05T18:55:26+08:00",
+      "source_time": "2026-06-05T18:55:26+08:00",
+      "crawled_at": "2026-06-20T23:54:13+08:00",
+      "collected_at": "2026-06-20T23:54:13+08:00",
+      "url": "https://www.ndrc.gov.cn/xwdt/tzgg/202606/t20260605_1405716.html",
+      "source_urls": [
+        "https://www.ndrc.gov.cn/xwdt/tzgg/202606/t20260605_1405716.html"
+      ]
+    },
+    {
+      "id": "60489c3afc9a73398a374360",
+      "source": "ndrc",
+      "title": "关于总结推广上海浦东新区、深圳、厦门综合改革试点创新举措和经验做法的通知",
+      "publish_time": "2026-06-05T17:02:16Z",
+      "publish_time_bj": "2026-06-05T17:02:16+08:00",
+      "source_time": "2026-06-05T17:02:16+08:00",
+      "crawled_at": "2026-06-20T23:54:28+08:00",
+      "collected_at": "2026-06-20T23:54:28+08:00",
+      "url": "https://www.ndrc.gov.cn/xwdt/tzgg/202606/t20260605_1405708.html",
+      "source_urls": [
+        "https://www.ndrc.gov.cn/xwdt/tzgg/202606/t20260605_1405708.html"
+      ]
+    }
+  ]
+}

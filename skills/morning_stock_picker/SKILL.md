@@ -1,6 +1,6 @@
 ---
 name: morning_stock_picker
-description: Use this skill when the user asks for a pre-market or opening-session A-share stock-picking plan, usually around 8:40-9:30 China time: recommend seven ranked stocks for short-term intraday/early-session trading, including five main candidates plus one quiet ignition candidate and one strongest-limit low-position acceptance candidate, using py-study news, policy catalysts, prior-day market data, available auction/opening data, and top short-term trader discipline.
+description: 'Use this skill when the user asks for a pre-market or opening-session A-share stock-picking plan, usually around 8:40-9:30 China time: recommend seven ranked stocks for short-term intraday/early-session trading, including five main candidates plus one quiet ignition candidate and one strongest-limit low-position acceptance candidate, using py-study news, policy catalysts, prior-day market data, available auction/opening data, and top short-term trader discipline.'
 ---
 
 # Morning Stock Picker
@@ -8,6 +8,18 @@ description: Use this skill when the user asks for a pre-market or opening-sessi
 This skill builds a morning A-share trading plan. The mindset is a top financial analyst plus elite short-term stock trader: identify five main stocks with the highest relative probability of being attacked by active funds after the open, then add two special candidates that may be calmer at first but have quiet ignition or strongest-limit relay potential. Give concrete execution conditions for all seven.
 
 The recommendation is a trading plan, not a promise. Use probability language such as "相对最优", "更容易被资金攻击", "竞价确认后再执行", and "不满足条件就放弃".
+
+## Objective Server Data Boundary
+
+The server is a data source only. It has no AI and must not provide main-line judgments, catalyst grades, announcement-risk conclusions, candidate pools, scores, or recommendations. Codex performs every analytical judgment locally.
+
+At the start of a live request, run:
+
+`venv/bin/python skills/morning_stock_picker/scripts/server_context.py`
+
+This sync is mandatory and must be the first data action even when a local cache already exists. Connection settings resolve from `STOCK_DATA_SERVER`/`STOCK_DATA_TOKEN` first, then `~/.config/stock-data-client/config.json`. All three stock skills share the single `data_server_cache` directory and `data_server_cache/latest_context.json`; never create a skill-specific objective-data cache. Verify calendar/data health/snapshot time, expected counts, `sync_duration_seconds`, `using_cached_data`, and that the context `mode` matches this run, then use the referenced gzip feature file, pools file, news index, and announcement index. Fetch full news/announcement text by ID only when needed. Do not load the full-market raw file into conversation context; use local client query commands to narrow objective rows before reasoning.
+
+If sync fails, use the newest complete local cache only when its timestamp is relevant and state the fallback clearly. Server fields are facts, not conclusions; infer themes, lifecycle, hard logic, risk, and final ranking yourself.
 
 ## Highest Priority Rule
 
@@ -105,6 +117,20 @@ The highest-quality morning setups usually come from fresh, under-priced hard ca
 
 Do not reject a direct company-level catalyst only because the broader sector is weak. However, if the stock cannot show relative strength or资金承接 after the open, downgrade it immediately.
 
+## Pre-Board Discovery Layer
+
+Before final ranking, run a separate latent-scout pass using [pre-board discovery](../references/pre_board_discovery.md). This pass is designed to find reusable evidence before a stock becomes obvious, without weakening execution standards.
+
+- `deep_base_latent`: low/middle-low range position, contraction after decline, no smooth new lows, and MA3/MA5 repair. Without a fresh catalyst, sector anchor, or auction/opening confirmation it remains watch-only.
+- `event_repricing`: a hard company message published after a first board can support the next session, but cannot be used to claim the first board was predicted. If the direct stock is sealed, map buyable same-chain alternatives.
+- `emotion_reactivation`: repeated boards/large down candles, high ATR, abnormal-movement filings, reduction, clarification, or weak fundamentals. Label it emotion, not quiet ignition or hard logic.
+- `anchor_reverse_map`: when a first/second-board anchor validates a product or bottleneck, scan ordinary tradable companies with pre-cutoff evidence of real capacity at that node, including low-position peers without a fresh direct headline.
+- `scheduled_event_reactivation`: keep both publication date and event date; re-surface verified conferences, standards, policy releases, and product events at T-3/T-1/T0.
+
+For top latent scouts and final candidates, check whether the server feed missed issuer website/official-account updates, investor interactions, or industry-event notices. Supplemental findings must retain source and timestamp and cannot override original filings. For every missed later winner, classify the miss as information unavailable, unbuyable, execution rejection, mapping failure, ranking failure, rule gap, or source coverage gap.
+
+Do not use raw factor/channel vote count as the final morning rank. Treat channels as evidence and vetoes; ranks 1-2 must pass both T+1 buyer/exit and drawdown/cash-out-risk gates. Keep material risk announcements active for 15 calendar days unless a newer original filing resolves them.
+
 ## Professional Execution Gate
 
 Separate analyst-quality ideas from trader-quality entries. A stock can rank high in the research candidate pool because the news is hard, fresh, and direct, but it cannot become an execution priority until the price, tradability, and opening承接 still offer a favorable risk-reward.
@@ -171,19 +197,19 @@ Recommendations must come from the full market and current real data:
 
 ## Required Workflow
 
-1. Update or read news first.
-   - From the project root, run current news collection when network is available:
-     `venv/bin/python main.py --source cls eastmoney_global cninfo ndrc --days 1 --log-level INFO`
-   - Then summarize local data:
-     `venv/bin/python skills/overnight_stock_picker/scripts/news_snapshot.py --data-dir data_dev --days 7 --limit 80`
+1. Sync and validate server data first, then read news.
+   - Run `venv/bin/python skills/morning_stock_picker/scripts/server_context.py`.
+   - Verify shared `latest_context.json`, health, calendar, snapshot time, expected counts, mode, and cache fallback status before analysis.
+   - Use only the server-backed news/announcement indexes under `data_server_cache` and fetch relevant original text by ID. Do not run local news collectors or read `data_dev`.
    - Read Serenity research cache when available:
      `data_research/serenity/latest_watchlist.json`, `data_research/serenity/latest_report.md`, and `data_research/serenity/rejected_candidates.md`.
    - Use the Serenity cache only as hard-logic background. Check its timestamp/news window. If it is stale or missing, say so and continue with the full-market scan plus a quick chokepoint pass.
-   - Then generate a market snapshot when AkShare is available:
-     `venv/bin/python market_data/market_snapshot.py --mode morning`
-   - Read the latest market snapshot from `data_market/latest_morning_snapshot.json`.
-   - If crawling fails, read the latest saved `data_dev` files and clearly state the newest timestamp used.
+   - Read the snapshot, feature, pool, and recent-history files referenced by `data_server_cache/latest_context.json`. Do not generate or read local `data_market` snapshots.
+   - If server sync fails, use only the newest complete context already under `data_server_cache`, state its timestamp and age, and lower confidence when it is stale.
    - Filter out news that is later than the user's request time.
+   - Classify each key catalyst as pre-move, same-session, after-close, or post-board. Fetch originals before grading hardness.
+   - Track both `published_at` and `event_at` for scheduled catalysts and re-surface verified events near their occurrence date.
+   - For leading candidates and latent scouts, perform a targeted source-gap check of issuer official news, investor interactions, and industry-event notices when network access is available.
 
 2. Build today's message-theme map.
    - Start with today's newest valid news, policy, company announcements, overseas markets, commodities, FX/rates, industry events, and company-level hard catalysts.
@@ -201,7 +227,7 @@ Recommendations must come from the full market and current real data:
    - After 9:30: add open, early分时承接, sector breadth, active money, and whether the candidate is above its intraday average price.
    - Before selecting stocks, classify yesterday's strongest themes as continuation, healthy divergence, or fade/rotation risk. This is a validation step only, not the anchor.
    - If today's message flow points to a new theme while yesterday's strong theme lacks fresh catalysts, prefer the new message theme unless auction/opening confirms yesterday's line.
-   - Use `data_market` to confirm all-market行情, industry/concept strength, fund flow, limit-up/broken-limit pools, and ranking warnings. Do not use rankings as the source of recommendations.
+   - Use the server-downloaded feature and pool files to confirm all-market行情, industry/concept strength, fund flow, limit-up/broken-limit pools, and ranking warnings. Do not use rankings as the source of recommendations.
 
 4. Build an analyst-first full-market list.
    - Start from the whole A-share market and all sectors, then filter by the user's tradability rules.
@@ -211,6 +237,8 @@ Recommendations must come from the full market and current real data:
    - If a hard-logic stock is not in the generated candidate pool, still evaluate it manually by theme strength, board position, trend, liquidity, and execution risk.
    - Recommend exactly seven ranked candidates: five main candidates plus rank 6 quiet ignition and rank 7 strongest-limit low-position acceptance, but mark the best 1-2 as the only execution priorities.
    - If the strongest stock is sealed limit-up or not realistically buyable, use it only as a sector flag and recommend a buyable same-theme alternative.
+   - Run the latent-scout pass separately. Observation-only scouts cannot displace executable ranks 1-2 without auction/opening or hard-message confirmation.
+   - When a product/industry anchor is on its first or second board, reverse-map real-capacity peers across the full market. Treat weak-tape peers as scouts until auction/opening confirms relative strength.
 
 5. Apply hard filters.
    - By default, do not recommend ChiNext/Growth Enterprise Market stocks such as `300/301` tickers, unless the user explicitly asks to include them.
@@ -226,6 +254,7 @@ Recommendations must come from the full market and current real data:
    - Rank by message-first score and practical tradability, not by theoretical涨停 probability alone.
    - New message > old strength. Prior-day strength can lift confidence only after today's message and auction/opening logic are valid.
    - If no candidate reaches execution quality, still give seven ranked relative candidates, but state that the best 1-2 require small trial position, auction confirmation, or no trade if the trigger fails.
+   - Do not rank by raw channel votes. Use independently supported evidence, explicit vetoes, and separate morning reliability records. Do not change factor weights from fewer than 40-60 forward decisions.
 
 7. Output in Chinese, concise and decision-oriented.
    - Include the data scope: live latest data or the explicit historical cutoff used.
@@ -235,6 +264,16 @@ Recommendations must come from the full market and current real data:
    - For each stock include: stock name/code, reference price/current available price, theme, score, reason, auction/opening condition, buy trigger, abandon condition, and position size.
    - Explicitly label rank 6 as "企稳点火票" and rank 7 as "最强涨停逻辑低位承接票".
    - End with the final execution priority: "只重点买第几名/哪两只", plus the key no-buy conditions. If rank 6 or rank 7 is better than ranks 3-5, explain why it can enter the execution pair.
+
+## Mandatory Recommendation Journal
+
+Before sending the final answer, seal the final seven-stock plan in `data_recommendations/daily_recommendations.json` with:
+
+`venv/bin/python analysis/recommendation_journal.py record --mode morning --trade-date YYYY-MM-DD --input /tmp/morning_recommendation.json`
+
+The input must contain `decision_time`, `market_judgment`, `data_context`, exactly seven `candidates`, `focus_codes`, `no_trade`, and `response_summary`. Each candidate must include rank/code/name plus the actual thesis, catalyst/time class, reference price, auction/opening confirmation, buy trigger, abandon condition, position, risk flags, and sell discipline used in the answer.
+
+Do not edit or delete a sealed run after outcomes are known. A revised recommendation creates a new run; the journal preserves the earlier version and marks it superseded. If journaling fails, state that failure in the final answer instead of pretending it was recorded.
 
 ## Morning Execution Logic
 

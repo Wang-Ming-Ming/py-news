@@ -417,6 +417,27 @@ def enrich_news_item(data: Dict[str, Any], source: str = "") -> Dict[str, Any]:
     return enriched
 
 
+def normalize_news_item(data: Dict[str, Any], source: str = "") -> Dict[str, Any]:
+    """Add objective time/provenance fields without analysis labels or scores."""
+    source_name = str(source or data.get("source") or "")
+    normalized = dict(data)
+    normalized.setdefault("source", source_name)
+    normalized = normalize_publish_time(normalized, source_name)
+    normalized = annotate_crawl_time(normalized, source_name)
+    for field in (
+        "risk_flags",
+        "risk_reasons",
+        "risk_level",
+        "is_risk_alert",
+        "news_score",
+        "news_tier",
+        "impact_reasons",
+        "is_high_impact",
+    ):
+        normalized.pop(field, None)
+    return normalized
+
+
 def _coerce_time_to_beijing(value: Any) -> Tuple[datetime | None, str]:
     if value is None or value == "":
         return None, "missing_time"
@@ -504,6 +525,7 @@ __all__ = [
     "annotate_crawl_time",
     "detect_risk_flags",
     "enrich_news_item",
+    "normalize_news_item",
     "normalize_publish_time",
     "parse_publish_time_to_beijing",
     "score_news",

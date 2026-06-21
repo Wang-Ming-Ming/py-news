@@ -310,7 +310,7 @@ def print_json(items: list[NewsItem], limit: int) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Summarize py-study news data for overnight stock picking.")
     parser.add_argument("--data-dir", default="data_dev", help="Directory containing source/date JSON files.")
-    parser.add_argument("--days", type=int, default=7, help="Include news from the last N days.")
+    parser.add_argument("--days", type=int, default=15, help="Include news from the last N days.")
     parser.add_argument("--limit", type=int, default=50, help="Number of latest/high-impact items to print.")
     parser.add_argument("--format", choices=["markdown", "json"], default="markdown")
     args = parser.parse_args()

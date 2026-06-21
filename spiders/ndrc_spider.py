@@ -26,6 +26,7 @@ from filters.keyword_filter import KeywordFilter
 from storage.deduplicator import Deduplicator
 from storage.storage_manager import StorageManager
 from utils.retry import RetryHandler
+from utils.request_pacer import RequestPacer
 from utils.exceptions import NetworkException, ParseException
 
 
@@ -95,6 +96,8 @@ class NDRCSpider:
         self.keyword_filter = keyword_filter
         self.deduplicator = deduplicator
         self.storage_manager = storage_manager
+        self.session = requests.Session()
+        self.request_pacer = RequestPacer(config.get("min_request_interval", 1.0))
         
         # 初始化重试处理器
         retry_times = config.get("retry_times", 3)
@@ -150,8 +153,9 @@ class NDRCSpider:
             }
             
             self.logger.debug(f"发送请求: {url}")
+            self.request_pacer.wait()
             
-            response = requests.get(
+            response = self.session.get(
                 url,
                 headers=headers,
                 timeout=self.timeout,
@@ -179,12 +183,20 @@ class NDRCSpider:
             raise NetworkException(f"连接失败: {url}")
         
         except requests.HTTPError as e:
+            status_code = e.response.status_code if e.response is not None else None
             self.logger.error(
                 f"HTTP 错误: {url}, "
-                f"状态码={e.response.status_code}, "
+                f"状态码={status_code}, "
                 f"错误: {e}"
             )
-            raise NetworkException(f"HTTP 错误: {url}, 状态码={e.response.status_code}")
+            if status_code in (403, 429):
+                retry_after = int(e.response.headers.get("Retry-After", 60)) if e.response is not None else 60
+                raise APIException(
+                    f"上游拒绝或限速: {url}",
+                    status_code=status_code,
+                    retry_after=retry_after,
+                )
+            raise NetworkException(f"HTTP 错误: {url}, 状态码={status_code}")
         
         except Exception as e:
             self.logger.error(f"请求失败: {url}, 错误: {e}", exc_info=True)
@@ -385,6 +397,16 @@ class NDRCSpider:
                     news_data = self.fetch_news_detail(url)
                     
                     if not news_data:
+                        continue
+
+                    publish_text = str(news_data.get("publish_time") or "")
+                    try:
+                        publish_date = datetime.fromisoformat(
+                            publish_text.replace("Z", "+00:00")
+                        ).date()
+                    except ValueError:
+                        publish_date = None
+                    if publish_date is not None and not (start_date.date() <= publish_date <= end_date.date()):
                         continue
                     
                     self.stats["total_fetched"] += 1

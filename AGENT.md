@@ -49,10 +49,10 @@
 
 ## Retention And Frequency
 
-- 只保留最近 7 天新闻数据。
-- `STORAGE_CONFIG["retention_days"] = 7`。
-- 采集结束后自动清理旧 JSON 文件。
-- `news_api.py` 默认只返回最近 7 天数据。
+- 服务器按日期永久保留原始新闻、公告和市场快照。
+- `STORAGE_CONFIG["retention_days"] = 0`，不自动删除历史文件。
+- 首次部署默认补采最近 15 天。
+- `news_api.py` 和本地 skill 默认读取最近 15 天，显式指定日期时可回取更早归档。
 
 建议调度：
 

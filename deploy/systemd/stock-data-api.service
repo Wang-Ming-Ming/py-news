@@ -1,0 +1,18 @@
+[Unit]
+Description=A-share objective read-only data API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=__SERVICE_USER__
+WorkingDirectory=__APP_DIR__
+EnvironmentFile=/etc/stock-data.env
+ExecStart=__APP_DIR__/venv/bin/python __APP_DIR__/news_api.py --host 0.0.0.0 --port 8765 --data-dir __APP_DIR__/data --market-dir __APP_DIR__/data_market --retention-days 15 --calendar-cache __APP_DIR__/data_market/trading_calendar.json --collector-state __APP_DIR__/data/collector_health.json
+Restart=on-failure
+RestartSec=10
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

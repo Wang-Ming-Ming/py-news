@@ -21,7 +21,8 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, List, Any, Optional
 
-from filters.news_enricher import enrich_news_item
+from filters.news_normalizer import normalize_news_item
+from utils.exceptions import DiskFullException
 
 
 class StorageManager:
@@ -68,9 +69,37 @@ class StorageManager:
 
     def _prepare_for_storage(self, data: Dict[str, Any], source: str) -> Dict[str, Any]:
         """
-        保存前补充北京时间、风险标记和影响力评分。
+        保存前只补充客观时间和采集来源字段，不生成分析标签。
         """
-        return enrich_news_item(data, source)
+        return normalize_news_item(data, source)
+
+    def _merge_duplicate(self, existing: Dict[str, Any], incoming: Dict[str, Any]) -> bool:
+        def url_list(item: Dict[str, Any]) -> List[str]:
+            values = item.get("source_urls")
+            return [str(value) for value in values] if isinstance(values, list) else []
+
+        urls = list(
+            dict.fromkeys(
+                str(value)
+                for value in [
+                    *url_list(existing),
+                    existing.get("url"),
+                    *url_list(incoming),
+                    incoming.get("url"),
+                ]
+                if value
+            )
+        )
+        changed = urls != url_list(existing)
+        if changed:
+            existing["source_urls"] = urls
+        existing_collected = str(existing.get("collected_at") or existing.get("crawled_at") or "")
+        incoming_collected = str(incoming.get("collected_at") or incoming.get("crawled_at") or "")
+        if incoming_collected and (not existing_collected or incoming_collected < existing_collected):
+            existing["collected_at"] = incoming_collected
+            existing["crawled_at"] = incoming_collected
+            changed = True
+        return changed
 
     def _get_date_key(self, data: Dict[str, Any], source: str) -> str:
         """
@@ -143,6 +172,11 @@ class StorageManager:
                     f"最小要求: {self.min_disk_space / (1024**3):.2f} GB"
                 )
                 self.logger.warning(warning_msg)
+                raise DiskFullException(
+                    warning_msg,
+                    available_space=available_space,
+                    required_space=self.min_disk_space,
+                )
             
             # 获取文件路径（使用北京时间归档日期）
             date_key = self._get_date_key(data, source)
@@ -171,6 +205,11 @@ class StorageManager:
             existing_keys = {self._get_unique_key(item, source) for item in existing_data if isinstance(item, dict)}
             data_key = self._get_unique_key(data, source)
             if data_key in existing_keys:
+                for existing in existing_data:
+                    if isinstance(existing, dict) and self._get_unique_key(existing, source) == data_key:
+                        if self._merge_duplicate(existing, data):
+                            self._atomic_write(file_path, existing_data)
+                        break
                 self.logger.debug(f"数据已存在，跳过保存: source={source}, key={data_key[:80]}")
                 return False
 
@@ -211,6 +250,11 @@ class StorageManager:
                     f"最小要求: {self.min_disk_space / (1024**3):.2f} GB"
                 )
                 self.logger.warning(warning_msg)
+                raise DiskFullException(
+                    warning_msg,
+                    available_space=available_space,
+                    required_space=self.min_disk_space,
+                )
             
             prepared_list = [self._prepare_for_storage(data, source) for data in data_list]
 
@@ -261,6 +305,10 @@ class StorageManager:
                     for item in date_data:
                         item_key = self._get_unique_key(item, source)
                         if item_key in existing_keys:
+                            for existing in merged_data:
+                                if isinstance(existing, dict) and self._get_unique_key(existing, source) == item_key:
+                                    self._merge_duplicate(existing, item)
+                                    break
                             continue
                         existing_keys.add(item_key)
                         merged_data.append(item)

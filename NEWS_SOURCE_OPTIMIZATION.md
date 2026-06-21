@@ -172,13 +172,13 @@
 推荐服务器启动形式：
 
 ```bash
-python run.py --host 0.0.0.0 --port 8765 --data-dir data --retention-days 7
+python run.py --host 0.0.0.0 --port 8765 --data-dir data --retention-days 15
 ```
 
 本地开发可以继续用：
 
 ```bash
-python run.py --host 127.0.0.1 --port 8765 --data-dir data_dev --retention-days 7
+python run.py --host 127.0.0.1 --port 8765 --data-dir data_dev --retention-days 15
 ```
 
 ### 2. 数据目录和环境配置

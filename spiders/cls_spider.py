@@ -21,13 +21,14 @@ import hashlib
 import requests
 import time
 from typing import List, Dict, Any, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 
 from parsers.cls_parser import CLSParser
 from storage.deduplicator import Deduplicator
 from storage.storage_manager import StorageManager
 from filters.keyword_extractor import KeywordExtractor
 from utils.retry import RetryHandler
+from utils.request_pacer import RequestPacer
 from utils.exceptions import NetworkException, APIException
 
 
@@ -108,6 +109,8 @@ class CLSSpider:
         self.deduplicator = deduplicator
         self.storage_manager = storage_manager
         self.keyword_extractor = keyword_extractor or KeywordExtractor(logger)
+        self.session = requests.Session()
+        self.request_pacer = RequestPacer(config.get("min_request_interval", 1.0))
         
         # 初始化重试处理器
         retry_times = config.get("retry_times", 3)
@@ -240,10 +243,11 @@ class CLSSpider:
                 headers["Authorization"] = f"Bearer {self.api_token}"
             
             self.logger.debug(f"发送请求: {method} {url}")
+            self.request_pacer.wait()
             
             # 发送请求
             if method.upper() == "GET":
-                response = requests.get(
+                response = self.session.get(
                     url,
                     params=params,
                     headers=headers,
@@ -251,7 +255,7 @@ class CLSSpider:
                     allow_redirects=True
                 )
             elif method.upper() == "POST":
-                response = requests.post(
+                response = self.session.post(
                     url,
                     params=params,
                     data=data,
@@ -332,7 +336,8 @@ class CLSSpider:
     def fetch_category_news(
         self, 
         category: str,
-        limit: int = 20
+        limit: int = 20,
+        last_time: Optional[int] = None,
     ) -> List[Dict[str, Any]]:
         """
         从指定类别获取新闻
@@ -383,7 +388,7 @@ class CLSSpider:
             params = self._build_signed_params({
                 "refresh_type": 1,
                 "rn": limit,
-                "last_time": int(time.time()),
+                "last_time": last_time or int(time.time()),
             })
             
             # 使用重试机制发送请求
@@ -427,12 +432,12 @@ class CLSSpider:
             self.logger.error(f"获取 {category} 类别新闻失败: {e}")
             self.stats["error_count"] += 1
             return []
-        
+
         except APIException as e:
             self.logger.error(f"API 调用失败: {category}, 错误: {e}")
             self.stats["error_count"] += 1
             return []
-        
+
         except Exception as e:
             self.logger.error(
                 f"获取 {category} 类别新闻时发生未知错误: {e}",
@@ -440,8 +445,73 @@ class CLSSpider:
             )
             self.stats["error_count"] += 1
             return []
+
+    @staticmethod
+    def _publish_epoch(item: Dict[str, Any]) -> Optional[int]:
+        value = item.get("publish_time")
+        if not value:
+            return None
+        try:
+            parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+            if parsed.tzinfo is None:
+                parsed = parsed.replace(tzinfo=timezone.utc)
+            return int(parsed.timestamp())
+        except (TypeError, ValueError):
+            return None
+
+    def fetch_category_news_since(
+        self,
+        category: str,
+        start_date: datetime,
+        page_size: int = 20,
+        max_pages: int = 500,
+    ) -> List[Dict[str, Any]]:
+        """Page backwards until the requested objective time boundary is reached."""
+        cutoff = int(start_date.timestamp())
+        cursor = int(time.time())
+        collected: List[Dict[str, Any]] = []
+        seen: set[str] = set()
+
+        for page_number in range(1, max_pages + 1):
+            page = self.fetch_category_news(category, limit=page_size, last_time=cursor)
+            if not page:
+                break
+            epochs = [value for item in page if (value := self._publish_epoch(item)) is not None]
+            if not epochs:
+                self.logger.warning("财联社历史页缺少可解析时间，停止翻页")
+                break
+
+            new_items = 0
+            for item in page:
+                epoch = self._publish_epoch(item)
+                if epoch is None or epoch < cutoff:
+                    continue
+                identity = str(item.get("url") or f"{item.get('title')}|{item.get('publish_time')}")
+                if identity in seen:
+                    continue
+                seen.add(identity)
+                collected.append(item)
+                new_items += 1
+
+            oldest = min(epochs)
+            self.logger.info(
+                "财联社历史回补第 %s 页: 获取=%s, 新增=%s, 最早时间=%s",
+                page_number,
+                len(page),
+                new_items,
+                datetime.fromtimestamp(oldest).isoformat(timespec="seconds"),
+            )
+            if oldest <= cutoff:
+                break
+            next_cursor = oldest - 1
+            if next_cursor >= cursor:
+                self.logger.warning("财联社历史游标未向前推进，停止翻页")
+                break
+            cursor = next_cursor
+
+        return collected
     
-    def run_once(self) -> List[Dict[str, Any]]:
+    def run_once(self, start_date: Optional[datetime] = None) -> List[Dict[str, Any]]:
         """
         执行一次完整的采集流程（所有类别）
         
@@ -475,7 +545,11 @@ class CLSSpider:
                 
                 try:
                     # 获取该类别的新闻
-                    news_list = self.fetch_category_news(category, limit=20)
+                    news_list = (
+                        self.fetch_category_news_since(category, start_date)
+                        if start_date is not None
+                        else self.fetch_category_news(category, limit=20)
+                    )
                     
                     if not news_list:
                         self.logger.debug(f"类别 {category} 未获取到新闻")

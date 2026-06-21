@@ -1,0 +1,11 @@
+{
+  "snapshot_id": "20260612_historical_16e1b3cdce97a978",
+  "dataset": "stocks",
+  "etag": "\"ed5aa77edfda307474398ad4b950af17e47692702ab82d5c573e8878da3c38a2\"",
+  "checksum": "ed5aa77edfda307474398ad4b950af17e47692702ab82d5c573e8878da3c38a2",
+  "expected_count": 5193,
+  "actual_count": 5193,
+  "size_bytes": 260178,
+  "path": "/Users/bawangchajiyouxiangongsi/Desktop/py-study/data_server_cache/archive/2026-06-12/market/20260612_historical_16e1b3cdce97a978/stocks.ndjson.gz",
+  "reused": false
+}

@@ -8,18 +8,11 @@
 """
 
 from filters.keyword_filter import KeywordFilter, create_keyword_filter_from_config
-from filters.news_enricher import (
-    detect_risk_flags,
-    enrich_news_item,
-    normalize_publish_time,
-    score_news,
-)
+from filters.news_normalizer import normalize_news_item, parse_publish_time_to_beijing
 
 __all__ = [
     "KeywordFilter",
     "create_keyword_filter_from_config",
-    "detect_risk_flags",
-    "enrich_news_item",
-    "normalize_publish_time",
-    "score_news",
+    "normalize_news_item",
+    "parse_publish_time_to_beijing",
 ]

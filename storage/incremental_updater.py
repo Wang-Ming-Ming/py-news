@@ -6,7 +6,7 @@
 主要特性：
 - 跟踪每个数据源的最后采集时间戳
 - 计算采集时间范围（从上次采集到现在）
-- 如果没有历史记录，默认采集过去 7 天的数据
+- 如果没有历史记录，默认采集过去 15 天的数据
 - 支持状态的持久化和加载
 
 需求：5.1, 5.2, 5.3, 5.4, 5.5
@@ -141,7 +141,7 @@ class IncrementalUpdater:
         except Exception as e:
             self.logger.error(f"增加采集计数失败: source={source}, 错误: {e}", exc_info=True)
     
-    def get_time_range(self, source: str, default_days: int = 7) -> Tuple[datetime, datetime]:
+    def get_time_range(self, source: str, default_days: int = 15) -> Tuple[datetime, datetime]:
         """
         获取采集时间范围
         
@@ -150,7 +150,7 @@ class IncrementalUpdater:
         
         Args:
             source: 数据源（ndrc/cls/cninfo）
-            default_days: 如果没有历史记录，默认采集的天数，默认为 7 天
+            default_days: 如果没有历史记录，默认采集的天数，默认为 15 天
             
         Returns:
             (start_date, end_date) 元组，表示采集时间范围
