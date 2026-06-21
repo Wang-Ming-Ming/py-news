@@ -59,8 +59,6 @@ data_market/latest_*.json
 Thumbs.db
 
 # Configuration (keep example files)
-config.py
-!config.example.py
 
 # Temporary files
 *.tmp
