@@ -604,6 +604,10 @@ class DataRepository:
         payload = {
             "schema_version": "1.0",
             "generated_at": datetime.now(BEIJING_TZ).isoformat(timespec="seconds"),
+            "api_capabilities": {
+                "news_collected_after": True,
+                "incremental_page_limit": 500,
+            },
             "news": {
                 "dataset_version": news_version,
                 "files": len(news_paths),
@@ -755,6 +759,7 @@ class DataAPIHandler(BaseHTTPRequestHandler):
         stock_code = query.get("stock_code", [""])[0]
         date_from = query.get("date_from", [""])[0]
         date_to = query.get("date_to", [""])[0]
+        collected_after_text = query.get("collected_after", [""])[0]
         limit = max(1, min(int(query.get("limit", ["200"])[0]), 500))
         offset = _decode_cursor(query.get("cursor", [""])[0])
         include_content = query.get("include_content", ["0"])[0] == "1"
@@ -766,6 +771,15 @@ class DataAPIHandler(BaseHTTPRequestHandler):
             date_from=date_from,
             date_to=date_to,
         )
+        if collected_after_text:
+            collected_after = _parse_time(collected_after_text)
+            if collected_after == datetime.min:
+                raise ValueError("invalid collected_after timestamp")
+            items = [
+                item
+                for item in items
+                if _parse_time(item.get("collected_at") or item.get("crawled_at")) > collected_after
+            ]
         if requested_version and requested_version != version:
             self._send_json({"error": "dataset version changed", "dataset_version": version}, status=409)
             return

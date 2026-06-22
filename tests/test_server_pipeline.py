@@ -11,7 +11,9 @@ from filters.news_normalizer import normalize_news_item
 from client.server_data_client import (
     ServerDataClient,
     _archive_index_by_date,
+    _merge_index_payloads,
     _select_snapshot,
+    _sync_incremental_index,
     sync_with_fallback,
 )
 from market_data.market_snapshot import is_mode_window_valid
@@ -410,6 +412,135 @@ class ServerPipelineTest(unittest.TestCase):
             self.assertTrue((root / "archive" / "2026-06-17" / "news" / "v1" / "news_index.json").exists())
             self.assertTrue((root / "archive" / "2026-06-18" / "news" / "v1" / "news_index.json").exists())
 
+    def test_incremental_index_merges_cache_and_only_requests_missing_window(self):
+        class IncrementalClient:
+            def __init__(self):
+                self.calls = []
+
+            def fetch_all_pages(self, path, params, checkpoint_path=None):
+                self.calls.append((path, params, checkpoint_path))
+                return {
+                    "dataset_version": "v2",
+                    "expected_count": 1,
+                    "actual_count": 1,
+                    "is_complete": True,
+                    "data": [
+                        {
+                            "id": "new",
+                            "title": "new item",
+                            "publish_time_bj": "2026-06-22T10:05:00+08:00",
+                            "collected_at": "2026-06-22T10:06:00+08:00",
+                        }
+                    ],
+                }
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            root.joinpath("latest_news_index.json").write_text(
+                json.dumps(
+                    {
+                        "dataset_version": "v1",
+                        "is_complete": True,
+                        "data": [
+                            {
+                                "id": "old",
+                                "title": "old item",
+                                "publish_time_bj": "2026-06-22T09:00:00+08:00",
+                                "collected_at": "2026-06-22T09:01:00+08:00",
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            client = IncrementalClient()
+            payload, metadata = _sync_incremental_index(
+                client,
+                root,
+                {
+                    "generated_at": "2026-06-22T10:10:00+08:00",
+                    "api_capabilities": {"news_collected_after": True},
+                },
+                "/v1/news",
+                "latest_news_index.json",
+            )
+            self.assertEqual({item["id"] for item in payload["data"]}, {"old", "new"})
+            self.assertEqual(metadata["strategy"], "collected_after")
+            self.assertEqual(metadata["downloaded_count"], 1)
+            self.assertEqual(client.calls[0][1]["collected_after"], "2026-06-22T08:51:00+08:00")
+
+    def test_incremental_index_uses_one_day_overlap_for_older_server(self):
+        class LegacyClient:
+            def __init__(self):
+                self.params = None
+
+            def fetch_all_pages(self, path, params, checkpoint_path=None):
+                self.params = params
+                return {
+                    "dataset_version": "v2",
+                    "expected_count": 0,
+                    "actual_count": 0,
+                    "is_complete": True,
+                    "data": [],
+                }
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            root.joinpath("latest_news_index.json").write_text(
+                json.dumps(
+                    {
+                        "dataset_version": "v1",
+                        "is_complete": True,
+                        "data": [
+                            {
+                                "id": "old",
+                                "publish_time_bj": "2026-06-21T09:00:00+08:00",
+                                "collected_at": "2026-06-21T09:01:00+08:00",
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            client = LegacyClient()
+            _, metadata = _sync_incremental_index(
+                client,
+                root,
+                {"generated_at": "2026-06-22T10:10:00+08:00"},
+                "/v1/news",
+                "latest_news_index.json",
+            )
+            self.assertEqual(metadata["strategy"], "date_overlap")
+            self.assertEqual(client.params["date_from"], "2026-06-20")
+
+    def test_merge_index_payloads_deduplicates_and_prunes_old_dates(self):
+        payload = _merge_index_payloads(
+            [
+                {
+                    "dataset_version": "v1",
+                    "data": [
+                        {"id": "old", "publish_time_bj": "2026-06-01T10:00:00+08:00"},
+                        {"id": "same", "publish_time_bj": "2026-06-21T10:00:00+08:00"},
+                    ],
+                },
+                {
+                    "dataset_version": "v2",
+                    "data": [
+                        {
+                            "id": "same",
+                            "title": "updated",
+                            "publish_time_bj": "2026-06-21T10:00:00+08:00",
+                        }
+                    ],
+                },
+            ],
+            "2026-06-08",
+            "2026-06-22",
+        )
+        self.assertEqual(payload["dataset_version"], "v2")
+        self.assertEqual(payload["actual_count"], 1)
+        self.assertEqual(payload["data"][0]["title"], "updated")
+
     def test_skill_sync_reports_cache_age_on_server_failure(self):
         class BrokenClient:
             def get_json(self, *args, **kwargs):
@@ -433,8 +564,18 @@ class ServerPipelineTest(unittest.TestCase):
             news_dir.joinpath("2026-06-18.json").write_text(
                 json.dumps(
                     [
-                        {"source": "cls", "title": "A", "publish_time": "2026-06-18T09:00:00+08:00"},
-                        {"source": "cls", "title": "B", "publish_time": "2026-06-18T10:00:00+08:00"},
+                        {
+                            "source": "cls",
+                            "title": "A",
+                            "publish_time": "2026-06-18T09:00:00+08:00",
+                            "crawled_at": "2026-06-18T09:05:00+08:00",
+                        },
+                        {
+                            "source": "cls",
+                            "title": "B",
+                            "publish_time": "2026-06-18T10:00:00+08:00",
+                            "crawled_at": "2026-06-18T10:05:00+08:00",
+                        },
                     ],
                     ensure_ascii=False,
                 ),
@@ -507,6 +648,19 @@ class ServerPipelineTest(unittest.TestCase):
                 )
                 self.assertEqual(second.status_code, 200)
                 self.assertIsNone(second.json()["next_cursor"])
+                incremental = requests.get(
+                    f"{base}/v1/news",
+                    params={
+                        "limit": 10,
+                        "date_from": "2026-06-18",
+                        "date_to": "2026-06-18",
+                        "collected_after": "2026-06-18T09:30:00+08:00",
+                    },
+                    headers=headers,
+                    timeout=5,
+                )
+                self.assertEqual(incremental.status_code, 200)
+                self.assertEqual([item["title"] for item in incremental.json()["data"]], ["B"])
 
                 export = requests.get(
                     f"{base}/v1/market/snapshots/test-snapshot/export",

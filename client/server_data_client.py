@@ -93,6 +93,184 @@ def _archive_index_by_date(
     return output_dirs
 
 
+def _parse_timestamp(value: Any) -> datetime | None:
+    text = str(value or "").strip()
+    if not text:
+        return None
+    try:
+        parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=CST)
+    return parsed.astimezone(CST)
+
+
+def _item_collected_at(item: dict[str, Any]) -> datetime | None:
+    for field in ("collected_at", "crawled_at", "source_time", "publish_time_bj", "publish_time"):
+        parsed = _parse_timestamp(item.get(field))
+        if parsed is not None:
+            return parsed
+    return None
+
+
+def _load_archived_index(
+    cache_dir: Path,
+    filename: str,
+    date_from: str,
+    date_to: str,
+) -> dict[str, Any]:
+    rows: dict[str, dict[str, Any]] = {}
+    versions: list[str] = []
+    for path in cache_dir.glob(f"archive/*/news/*/{filename}"):
+        market_date = path.parts[-4]
+        if market_date < date_from or market_date > date_to:
+            continue
+        payload = _read_json(path, {}) or {}
+        version = str(payload.get("dataset_version") or "")
+        if version:
+            versions.append(version)
+        for item in payload.get("data") or []:
+            item_id = str(item.get("id") or "")
+            if item_id:
+                rows[item_id] = item
+    return {
+        "dataset_version": versions[-1] if versions else "",
+        "expected_count": len(rows),
+        "actual_count": len(rows),
+        "is_complete": True,
+        "data": list(rows.values()),
+    }
+
+
+def _merge_index_payloads(
+    payloads: list[dict[str, Any]],
+    date_from: str,
+    date_to: str,
+) -> dict[str, Any]:
+    rows: dict[str, dict[str, Any]] = {}
+    version = ""
+    for payload in payloads:
+        if not isinstance(payload, dict):
+            continue
+        version = str(payload.get("dataset_version") or version)
+        for item in payload.get("data") or []:
+            item_date = _item_date(item)
+            if item_date == "unknown-date" or not (date_from <= item_date <= date_to):
+                continue
+            item_id = str(item.get("id") or "")
+            if not item_id:
+                item_id = hashlib.sha256(
+                    json.dumps(item, ensure_ascii=False, sort_keys=True).encode("utf-8")
+                ).hexdigest()[:24]
+                item = {**item, "id": item_id}
+            rows[item_id] = item
+    ordered = sorted(
+        rows.values(),
+        key=lambda item: _item_collected_at(item) or datetime.min.replace(tzinfo=CST),
+        reverse=True,
+    )
+    return {
+        "dataset_version": version,
+        "expected_count": len(ordered),
+        "actual_count": len(ordered),
+        "is_complete": True,
+        "data": ordered,
+    }
+
+
+def _sync_incremental_index(
+    client: "ServerDataClient",
+    cache_dir: Path,
+    manifest: dict[str, Any],
+    endpoint: str,
+    filename: str,
+    retention_days: int = 15,
+    full_index: bool = False,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    latest_path = cache_dir / filename
+    if full_index:
+        payload = client.fetch_all_pages(
+            endpoint,
+            {"limit": 500},
+            checkpoint_path=cache_dir / f".{filename}.pages.json",
+        )
+        return payload, {
+            "strategy": "full",
+            "date_from": None,
+            "collected_after": None,
+            "downloaded_count": payload.get("actual_count", 0),
+            "merged_count": payload.get("actual_count", 0),
+            "error": None,
+        }
+
+    current_date = str(
+        manifest.get("generated_at") or datetime.now(CST).isoformat(timespec="seconds")
+    )[:10]
+    try:
+        end_date = datetime.fromisoformat(current_date).date()
+    except ValueError:
+        end_date = datetime.now(CST).date()
+    cutoff_date = end_date - timedelta(days=max(1, retention_days) - 1)
+    cutoff = cutoff_date.isoformat()
+    end = end_date.isoformat()
+
+    cached = _read_json(latest_path, {}) or {}
+    archived = _load_archived_index(cache_dir, filename, cutoff, end)
+    base = _merge_index_payloads([cached, archived], cutoff, end)
+    newest_collected = max(
+        (_item_collected_at(item) for item in base.get("data") or []),
+        default=None,
+    )
+    newest_date = max(
+        (_item_date(item) for item in base.get("data") or [] if _item_date(item) != "unknown-date"),
+        default=cutoff,
+    )
+
+    capabilities = manifest.get("api_capabilities") or {}
+    supports_collected_after = bool(capabilities.get("news_collected_after"))
+    params: dict[str, Any] = {"limit": 500, "date_to": end}
+    collected_after = None
+    if supports_collected_after and newest_collected is not None:
+        collected_after = (newest_collected - timedelta(minutes=10)).isoformat(timespec="seconds")
+        params.update({"date_from": cutoff, "collected_after": collected_after})
+        strategy = "collected_after"
+    else:
+        overlap_start = datetime.fromisoformat(newest_date).date() - timedelta(days=1)
+        params["date_from"] = max(cutoff_date, overlap_start).isoformat()
+        strategy = "date_overlap"
+
+    try:
+        delta = client.fetch_all_pages(
+            endpoint,
+            params,
+            checkpoint_path=cache_dir / f".{filename}.incremental.pages.json",
+        )
+        merged = _merge_index_payloads([base, delta], cutoff, end)
+        metadata = {
+            "strategy": strategy,
+            "date_from": params.get("date_from"),
+            "date_to": end,
+            "collected_after": collected_after,
+            "downloaded_count": delta.get("actual_count", 0),
+            "merged_count": merged.get("actual_count", 0),
+            "error": None,
+        }
+        return merged, metadata
+    except Exception as exc:
+        if not base.get("data"):
+            raise
+        return base, {
+            "strategy": f"{strategy}_cached_fallback",
+            "date_from": params.get("date_from"),
+            "date_to": end,
+            "collected_after": collected_after,
+            "downloaded_count": 0,
+            "merged_count": base.get("actual_count", 0),
+            "error": str(exc),
+        }
+
+
 class ServerDataClient:
     def __init__(
         self,
@@ -385,7 +563,12 @@ def _archive_recent_snapshot_contexts(
     return paths
 
 
-def sync_data(client: ServerDataClient, cache_dir: Path, mode: str) -> dict[str, Any]:
+def sync_data(
+    client: ServerDataClient,
+    cache_dir: Path,
+    mode: str,
+    full_index: bool = False,
+) -> dict[str, Any]:
     started = time.monotonic()
     health = client.get_json("/v1/health")
     calendar = client.get_json("/v1/calendar")
@@ -416,35 +599,21 @@ def sync_data(client: ServerDataClient, cache_dir: Path, mode: str) -> dict[str,
 
     manifest_news_version = str(manifest.get("news", {}).get("dataset_version") or "")
     manifest_announcement_version = str(manifest.get("announcements", {}).get("dataset_version") or "")
-    cached_news = _read_json(cache_dir / "latest_news_index.json", {})
-    cached_announcements = _read_json(cache_dir / "latest_announcements_index.json", {})
-    reuse_news = bool(
-        manifest_news_version
-        and cached_news.get("dataset_version") == manifest_news_version
-        and cached_news.get("is_complete")
+    news, news_incremental = _sync_incremental_index(
+        client,
+        cache_dir,
+        manifest,
+        "/v1/news",
+        "latest_news_index.json",
+        full_index=full_index,
     )
-    reuse_announcements = bool(
-        manifest_announcement_version
-        and cached_announcements.get("dataset_version") == manifest_announcement_version
-        and cached_announcements.get("is_complete")
-    )
-    news = (
-        cached_news
-        if reuse_news
-        else client.fetch_all_pages(
-            "/v1/news",
-            {"limit": 200},
-            checkpoint_path=cache_dir / ".news_pages.json",
-        )
-    )
-    announcements = (
-        cached_announcements
-        if reuse_announcements
-        else client.fetch_all_pages(
-            "/v1/announcements",
-            {"limit": 100},
-            checkpoint_path=cache_dir / ".announcement_pages.json",
-        )
+    announcements, announcement_incremental = _sync_incremental_index(
+        client,
+        cache_dir,
+        manifest,
+        "/v1/announcements",
+        "latest_announcements_index.json",
+        full_index=full_index,
     )
     dataset_version_drift = {
         "news": bool(manifest_news_version and news["dataset_version"] != manifest_news_version),
@@ -488,8 +657,11 @@ def sync_data(client: ServerDataClient, cache_dir: Path, mode: str) -> dict[str,
         "news_count": news["actual_count"],
         "announcement_count": announcements["actual_count"],
         "dataset_version_drift": dataset_version_drift,
-        "reused_news_index": reuse_news,
-        "reused_announcements_index": reuse_announcements,
+        "sync_strategy": "full" if full_index else "incremental",
+        "news_incremental": news_incremental,
+        "announcement_incremental": announcement_incremental,
+        "reused_news_index": news_incremental.get("downloaded_count", 0) == 0,
+        "reused_announcements_index": announcement_incremental.get("downloaded_count", 0) == 0,
         "using_cached_data": False,
         "sync_error": None,
         "sync_duration_seconds": round(time.monotonic() - started, 2),
@@ -502,9 +674,10 @@ def sync_with_fallback(
     client: ServerDataClient,
     cache_dir: Path,
     mode: str,
+    full_index: bool = False,
 ) -> dict[str, Any]:
     try:
-        return sync_data(client, cache_dir, mode)
+        return sync_data(client, cache_dir, mode, full_index=full_index)
     except Exception as exc:
         fallback = cache_dir / "latest_context.json"
         if not fallback.exists():
@@ -647,6 +820,11 @@ def build_parser() -> argparse.ArgumentParser:
 
     sync = subparsers.add_parser("sync")
     sync.add_argument("--mode", choices=["morning", "overnight", "trend"], required=True)
+    sync.add_argument(
+        "--full",
+        action="store_true",
+        help="download the complete retained news/announcement indexes instead of incremental deltas",
+    )
 
     archive = subparsers.add_parser("archive-date")
     archive.add_argument("--date", required=True, help="YYYY-MM-DD")
@@ -689,7 +867,7 @@ def main() -> None:
     client = ServerDataClient(args.server, args.token)
     try:
         if args.command == "sync":
-            result = sync_with_fallback(client, cache_dir, args.mode)
+            result = sync_with_fallback(client, cache_dir, args.mode, full_index=args.full)
         elif args.command == "archive-date":
             result = archive_date(client, cache_dir, args.date)
         elif args.command == "query-features":
