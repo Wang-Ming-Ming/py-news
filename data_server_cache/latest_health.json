@@ -1,13 +1,13 @@
 {
   "status": "ok",
-  "server_time": "2026-06-21T13:20:22+08:00",
+  "server_time": "2026-06-22T09:17:04+08:00",
   "timezone": "Asia/Shanghai",
   "calendar": {
-    "current_time": "2026-06-21T13:20:22+08:00",
-    "current_date": "2026-06-21",
-    "is_trade_day": false,
+    "current_time": "2026-06-22T09:17:04+08:00",
+    "current_date": "2026-06-22",
+    "is_trade_day": true,
     "previous_trade_day": "2026-06-18",
-    "next_trade_day": "2026-06-22",
+    "next_trade_day": "2026-06-23",
     "calendar": {
       "available": true,
       "source": "akshare.tool_trade_date_hist_sina",
@@ -29,68 +29,68 @@
   "sources": {
     "cls": {
       "files": 16,
-      "items": 6711,
-      "newest_publish_time": "2026-06-21T12:53:05+08:00",
-      "coverage_start_date": "2026-06-06",
-      "coverage_end_date": "2026-06-21",
+      "items": 6834,
+      "newest_publish_time": "2026-06-22T09:11:38+08:00",
+      "coverage_start_date": "2026-06-07",
+      "coverage_end_date": "2026-06-22",
       "covered_calendar_days": 16,
-      "newest_file_mtime": "2026-06-21T12:56:29+08:00",
-      "last_success_at": "2026-06-21T13:11:30+08:00",
+      "newest_file_mtime": "2026-06-22T09:12:07+08:00",
+      "last_success_at": "2026-06-22T09:12:07+08:00",
       "consecutive_failures": 0,
       "last_error": null,
       "paused_until": null,
-      "age_minutes": 8.88,
+      "age_minutes": 4.94,
       "stale_after_minutes": 30,
       "missing": false,
       "is_stale": false
     },
     "cninfo": {
       "files": 14,
-      "items": 17830,
-      "newest_publish_time": "2026-06-19T00:00:00+08:00",
-      "coverage_start_date": "2026-06-06",
-      "coverage_end_date": "2026-06-19",
-      "covered_calendar_days": 14,
-      "newest_file_mtime": "2026-06-21T11:37:58+08:00",
-      "last_success_at": "2026-06-21T12:39:26+08:00",
+      "items": 16772,
+      "newest_publish_time": "2026-06-22T00:00:00+08:00",
+      "coverage_start_date": "2026-06-07",
+      "coverage_end_date": "2026-06-22",
+      "covered_calendar_days": 16,
+      "newest_file_mtime": "2026-06-22T00:39:52+08:00",
+      "last_success_at": "2026-06-22T08:42:20+08:00",
       "consecutive_failures": 0,
       "last_error": null,
       "paused_until": null,
-      "age_minutes": 40.95,
+      "age_minutes": 34.73,
       "stale_after_minutes": 180,
       "missing": false,
       "is_stale": false
     },
     "eastmoney_global": {
       "files": 16,
-      "items": 8869,
-      "newest_publish_time": "2026-06-21T12:53:34+08:00",
-      "coverage_start_date": "2026-06-06",
-      "coverage_end_date": "2026-06-21",
+      "items": 9005,
+      "newest_publish_time": "2026-06-22T09:05:51+08:00",
+      "coverage_start_date": "2026-06-07",
+      "coverage_end_date": "2026-06-22",
       "covered_calendar_days": 16,
-      "newest_file_mtime": "2026-06-21T13:06:40+08:00",
-      "last_success_at": "2026-06-21T13:06:40+08:00",
+      "newest_file_mtime": "2026-06-22T09:07:07+08:00",
+      "last_success_at": "2026-06-22T09:07:07+08:00",
       "consecutive_failures": 0,
       "last_error": null,
       "paused_until": null,
-      "age_minutes": 13.71,
+      "age_minutes": 9.94,
       "stale_after_minutes": 60,
       "missing": false,
       "is_stale": false
     },
     "ndrc": {
       "files": 8,
-      "items": 36,
-      "newest_publish_time": "2026-06-18T16:41:53+08:00",
-      "coverage_start_date": "2026-06-06",
-      "coverage_end_date": "2026-06-18",
-      "covered_calendar_days": 13,
-      "newest_file_mtime": "2026-06-20T23:55:38+08:00",
-      "last_success_at": "2026-06-21T11:41:20+08:00",
+      "items": 39,
+      "newest_publish_time": "2026-06-22T08:24:30+08:00",
+      "coverage_start_date": "2026-06-08",
+      "coverage_end_date": "2026-06-22",
+      "covered_calendar_days": 15,
+      "newest_file_mtime": "2026-06-22T09:05:50+08:00",
+      "last_success_at": "2026-06-22T09:07:00+08:00",
       "consecutive_failures": 0,
       "last_error": null,
       "paused_until": null,
-      "age_minutes": 99.05,
+      "age_minutes": 10.06,
       "stale_after_minutes": 480,
       "missing": false,
       "is_stale": false
@@ -98,36 +98,36 @@
   },
   "collector": {
     "schema_version": "1.0",
-    "updated_at": "2026-06-21T13:11:30+08:00",
+    "updated_at": "2026-06-22T09:12:07+08:00",
     "sources": {
       "cls": {
         "consecutive_failures": 0,
-        "last_attempt_at": "2026-06-21T13:11:30+08:00",
-        "last_success_at": "2026-06-21T13:11:30+08:00",
+        "last_attempt_at": "2026-06-22T09:12:07+08:00",
+        "last_success_at": "2026-06-22T09:12:07+08:00",
         "last_failure_at": null,
         "last_error": null,
         "paused_until": null
       },
       "eastmoney_global": {
         "consecutive_failures": 0,
-        "last_attempt_at": "2026-06-21T13:06:40+08:00",
-        "last_success_at": "2026-06-21T13:06:40+08:00",
+        "last_attempt_at": "2026-06-22T09:07:07+08:00",
+        "last_success_at": "2026-06-22T09:07:07+08:00",
         "last_failure_at": null,
         "last_error": null,
         "paused_until": null
       },
       "cninfo": {
         "consecutive_failures": 0,
-        "last_attempt_at": "2026-06-21T12:39:26+08:00",
-        "last_success_at": "2026-06-21T12:39:26+08:00",
+        "last_attempt_at": "2026-06-22T08:42:20+08:00",
+        "last_success_at": "2026-06-22T08:42:20+08:00",
         "last_failure_at": null,
         "last_error": null,
         "paused_until": null
       },
       "ndrc": {
         "consecutive_failures": 0,
-        "last_attempt_at": "2026-06-21T11:41:20+08:00",
-        "last_success_at": "2026-06-21T11:41:20+08:00",
+        "last_attempt_at": "2026-06-22T09:07:00+08:00",
+        "last_success_at": "2026-06-22T09:07:00+08:00",
         "last_failure_at": null,
         "last_error": null,
         "paused_until": null
@@ -220,22 +220,161 @@
     "available_complete_day_count": 20
   },
   "latest_market": {
-    "morning": null,
+    "morning": {
+      "snapshot_id": "20260622T091500_morning_87dd51c0d6",
+      "mode": "morning",
+      "captured_at": "2026-06-22T09:15:00.610442+08:00",
+      "source_time": "2026-06-22T09:15:00.610442+08:00",
+      "market_date": "20260622",
+      "window_valid": true,
+      "stock_count": 5527,
+      "tradeable_stock_count": 3031,
+      "expected_count": 5527,
+      "actual_count": 5527,
+      "is_complete": true,
+      "size_bytes": 2333375,
+      "checksum": "83c6282a9e8f537ed0e7025e1021dc2438591b1fe8c9686c441c0b204a6b0e63",
+      "download_url": "/v1/market/snapshots/20260622T091500_morning_87dd51c0d6/export?dataset=stocks"
+    },
     "midday": null,
     "overnight": null,
     "custom": null
   },
   "market_status": {
-    "latest_source_time": null,
-    "latest_stock_count": 0,
-    "delay_minutes": null,
-    "missing": true,
-    "source_status": {},
-    "missing_interfaces": []
+    "latest_source_time": "2026-06-22T09:15:00.610442+08:00",
+    "latest_stock_count": 5527,
+    "delay_minutes": 2.06,
+    "missing": false,
+    "source_status": {
+      "stock_spot": {
+        "ok": true,
+        "rows": 5527,
+        "duration_sec": 23.26,
+        "error": null,
+        "columns": [
+          "代码",
+          "名称",
+          "最新价",
+          "涨跌额",
+          "涨跌幅",
+          "买入",
+          "卖出",
+          "昨收",
+          "今开",
+          "最高",
+          "最低",
+          "成交量",
+          "成交额",
+          "时间戳"
+        ]
+      },
+      "industry_boards": {
+        "ok": false,
+        "rows": 0,
+        "duration_sec": 5.924,
+        "error": "RuntimeError: Industry board providers failed: eastmoney_direct=requests=('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); curl=Command '['curl', '--silent', '--show-error', '--location', '--noproxy', '*', '--ipv4', '--max-time', '30', '--header', 'accept: application/json', '--header', 'user-agent: Mozilla/5.0', 'https://17.push2.eastmoney.com/api/qt/clist/get?pn=1&pz=100&po=1&np=1&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2&fid=f3&fs=m%3A90+t%3A2+f%3A%2150&fields=f1%2Cf2%2Cf3%2Cf4%2Cf5%2Cf6%2Cf7%2Cf8%2Cf9%2Cf10%2Cf12%2Cf13%2Cf14%2Cf15%2Cf16%2Cf17%2Cf18%2Cf20%2Cf21%2Cf23%2Cf24%2Cf25%2Cf26%2Cf22%2Cf33%2Cf11%2Cf62%2Cf128%2Cf136%2Cf115%2Cf152%2Cf124%2Cf107%2Cf104%2Cf105%2Cf140%2Cf141%2Cf207%2Cf208%2Cf209%2Cf222']' returned non-zero exit status 56.; akshare=('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "columns": []
+      },
+      "concept_boards": {
+        "ok": false,
+        "rows": 0,
+        "duration_sec": 11.44,
+        "error": "RuntimeError: Concept board providers failed: eastmoney_direct=requests=('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); curl=Command '['curl', '--silent', '--show-error', '--location', '--noproxy', '*', '--ipv4', '--max-time', '30', '--header', 'accept: application/json', '--header', 'user-agent: Mozilla/5.0', 'https://79.push2.eastmoney.com/api/qt/clist/get?pn=5&pz=100&po=1&np=1&ut=bd1d9ddb04089700cf9c27f6f7426281&fltt=2&invt=2&fid=f12&fs=m%3A90+t%3A3+f%3A%2150&fields=f1%2Cf2%2Cf3%2Cf4%2Cf5%2Cf6%2Cf7%2Cf8%2Cf9%2Cf10%2Cf12%2Cf13%2Cf14%2Cf15%2Cf16%2Cf17%2Cf18%2Cf20%2Cf21%2Cf23%2Cf24%2Cf25%2Cf26%2Cf22%2Cf33%2Cf11%2Cf62%2Cf128%2Cf136%2Cf115%2Cf152%2Cf124%2Cf107%2Cf104%2Cf105%2Cf140%2Cf141%2Cf207%2Cf208%2Cf209%2Cf222']' returned non-zero exit status 56.; akshare=('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "columns": []
+      },
+      "individual_fund_flow_today": {
+        "ok": false,
+        "rows": 0,
+        "duration_sec": 0.354,
+        "error": "RuntimeError: Stock fund flow providers failed: eastmoney_direct=requests=('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); curl=Command '['curl', '--silent', '--show-error', '--location', '--noproxy', '*', '--ipv4', '--max-time', '30', '--header', 'accept: application/json', '--header', 'user-agent: Mozilla/5.0', 'https://push2.eastmoney.com/api/qt/clist/get?fid=f62&po=1&pz=100&pn=1&np=1&fltt=2&invt=2&ut=b2884a393a59ad64002292a3e90d46a5&fs=m%3A0+t%3A6+f%3A%212%2Cm%3A0+t%3A13+f%3A%212%2Cm%3A0+t%3A80+f%3A%212%2Cm%3A1+t%3A2+f%3A%212%2Cm%3A1+t%3A23+f%3A%212%2Cm%3A0+t%3A7+f%3A%212%2Cm%3A1+t%3A3+f%3A%212&fields=f12%2Cf14%2Cf2%2Cf3%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf204%2Cf205%2Cf124']' returned non-zero exit status 56.; akshare=('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "columns": []
+      },
+      "individual_fund_flow_5d": {
+        "ok": false,
+        "rows": 0,
+        "duration_sec": 0.356,
+        "error": "RuntimeError: Stock fund flow providers failed: eastmoney_direct=requests=('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); curl=Command '['curl', '--silent', '--show-error', '--location', '--noproxy', '*', '--ipv4', '--max-time', '30', '--header', 'accept: application/json', '--header', 'user-agent: Mozilla/5.0', 'https://push2.eastmoney.com/api/qt/clist/get?fid=f164&po=1&pz=100&pn=1&np=1&fltt=2&invt=2&ut=b2884a393a59ad64002292a3e90d46a5&fs=m%3A0+t%3A6+f%3A%212%2Cm%3A0+t%3A13+f%3A%212%2Cm%3A0+t%3A80+f%3A%212%2Cm%3A1+t%3A2+f%3A%212%2Cm%3A1+t%3A23+f%3A%212%2Cm%3A0+t%3A7+f%3A%212%2Cm%3A1+t%3A3+f%3A%212&fields=f12%2Cf14%2Cf2%2Cf109%2Cf164%2Cf165%2Cf166%2Cf167%2Cf168%2Cf169%2Cf170%2Cf171%2Cf172%2Cf173%2Cf257%2Cf258%2Cf124']' returned non-zero exit status 56.; akshare=('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "columns": []
+      },
+      "industry_fund_flow_today": {
+        "ok": false,
+        "rows": 0,
+        "duration_sec": 0.374,
+        "error": "RuntimeError: Sector fund flow providers failed: eastmoney_direct=requests=('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); curl=Command '['curl', '--silent', '--show-error', '--location', '--noproxy', '*', '--ipv4', '--max-time', '30', '--header', 'accept: application/json', '--header', 'user-agent: Mozilla/5.0', 'https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=100&po=1&np=1&ut=b2884a393a59ad64002292a3e90d46a5&fltt=2&invt=2&fid0=f62&fs=m%3A90+t%3A2&stat=1&fields=f12%2Cf14%2Cf2%2Cf3%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf204%2Cf205%2Cf124']' returned non-zero exit status 56.; akshare=('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "columns": []
+      },
+      "concept_fund_flow_today": {
+        "ok": false,
+        "rows": 0,
+        "duration_sec": 0.356,
+        "error": "RuntimeError: Sector fund flow providers failed: eastmoney_direct=requests=('Connection aborted.', RemoteDisconnected('Remote end closed connection without response')); curl=Command '['curl', '--silent', '--show-error', '--location', '--noproxy', '*', '--ipv4', '--max-time', '30', '--header', 'accept: application/json', '--header', 'user-agent: Mozilla/5.0', 'https://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=100&po=1&np=1&ut=b2884a393a59ad64002292a3e90d46a5&fltt=2&invt=2&fid0=f62&fs=m%3A90+t%3A3&stat=1&fields=f12%2Cf14%2Cf2%2Cf3%2Cf62%2Cf184%2Cf66%2Cf69%2Cf72%2Cf75%2Cf78%2Cf81%2Cf84%2Cf87%2Cf204%2Cf205%2Cf124']' returned non-zero exit status 56.; akshare=('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))",
+        "columns": []
+      },
+      "limit_up_pool": {
+        "ok": true,
+        "rows": 0,
+        "duration_sec": 0.159,
+        "error": null,
+        "columns": []
+      },
+      "previous_limit_up_pool": {
+        "ok": true,
+        "rows": 91,
+        "duration_sec": 0.158,
+        "error": null,
+        "columns": [
+          "序号",
+          "代码",
+          "名称",
+          "涨跌幅",
+          "最新价",
+          "涨停价",
+          "成交额",
+          "流通市值",
+          "总市值",
+          "换手率",
+          "涨速",
+          "振幅",
+          "昨日封板时间",
+          "昨日连板数",
+          "涨停统计",
+          "所属行业"
+        ]
+      },
+      "strong_pool": {
+        "ok": true,
+        "rows": 0,
+        "duration_sec": 0.134,
+        "error": null,
+        "columns": []
+      },
+      "broken_limit_pool": {
+        "ok": true,
+        "rows": 0,
+        "duration_sec": 0.15,
+        "error": null,
+        "columns": []
+      },
+      "dtgc_pool": {
+        "ok": true,
+        "rows": 0,
+        "duration_sec": 0.153,
+        "error": null,
+        "columns": []
+      }
+    },
+    "missing_interfaces": [
+      "industry_boards",
+      "concept_boards",
+      "individual_fund_flow_today",
+      "individual_fund_flow_5d",
+      "industry_fund_flow_today",
+      "concept_fund_flow_today"
+    ]
   },
   "storage": {
     "total_bytes": 63290032128,
-    "used_bytes": 5378101248,
-    "free_bytes": 55211098112
+    "used_bytes": 5381447680,
+    "free_bytes": 55207751680
   }
 }

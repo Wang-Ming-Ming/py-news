@@ -1,9 +1,9 @@
 {
-  "current_time": "2026-06-21T13:20:22+08:00",
-  "current_date": "2026-06-21",
-  "is_trade_day": false,
+  "current_time": "2026-06-22T09:17:04+08:00",
+  "current_date": "2026-06-22",
+  "is_trade_day": true,
   "previous_trade_day": "2026-06-18",
-  "next_trade_day": "2026-06-22",
+  "next_trade_day": "2026-06-23",
   "calendar": {
     "available": true,
     "source": "akshare.tool_trade_date_hist_sina",
