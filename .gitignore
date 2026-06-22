@@ -59,6 +59,7 @@ data_market/latest_*.json
 Thumbs.db
 
 # Configuration (keep example files)
+data_server_cache/
 
 # Temporary files
 *.tmp
