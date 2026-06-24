@@ -109,6 +109,27 @@ class ServerPipelineTest(unittest.TestCase):
         )
         self.assertEqual(selected["snapshot_id"], "historical-1")
 
+    def test_morning_sync_prefers_previous_close_until_current_auction_exists(self):
+        morning = {
+            "snapshot_id": "morning-open",
+            "mode": "morning",
+            "source_time": "2026-06-22T09:45:00+08:00",
+            "market_date": "20260622",
+            "is_complete": True,
+        }
+        close = {
+            "snapshot_id": "overnight-close",
+            "mode": "overnight",
+            "source_time": "2026-06-22T15:00:00+08:00",
+            "market_date": "20260622",
+            "is_complete": True,
+        }
+        selected = _select_snapshot(
+            {"market": {"latest": {"morning": morning, "overnight": close}}},
+            "morning",
+        )
+        self.assertEqual(selected["snapshot_id"], "overnight-close")
+
     def test_history_bootstrap_parses_real_daily_kline_fields(self):
         payload = {
             "data": {

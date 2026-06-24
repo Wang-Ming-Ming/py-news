@@ -69,11 +69,11 @@ def normalize_code(value: Any) -> str:
     return text
 
 
-def validate_payload(payload: dict[str, Any]) -> dict[str, Any]:
+def validate_payload(payload: dict[str, Any], mode: str | None = None) -> dict[str, Any]:
     result = deepcopy(payload)
     candidates = result.get("candidates")
-    if not isinstance(candidates, list) or len(candidates) != 7:
-        raise ValueError("morning/overnight record must contain exactly seven candidates")
+    if not isinstance(candidates, list) or len(candidates) != 8:
+        raise ValueError("morning/overnight record must contain exactly eight candidates")
 
     ranks: set[int] = set()
     candidate_codes: set[str] = set()
@@ -81,8 +81,8 @@ def validate_payload(payload: dict[str, Any]) -> dict[str, Any]:
         if not isinstance(candidate, dict):
             raise ValueError("each candidate must be a JSON object")
         rank = int(candidate.get("rank") or 0)
-        if rank not in range(1, 8) or rank in ranks:
-            raise ValueError("candidate ranks must be unique integers 1-7")
+        if rank not in range(1, 9) or rank in ranks:
+            raise ValueError("candidate ranks must be unique integers 1-8")
         name = str(candidate.get("name") or "").strip()
         if not name:
             raise ValueError(f"candidate rank {rank} is missing name")
@@ -93,8 +93,8 @@ def validate_payload(payload: dict[str, Any]) -> dict[str, Any]:
         ranks.add(rank)
         candidate_codes.add(code)
 
-    if ranks != set(range(1, 8)):
-        raise ValueError("candidate ranks must cover 1-7")
+    if ranks != set(range(1, 9)):
+        raise ValueError("candidate ranks must cover 1-8")
     candidates.sort(key=lambda item: item["rank"])
 
     focus_codes = [normalize_code(value) for value in result.get("focus_codes") or []]
@@ -107,6 +107,10 @@ def validate_payload(payload: dict[str, Any]) -> dict[str, Any]:
     result["response_summary"] = str(result.get("response_summary") or "").strip()
     result["no_trade"] = bool(result.get("no_trade", False))
     result.setdefault("data_context", {})
+    if mode == "morning":
+        for field in ("overseas_sector_context", "holding_actions"):
+            if not isinstance(result.get(field), list):
+                raise ValueError(f"morning record requires {field} as a list")
     return result
 
 
@@ -119,7 +123,7 @@ def record_recommendation(
     if mode not in VALID_MODES:
         raise ValueError(f"mode must be one of {sorted(VALID_MODES)}")
     date.fromisoformat(trade_date)
-    content = validate_payload(payload)
+    content = validate_payload(payload, mode)
     recorded_at = now_iso()
     run_id = f"{trade_date}-{mode}-{datetime.now(CST).strftime('%H%M%S')}-{uuid.uuid4().hex[:8]}"
     digest_source = json.dumps(content, ensure_ascii=False, sort_keys=True, separators=(",", ":"))

@@ -262,7 +262,7 @@ models.py        数据模型
 
 ## 每日推荐封存与复盘
 
-早盘和尾盘 skill 会把最终七只候选、重点票、触发/放弃条件、数据截止时间和卖出纪律封存在：
+早盘和尾盘 skill 会把最终八只候选（含固定第8名低位插针反转票）、重点票、触发/放弃条件、数据截止时间和卖出纪律封存在：
 
 `data_recommendations/daily_recommendations.json`
 

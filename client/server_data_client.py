@@ -511,7 +511,10 @@ def _select_snapshot(manifest: dict[str, Any], mode: str) -> dict[str, Any]:
     market = manifest.get("market", {})
     latest = market.get("latest", {})
     if mode == "morning":
-        candidates = [latest.get("morning"), latest.get("custom")]
+        # Before today's auction exists, yesterday's close is newer and more
+        # decision-relevant than yesterday's opening snapshot. Once a current-
+        # day auction/opening snapshot arrives, the same recency rule selects it.
+        candidates = list(latest.values())
     elif mode == "overnight":
         candidates = [latest.get("overnight"), latest.get("custom")]
     else:

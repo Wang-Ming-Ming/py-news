@@ -1,11 +1,11 @@
 ---
 name: overnight_stock_picker
-description: 'Use when the user asks for a late-session A-share overnight plan, normally from 14:30 onward: scan the full ordinary tradable market, rank seven candidates, identify only the best 1-3 executable names, and provide a next-trading-day exit plan using fresh news/announcements, multi-day market structure, real late-session acceptance, announcement risk, and next-buyer logic.'
+description: 'Use when the user asks for a late-session A-share overnight plan, normally from 14:30 onward: scan the full ordinary tradable market, rank eight candidates including a dedicated low-position pin-reversal/MACD-turn stock, identify only the best 1-3 executable names, and provide a next-trading-day exit plan using fresh news/announcements, multi-day market structure, real late-session acceptance, announcement risk, and next-buyer logic.'
 ---
 
 # Overnight Stock Picker
 
-Recommend seven ranked ordinary A-share candidates for buying late in the session and selling no later than the next trading day. The primary objective for ranks 1-2 is not maximum theoretical upside; it is a realistic positive/red exit window after the user's cost, supported by a clear next buyer.
+Recommend eight ranked ordinary A-share candidates for buying late in the session and selling no later than the next trading day. The primary objective for ranks 1-2 is not maximum theoretical upside; it is a realistic positive/red exit window after the user's cost, supported by a clear next buyer.
 
 Never promise a rise or limit-up. Separate research quality from execution quality and say when no normal-size trade exists.
 
@@ -28,13 +28,13 @@ Confirm the exact next A-share trading day. If carrying across a weekend/holiday
 
 ## Information-Time Gate
 
-Use only information public by the actual decision time. Label catalysts as `pre_move`, `same_session`, `after_close`, or `post_board` using [pre-board discovery](../references/pre_board_discovery.md).
+Use only information public by the actual decision time. Label catalysts as `pre_move`, `same_session`, `after_close`, or `post_board` from their published timestamps.
 
 - Do not use an after-close announcement to explain or predict that day's first board.
 - A keyword/title is discovery only. Read the original before calling it hard catalyst.
 - Keep material risk announcements sticky for 15 calendar days unless an original filing resolves them.
 - Track both publication time and event time. Re-surface verified scheduled events at T-3/T-1/T0.
-- For top candidates and latent scouts, check issuer official news, investor interactions, and industry-event notices when the server feed may have a coverage gap. Preserve source/timestamp and never elevate a rumor.
+- For top candidates, check issuer official news, investor interactions, and industry-event notices only when the server feed may have a material coverage gap. Preserve source/timestamp and never elevate a rumor.
 - In a historical replay, enforce the requested cutoff and never use future market/news data.
 
 ## Decision Objective
@@ -60,12 +60,13 @@ Do not convert raw factor/channel votes into final rank. Treat channels as indep
 
 1. **Sync and validate.** Read the shared context, recent dated archives, news/announcement indexes, and relevant originals. Use a complete cache only with a timestamp warning if the server fails.
 2. **Classify the market.** Use multi-day breadth, turnover, limit-up/broken-limit quality, theme persistence, and core-stock feedback to classify risk-on repair, risk-off, continuation, cash-out, or fresh rotation. Do not infer lifecycle from one snapshot.
-3. **Build evidence paths.** Start from fresh hard company news, policy/industry events, commodity/overseas mapping, confirmed main lines, and market-led capacity/front-row stocks. Map scarce industry-chain nodes with Serenity research as supplemental evidence, never as a closed universe. When a first/second-board anchor validates a product or bottleneck, reverse-map companies with pre-cutoff evidence of real capacity at that node.
-4. **Scan the full ordinary tradable market.** Search main-board stocks for direct beneficiaries, capacity cores, buyable front-row substitutes, pre-ignition trends, quiet acceptance, and strongest-anchor low-position extensions. Do not start from a generated candidate pool.
-5. **Run the latent scout separately.** Use the archetypes in [pre-board discovery](../references/pre_board_discovery.md). A deep-base/no-news chart stays watch-only; an after-close event can support the next session but not the first board; high-volatility emotion reactivation cannot be called quiet ignition. Re-surface scheduled events near `event_at`, label source-coverage gaps, and keep weak-tape same-chain peers in the scout lane until live confirmation.
+3. **Build direct evidence paths.** Start from fresh company news, policy/industry events, commodity/overseas mapping, confirmed themes, directly verified beneficiaries, and market-led front-row stocks. Do not load optional industry research or derive upstream/downstream substitutes during a live recommendation.
+4. **Scan the full ordinary tradable market.** Search main-board stocks for directly supported beneficiaries, buyable front-row names, pre-ignition trends, quiet acceptance, and low-position theme extensions. Do not start from a generated candidate pool.
+5. **Keep low-position ideas evidence-based.** A deep-base/no-news chart stays watch-only; an after-close event can support the next session but not the first board; high-volatility emotion reactivation cannot be called quiet ignition. Do not reverse-map upstream/downstream peers from an anchor stock.
 6. **Verify late-session acceptance.** Use the actual observed 14:30 onward snapshots: position versus VWAP/average price, movement toward/away from day high, volume/amount progression, board synchronization, and final-minute fake-pull or dive. Historical close-only data cannot prove this gate.
-7. **Check risk and executability.** Reject unbuyable sealed boards, unresolved material risk, distribution structures, unclear beneficiary mapping, and names with no credible next buyer.
-8. **Rank seven, execute fewer.** Output seven for comparison, but select normally 1-2 and at most 3. Weak/no-edge markets allow one tiny trial or no trade.
+7. **Check risk and executability.** Reject unbuyable sealed boards, unresolved material risk, distribution structures, unverified relevance, and names with no credible next buyer.
+8. **Scan the dedicated pin-reversal lane.** Run `venv/bin/python analysis/low_pin_reversal_scanner.py --mode overnight --limit 30`, then verify the relative-best setup against fresh messages, theme strength, risk, and actual 14:30+ acceptance.
+9. **Rank eight, execute fewer.** Output eight unique stocks for comparison, but select normally 1-2 and at most 3. Weak/no-edge markets allow one tiny trial or no trade.
 
 ## Full-Market and Permission Rules
 
@@ -81,7 +82,7 @@ Use this hierarchy, then test whether price has already consumed it:
 
 1. Direct company filing with amount/counterparty/date or material transaction.
 2. Policy landing or supply-demand change with clear physical beneficiaries.
-3. Industry event mapped to scarce nodes/capacity cores.
+3. Industry event with directly verified listed-company relevance.
 4. Overseas, commodity, FX, or rate mapping.
 5. Repeated old theme, loose concept, or media imagination.
 
@@ -96,7 +97,7 @@ Hard news does not override an unbuyable price, absent acceptance, or cash-out r
 
 ## Pre-Ignition and Distribution Gate
 
-Search for under-recognized trends with higher lows, controlled volume, MA structure improving, room below the recent high, and same-chain/theme confirmation. Do not require every candidate to already be above MA20; a low-position scout may be below MA10, but it stays observation-only until a real catalyst/sector/auction-tape trigger appears.
+Search for under-recognized trends with higher lows, controlled volume, MA structure improving, room below the recent high, and theme confirmation. Do not require every candidate to already be above MA20; a low-position stock may be below MA10, but it stays observation-only until a real catalyst/sector/tape trigger appears.
 
 Reject fake quiet structures:
 
@@ -108,7 +109,7 @@ Reject fake quiet structures:
 
 Large gain is not automatically rejected. It ranks high only when incremental relay demand is specific and stronger than available profit inventory.
 
-## Seven-Candidate Structure
+## Eight-Candidate Structure
 
 1. Strongest executable next-day premium setup.
 2. Independent replacement with a similarly clear exit path.
@@ -117,8 +118,11 @@ Large gain is not automatically rejected. It ranks high only when incremental re
 5. Controlled higher-elasticity or independent backup theme.
 6. **企稳点火票**: stable/quiet hard-catalyst or confirmed latent setup that passes anti-distribution gates.
 7. **最强涨停逻辑低位承接票**: buyable low-/middle-position extension of the day's strongest unavailable anchor.
+8. **低位插针反转票**: a low/middle-position sweep-and-recovery base from today or the latest 1-3 sessions, followed when needed by a current breakout/MACD turn, healthy volume, real 14:30+ acceptance, and a verified next-day discovery path.
 
-Ranks 6-7 are real candidates, not filler. If they fail catalyst, acceptance, or risk gates, label them observation/trial. They may enter the final 1-3 only when stronger than ranks 3-5.
+Ranks 6-8 are real candidates, not filler. Keep all eight codes unique. If the best pin setup is already in ranks 1-7, move it to rank 8 and replace its former slot. Rank 8 may enter the final 1-3 only after passing shape, message, theme, risk, and late-tape gates. If no setup passes all gates, show the relative-best scanner result as observation-only without inventing execution confidence.
+
+Read [the shared pin-reversal rules](../references/low_pin_reversal.md). The scanner is an objective discovery tool, not a recommendation engine. Inspect `recent_pin_breakouts` first, then same-day `confirmed` and `scouts`. Prefer MACD `red_turn`/`red_expanding`; allow a fast near-cross only after a qualified recent pin plus a current break above the pin high/MA5. Reject high-position self-rescue, negative-announcement pins, extreme-volume distribution, and any candidate that loses VWAP/support after 14:30.
 
 ## Timing Discipline
 
@@ -133,21 +137,22 @@ Write concise Chinese and include:
 - calendar header: current time, latest completed trading day, exact next trading day, extra closed nights;
 - data scope and limitations, including actual late-session snapshot coverage;
 - market regime, theme lifecycle, and next-day capital path;
-- exactly seven ranked candidates;
-- for each: code/name, current price/change, evidence type, catalyst timestamp class, theme/chain role, multi-day structure, late-session acceptance, announcement-risk result, next buyer, premium/exit type, buy area/trigger, abandon condition, position, and next-day sell plan;
+- exactly eight ranked candidates;
+- for each: code/name, current price/change, evidence type, catalyst timestamp class, theme role, multi-day structure, late-session acceptance, announcement-risk result, next buyer, premium/exit type, buy area/trigger, abandon condition, position, and next-day sell plan;
 - rank 6/7 labels;
+- rank 8 `低位插针反转票` with pattern date, confirmation date/days since pin, low/recovery, range position, shadow/close position, pattern/current amount, MACD state, message/theme confirmation, next buyer, trigger, invalidation, position, and next-day exit;
 - conservative 1-2 stock plan and aggressive maximum-3 plan only when justified;
 - explicit “small trial/no normal trade” statement when confidence is insufficient.
 
-Read [strategy reference](references/strategy.md) only for detailed scoring, lifecycle edge cases, and examples. Read [pre-board discovery](../references/pre_board_discovery.md) for latent ignition or missed-winner audits.
+Read [strategy reference](references/strategy.md) only for detailed scoring, lifecycle edge cases, and examples. Do not load optional industry-research resources during a normal recommendation run.
 
 ## Mandatory Recommendation Journal
 
-Before sending the final answer, seal the final seven-stock plan in `data_recommendations/daily_recommendations.json` with:
+Before sending the final answer, seal the final eight-stock plan in `data_recommendations/daily_recommendations.json` with:
 
 `venv/bin/python analysis/recommendation_journal.py record --mode overnight --trade-date YYYY-MM-DD --input /tmp/overnight_recommendation.json`
 
-Use the buy-date as `trade-date`. The input must contain `decision_time`, `market_judgment`, `data_context`, exactly seven `candidates`, `focus_codes`, `no_trade`, and `response_summary`. Each candidate must include rank/code/name plus catalyst/time class, industrial-chain role, current/reference price, late-session acceptance, next buyer, entry trigger/range, abandon condition, position, risk flags, premium type, and next-trading-day sell plan.
+Use the buy-date as `trade-date`. The input must contain `decision_time`, `market_judgment`, `data_context`, exactly eight `candidates`, `focus_codes`, `no_trade`, and `response_summary`. Each candidate must include rank/code/name plus catalyst/time class, theme role, current/reference price, late-session acceptance, next buyer, entry trigger/range, abandon condition, position, risk flags, premium type, and next-trading-day sell plan. Rank 8 must also preserve its objective pin/MACD evidence and confirmation grade.
 
 Do not edit or delete a sealed run after outcomes are known. A revised recommendation creates a new run; the journal preserves the earlier version and marks it superseded. If journaling fails, state that failure in the final answer instead of pretending it was recorded.
 

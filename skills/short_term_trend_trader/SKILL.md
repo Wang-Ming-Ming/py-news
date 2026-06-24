@@ -13,7 +13,7 @@ This is not a promise of profit. Use probability language such as "趋势仍健�
 
 ## Objective Server Data Boundary
 
-The server has no AI and supplies objective data only. It must not determine trend state, announcement risk, industry logic, candidates, or trades. At the start of analysis run:
+The server has no AI and supplies objective data only. It must not determine trend state, announcement risk, catalyst relevance, candidates, or trades. At the start of analysis run:
 
 `venv/bin/python skills/short_term_trend_trader/scripts/server_context.py`
 
@@ -33,7 +33,7 @@ This sync is mandatory and must be the first data action even when a local cache
 Prioritize hard logic plus trend health:
 
 1. Message flow over at least the latest week, not only today's headline.
-2. Theme and industry-chain strength confirmed by market data.
+2. Theme strength and stock relevance confirmed by market data and direct public evidence.
 3. The stock's own trend: higher lows, moving-average support, volume quality, VWAP/average-price behavior, and relative strength.
 4. Capital acceptance: repeated pullback absorption, afternoon/late-session support, and lack of heavy distribution.
 5. Clear sell discipline: once the trend turns weak, exit without arguing with the tape.
@@ -46,15 +46,10 @@ Before analysis, use the newest valid server-backed local cache available:
 
 1. Run `venv/bin/python skills/short_term_trend_trader/scripts/server_context.py` and verify the resulting context, health, calendar, and snapshot version.
 2. Use only the server-backed news/announcement indexes under `data_server_cache` and fetch relevant original text by ID. Do not run local collectors or read `data_dev`.
-4. Read social market signals when available:
+3. Read social market signals when available:
    `data_social/latest_social_signals.json`
-5. Read Serenity hard-logic research cache when available:
-   - `data_research/serenity/latest_watchlist.json`
-   - `data_research/serenity/latest_report.md`
-   - `data_research/serenity/rejected_candidates.md`
-   Treat it as supplemental knowledge, not a closed universe. It helps identify hard-logic trend names and rejected weak logic, but every recommendation must still pass full-market trend and capital confirmation.
-6. Read the latest valid snapshot, features, and pools referenced by `data_server_cache/latest_context.json`; never use legacy local `data_market` files.
-7. Review recent objective market history only from `data_server_cache/archive/YYYY-MM-DD/market/`.
+4. Read the latest valid snapshot, features, and pools referenced by `data_server_cache/latest_context.json`; never use legacy local `data_market` files.
+5. Review recent objective market history only from `data_server_cache/archive/YYYY-MM-DD/market/`.
 
 If server sync fails, use only the latest complete context already under `data_server_cache`, clearly state its timestamp and age, and lower confidence when stale.
 
@@ -65,48 +60,18 @@ For new buys, do not start from `rankings.overnight_candidates` or `rankings.act
 Build candidates in this order:
 
 1. Extract one-week hard themes: policy, company公告, orders, price rises, supply-demand shifts, overseas mapping, industry events, and social attention only as secondary evidence.
-2. Map themes to industry-chain nodes and all tradable A-share stocks.
+2. Search all tradable A-share stocks for directly named companies, verified business beneficiaries, and market-recognized theme leaders or low-position candidates.
 3. Filter by tradability: default exclude STAR Market `688/689`, Beijing Stock Exchange-style restricted names, ST/delisting risk, and names requiring 500K RMB permission. Keep caution on `300/301` unless the user allows them.
 4. Evaluate trend health and position: early trend, confirmed trend, acceleration, healthy pullback, climax, or broken trend.
 5. Validate with current market data: sector strength, leader confirmation, turnover, fund flow, limit-up anchors, relative strength, and recent support.
 
-## Pre-Board and Source-Coverage Pass
+## Direct-Evidence Boundary
 
-Use [pre-board discovery](../references/pre_board_discovery.md) before final ranking.
+Do not load optional industry-research resources or perform upstream/downstream or scarcity inference during a normal trend recommendation. Those resources and data remain stored but are intentionally disabled until separately improved.
 
-- Track scheduled catalysts by both publication date and event date, and re-surface them near T-3/T-1/T0.
-- When a first/second-board anchor confirms a product or bottleneck, reverse-map ordinary tradable companies with pre-cutoff evidence of real capacity or customers at that node.
-- Check issuer official news, investor interactions, and industry-event notices for leading trend candidates when the server feed may be incomplete.
-- Keep low-position weak-tape peers in a scout lane until trend, volume, and sector confirmation appear.
-- A later announcement can validate future continuation but cannot be backfilled to claim an earlier move was predicted.
+For candidate relevance, use only original announcements, reliable reports that name the company, verified public company business facts, and current market recognition. Expectation trades remain eligible when labeled honestly and confirmed by trend, volume, and theme behavior; loose concepts or company-denied stories are rejected.
 
-## Bottleneck Research Gate
-
-This skill should use `serenity-bottleneck` as the main hard-logic research companion, especially for several-day trend trades.
-
-The stock universe remains full-market. The bottleneck pass is used to decide whether a trend stock has a real industrial reason to keep attracting funds, not to create a closed list.
-
-If `data_research/serenity/latest_watchlist.json` exists, use it as a hard-logic supplement after reading the one-week news flow and before final trend ranking. Do not rank only this file. Merge its names with full-market trend candidates confirmed by price, volume, sector behavior, and fund path.
-
-Trend trading can hold future expectations before earnings are confirmed. Classify each Serenity-related trend stock:
-
-- `current_hard_logic`: current business/order/revenue/price evidence exists.
-- `future_expectation`: validation, sample, capacity, customer import, price-rise, or order expectation exists and the tape confirms funds are pricing it.
-- `pure_concept`: only label similarity or explicit company denial.
-
-Do not delete `future_expectation` stocks only because orders are not yet visible. They can be bought/held for several days when the theme is still fermenting and the trend is healthy. However, if they lose trend support or fresh announcements kill the expectation, sell quickly because there is no current earnings cushion.
-
-Workflow:
-
-1. Start with one-week message flow and full-market stock data.
-2. For supply-chain themes, apply Serenity-style analysis: anchor the event, draw the chain, find the scarce node, identify direct beneficiaries, and reject loose concept followers.
-3. Build a hard-logic trend watchlist from the bottleneck result: direct beneficiaries, capacity cores, pre-ignition trend stocks, and low-/middle-position extensions.
-4. Merge that watchlist with market-confirmed trend names from the full market.
-5. Rank only after trend health, capital acceptance, price position, announcement risk, and invalidation levels are checked.
-
-A stock can be held or bought for several days only when both sides agree: the industrial thesis is still alive and the trend tape has not broken. If the bottleneck thesis is strong but the trend breaks, sell. If the chart is strong but the business/chokepoint logic is weak, downgrade to technical speculation.
-
-For future-expectation trades, the industrial thesis means "expectation still has room to be repriced", not "orders have already landed". Track whether the next verification step is approaching and whether money is still accumulating.
+Check issuer official news, investor interactions, or event notices only when the server feed is insufficient for a leading candidate. Do not reverse-map upstream/downstream peers from an anchor stock.
 
 ## Holding Decisions
 

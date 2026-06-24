@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import pytest
+
 from analysis.recommendation_journal import load_journal, record_recommendation, review_context
 
 
@@ -8,6 +10,8 @@ def payload(prefix: str) -> dict:
         "decision_time": "2026-06-18T09:20:00+08:00",
         "market_judgment": f"{prefix} market",
         "data_context": {"snapshot_time": "2026-06-18T09:19:00+08:00"},
+        "overseas_sector_context": [],
+        "holding_actions": [],
         "candidates": [
             {
                 "rank": rank,
@@ -16,7 +20,7 @@ def payload(prefix: str) -> dict:
                 "buy_trigger": "test trigger",
                 "abandon_condition": "test abandon",
             }
-            for rank in range(1, 8)
+            for rank in range(1, 9)
         ],
         "focus_codes": ["600001", "600002"],
         "no_trade": False,
@@ -36,6 +40,15 @@ def test_record_keeps_revisions_and_seals_latest(tmp_path: Path) -> None:
     assert runs[1]["status"] == "active"
     assert runs[1]["sealed"] is True
     assert first["content_sha256"] != second["content_sha256"]
+
+
+def test_morning_record_requires_overseas_and_holding_context(tmp_path: Path) -> None:
+    path = tmp_path / "recommendations.json"
+    missing = payload("missing")
+    missing.pop("holding_actions")
+
+    with pytest.raises(ValueError, match="holding_actions"):
+        record_recommendation(path, "morning", "2026-06-18", missing)
 
 
 def test_review_context_uses_today_morning_and_previous_overnight(tmp_path: Path) -> None:
