@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "updated_at": "2026-06-23T14:56:02+08:00",
+  "updated_at": "2026-06-24T15:07:07+08:00",
   "days": {
     "2026-06-22": {
       "morning": [
@@ -276,6 +276,776 @@
           ],
           "no_trade": false,
           "response_summary": "弱市只重点海思科，仓位3%-5%；通化东宝仅作为小仓第二选择，不建议执行三只进攻组合。若海思科收盘前跌破52.70元，则今天不做新的隔夜仓。"
+        }
+      ]
+    },
+    "2026-06-24": {
+      "morning": [
+        {
+          "run_id": "2026-06-24-morning-105710-8fa8667b",
+          "mode": "morning",
+          "trade_date": "2026-06-24",
+          "recorded_at": "2026-06-24T10:57:10+08:00",
+          "decision_time": "2026-06-24T10:38:00+08:00",
+          "status": "superseded",
+          "superseded_by": "2026-06-24-morning-105946-b97b428c",
+          "sealed": true,
+          "content_sha256": "d9146f60b4f38c0b32b163d6b3e82965d0d7296bad595f097aabee39b94ba427",
+          "market_judgment": "09:45上涨1019家、下跌4237家，市场宽度19.39%，风险偏好收缩，仅局部消息轮动；只允许重点一只。",
+          "data_context": {
+            "snapshot_id": "20260624T094500_morning_b03c64ee31",
+            "snapshot_time": "2026-06-24T09:45:00.599250+08:00",
+            "complete": true,
+            "stock_count": 5368,
+            "quotes_time": "2026-06-24T10:35:45+08:00"
+          },
+          "overseas_sector_context": [
+            {
+              "sector": "科技",
+              "status": "负面",
+              "evidence": "纳指100跌3.29%、费半约跌7%、美光跌超13%"
+            },
+            {
+              "sector": "有色",
+              "status": "负面",
+              "evidence": "黄金跌近1%、LME铜跌278美元"
+            },
+            {
+              "sector": "医药",
+              "status": "A股防御偏强",
+              "evidence": "弱市延续但有兑现风险"
+            }
+          ],
+          "holding_actions": [],
+          "candidates": [
+            {
+              "rank": 1,
+              "code": "603163",
+              "name": "圣晖集成",
+              "thesis": "重大项目签约且开盘正反馈。",
+              "catalyst_class": "公司硬催化",
+              "reference_price": "114.99",
+              "auction_confirmation": "111.39回踩后升至114.99",
+              "buy_trigger": "113.80-114.60承接后站上115.10或突破115.77",
+              "abandon_condition": "跌破113.30",
+              "position": "4%-5%",
+              "risk_flags": [
+                "外围科技大跌"
+              ],
+              "sell_discipline": "117-119兑现，收盘低于113.80退出"
+            },
+            {
+              "rank": 2,
+              "code": "600201",
+              "name": "生物股份",
+              "thesis": "回购报告书叠加医药防御。",
+              "catalyst_class": "回购",
+              "reference_price": "12.18",
+              "auction_confirmation": "11.80下探后收回",
+              "buy_trigger": "12.08-12.16承接后突破12.24",
+              "abandon_condition": "跌破12.02",
+              "position": "3%-4%",
+              "risk_flags": [
+                "医药兑现"
+              ],
+              "sell_discipline": "12.45-12.70兑现"
+            },
+            {
+              "rank": 3,
+              "code": "002468",
+              "name": "申通快递",
+              "thesis": "3.5亿至4.5亿元回购且5月收入同比增长30.23%，但冲高回落。",
+              "catalyst_class": "回购+经营",
+              "reference_price": "13.82",
+              "auction_confirmation": "14.19冲高后回落",
+              "buy_trigger": "站稳13.92并突破14.00",
+              "abandon_condition": "跌破13.62",
+              "position": "3%",
+              "risk_flags": [
+                "冲高回落"
+              ],
+              "sell_discipline": "14.15-14.40兑现"
+            },
+            {
+              "rank": 4,
+              "code": "002549",
+              "name": "凯美特气",
+              "thesis": "电子特种气体业务真实，昨日涨停后仍红盘。",
+              "catalyst_class": "持续主题",
+              "reference_price": "19.07",
+              "auction_confirmation": "冲19.68后回落",
+              "buy_trigger": "19.00承接后重回19.30",
+              "abandon_condition": "跌破18.80",
+              "position": "2%-3%",
+              "risk_flags": [
+                "高位",
+                "外围芯片跌"
+              ],
+              "sell_discipline": "19.50-19.80兑现"
+            },
+            {
+              "rank": 5,
+              "code": "600379",
+              "name": "宝光股份",
+              "thesis": "电网开关业务真实，算电协同下昨日涨停后仍强。",
+              "catalyst_class": "算电协同",
+              "reference_price": "14.34",
+              "auction_confirmation": "13.58后修复",
+              "buy_trigger": "14.15-14.28承接后突破14.45",
+              "abandon_condition": "跌破14.00",
+              "position": "2%-3%",
+              "risk_flags": [
+                "昨日涨停"
+              ],
+              "sell_discipline": "14.70-15.00兑现"
+            },
+            {
+              "rank": 6,
+              "code": "601518",
+              "name": "吉林高速",
+              "thesis": "企稳点火票；中标但开盘资金否定。",
+              "catalyst_class": "中标未确认",
+              "reference_price": "2.94",
+              "auction_confirmation": "开3.00后跌2.33%",
+              "buy_trigger": "收回3.03并站稳",
+              "abandon_condition": "跌破2.93",
+              "position": "0仓观察",
+              "risk_flags": [
+                "未确认"
+              ],
+              "sell_discipline": "触发后不守3.03退出"
+            },
+            {
+              "rank": 7,
+              "code": "000065",
+              "name": "北方国际",
+              "thesis": "国际工程最强主题的低位承接，中工国际涨停。",
+              "catalyst_class": "涨停主题承接",
+              "reference_price": "12.24",
+              "auction_confirmation": "11.83后回升",
+              "buy_trigger": "12.10-12.25承接后突破12.35",
+              "abandon_condition": "跌破11.95",
+              "position": "2%-3%",
+              "risk_flags": [
+                "无今日公司催化"
+              ],
+              "sell_discipline": "12.50-12.75兑现"
+            },
+            {
+              "rank": 8,
+              "code": "002090",
+              "name": "金智科技",
+              "thesis": "9.55插针收回，MACD底部翻红且电网确认。",
+              "catalyst_class": "插针+MACD",
+              "reference_price": "9.69",
+              "auction_confirmation": "下影53.6%，MACD柱-0.0245转+0.0378",
+              "buy_trigger": "突破9.87或回踩后重上9.78",
+              "abandon_condition": "跌破9.55",
+              "position": "B-观察2%-3%",
+              "risk_flags": [
+                "无公司硬催化"
+              ],
+              "sell_discipline": "10.05-10.25兑现",
+              "pin_macd_evidence": {
+                "recent_low": "6月22日8.82，今日9.55后回收",
+                "lower_shadow_ratio_0945": 0.5357,
+                "macd_hist_20260623": -0.0245,
+                "macd_hist_20260624": 0.0378,
+                "confirmation_grade": "B-观察级"
+              }
+            }
+          ],
+          "focus_codes": [
+            "603163"
+          ],
+          "no_trade": false,
+          "response_summary": "弱市只重点圣晖集成，生物股份第二观察；圣晖跌破113.30则不新开仓。"
+        },
+        {
+          "run_id": "2026-06-24-morning-105946-b97b428c",
+          "mode": "morning",
+          "trade_date": "2026-06-24",
+          "recorded_at": "2026-06-24T10:59:46+08:00",
+          "decision_time": "2026-06-24T10:58:40+08:00",
+          "status": "active",
+          "superseded_by": null,
+          "sealed": true,
+          "content_sha256": "b3dec1eb3d0251af377d8524585aaf1d64bbf5ba776d3003f415403c2b1e90e3",
+          "market_judgment": "09:45上涨1019家、下跌4237家，市场宽度19.39%，风险偏好收缩，仅局部消息轮动；只允许重点一只。",
+          "data_context": {
+            "snapshot_id": "20260624T094500_morning_b03c64ee31",
+            "snapshot_time": "2026-06-24T09:45:00.599250+08:00",
+            "complete": true,
+            "stock_count": 5368,
+            "quotes_time": "2026-06-24T10:58:40+08:00"
+          },
+          "overseas_sector_context": [
+            {
+              "sector": "科技",
+              "status": "负面",
+              "evidence": "纳指100跌3.29%、费半约跌7%、美光跌超13%"
+            },
+            {
+              "sector": "有色",
+              "status": "负面",
+              "evidence": "黄金跌近1%、LME铜跌278美元"
+            },
+            {
+              "sector": "医药",
+              "status": "A股防御偏强",
+              "evidence": "弱市延续但有兑现风险"
+            }
+          ],
+          "holding_actions": [],
+          "candidates": [
+            {
+              "rank": 1,
+              "code": "603163",
+              "name": "圣晖集成",
+              "thesis": "重大项目签约且开盘正反馈。",
+              "catalyst_class": "公司硬催化",
+              "reference_price": "114.16元（10:58，+3.36%）",
+              "auction_confirmation": "111.39回踩后升至114.99",
+              "buy_trigger": "113.80-114.60承接后站上115.10或突破115.77",
+              "abandon_condition": "跌破113.30",
+              "position": "4%-5%",
+              "risk_flags": [
+                "外围科技大跌"
+              ],
+              "sell_discipline": "117-119兑现，收盘低于113.80退出"
+            },
+            {
+              "rank": 2,
+              "code": "600201",
+              "name": "生物股份",
+              "thesis": "回购报告书叠加医药防御。",
+              "catalyst_class": "回购",
+              "reference_price": "12.42元（10:58，+4.55%）",
+              "auction_confirmation": "11.80下探后收回",
+              "buy_trigger": "不追涨；12.25-12.35回踩承接后重上12.45，或有效突破12.50",
+              "abandon_condition": "跌破12.20或医药前排集中炸板",
+              "position": "3%-4%",
+              "risk_flags": [
+                "医药兑现"
+              ],
+              "sell_discipline": "12.45-12.70兑现"
+            },
+            {
+              "rank": 3,
+              "code": "002468",
+              "name": "申通快递",
+              "thesis": "3.5亿至4.5亿元回购且5月收入同比增长30.23%，但冲高回落。",
+              "catalyst_class": "回购+经营",
+              "reference_price": "13.83元（10:58，+0.66%）",
+              "auction_confirmation": "14.19冲高后回落",
+              "buy_trigger": "站稳13.92并突破14.00",
+              "abandon_condition": "跌破13.62",
+              "position": "3%",
+              "risk_flags": [
+                "冲高回落"
+              ],
+              "sell_discipline": "14.15-14.40兑现"
+            },
+            {
+              "rank": 4,
+              "code": "002549",
+              "name": "凯美特气",
+              "thesis": "电子特种气体业务真实，昨日涨停后仍红盘。",
+              "catalyst_class": "持续主题",
+              "reference_price": "18.99元（10:58，+1.71%）",
+              "auction_confirmation": "冲19.68后回落",
+              "buy_trigger": "19.00承接后重回19.30",
+              "abandon_condition": "跌破18.80",
+              "position": "2%-3%",
+              "risk_flags": [
+                "高位",
+                "外围芯片跌"
+              ],
+              "sell_discipline": "19.50-19.80兑现"
+            },
+            {
+              "rank": 5,
+              "code": "600379",
+              "name": "宝光股份",
+              "thesis": "电网开关业务真实，算电协同下昨日涨停后仍强。",
+              "catalyst_class": "算电协同",
+              "reference_price": "14.49元（10:58，+5.54%）",
+              "auction_confirmation": "13.58后修复",
+              "buy_trigger": "不追；14.25-14.40回踩承接后重新站上14.55",
+              "abandon_condition": "跌破14.15或电网强势股普遍转弱",
+              "position": "2%-3%",
+              "risk_flags": [
+                "昨日涨停"
+              ],
+              "sell_discipline": "14.70-15.00兑现"
+            },
+            {
+              "rank": 6,
+              "code": "601518",
+              "name": "吉林高速",
+              "thesis": "企稳点火票；中标但开盘资金否定。",
+              "catalyst_class": "中标未确认",
+              "reference_price": "2.91元（10:58，-3.32%）",
+              "auction_confirmation": "开3.00后跌2.33%",
+              "buy_trigger": "今日已跌破原放弃位，取消交易",
+              "abandon_condition": "已触发：跌破2.93",
+              "position": "0仓观察",
+              "risk_flags": [
+                "未确认"
+              ],
+              "sell_discipline": "触发后不守3.03退出"
+            },
+            {
+              "rank": 7,
+              "code": "000065",
+              "name": "北方国际",
+              "thesis": "国际工程最强主题的低位承接，中工国际涨停。",
+              "catalyst_class": "涨停主题承接",
+              "reference_price": "12.19元（10:58，+2.35%）",
+              "auction_confirmation": "11.83后回升",
+              "buy_trigger": "12.10-12.25承接后突破12.35",
+              "abandon_condition": "跌破11.95",
+              "position": "2%-3%",
+              "risk_flags": [
+                "无今日公司催化"
+              ],
+              "sell_discipline": "12.50-12.75兑现"
+            },
+            {
+              "rank": 8,
+              "code": "002090",
+              "name": "金智科技",
+              "thesis": "9.55插针收回，MACD底部翻红且电网确认。",
+              "catalyst_class": "插针+MACD",
+              "reference_price": "9.59元（10:58，-1.24%）",
+              "auction_confirmation": "下影53.6%，MACD柱-0.0245转+0.0378",
+              "buy_trigger": "当前不买；先重上9.78，再放量突破9.87",
+              "abandon_condition": "跌破9.55",
+              "position": "B-观察2%-3%",
+              "risk_flags": [
+                "无公司硬催化"
+              ],
+              "sell_discipline": "10.05-10.25兑现",
+              "pin_macd_evidence": {
+                "recent_low": "6月22日8.82，今日9.55后回收",
+                "lower_shadow_ratio_0945": 0.5357,
+                "macd_hist_20260623": -0.0245,
+                "macd_hist_20260624": 0.0378,
+                "confirmation_grade": "B-观察级"
+              }
+            }
+          ],
+          "focus_codes": [
+            "603163"
+          ],
+          "no_trade": false,
+          "response_summary": "弱市只重点圣晖集成，需重新站上115.10或有效突破115.77；生物股份涨至4.55%后只等回踩，吉林高速取消，金智科技接近取消线。"
+        }
+      ],
+      "overnight": [
+        {
+          "run_id": "2026-06-24-overnight-150516-662b2267",
+          "mode": "overnight",
+          "trade_date": "2026-06-24",
+          "recorded_at": "2026-06-24T15:05:16+08:00",
+          "decision_time": "2026-06-24T14:52:18+08:00",
+          "status": "superseded",
+          "superseded_by": "2026-06-24-overnight-150707-2f7cfa6e",
+          "sealed": true,
+          "content_sha256": "794e4e3b89463b6112e361d89eb5f2c7354c1891b3e0d74d4f3282f160afd3e8",
+          "market_judgment": "弱市中的局部强轮动：市场广度25.89%，半导体、元件、专业工程、化工和医药局部确认，但下跌家数4058、炸板23，下一交易日优先走容量核心与硬公告低拥挤票，回避高位放量兑现。",
+          "data_context": {
+            "snapshot_id": "20260624T145200_overnight_89c02e8c15",
+            "source_time": "2026-06-24T14:52:00+08:00",
+            "is_complete": true,
+            "history_days": 15,
+            "news_window": "2026-06-10 to 2026-06-24",
+            "next_trade_day": "2026-06-25"
+          },
+          "candidates": [
+            {
+              "rank": 1,
+              "code": "002001",
+              "name": "新和成",
+              "catalyst": "2026-06-24回购公司股份方案",
+              "time_class": "same_session",
+              "theme_role": "化工硬公告容量票",
+              "current_price": 30.68,
+              "late_session_acceptance": "14:30/14:40/14:52为30.72/30.68/30.68，稳定守住开盘与MA5",
+              "next_buyer": "回购预期与化工轮动资金",
+              "entry_range": "30.60-30.75",
+              "entry_trigger": "尾盘不破30.55",
+              "abandon_condition": "跌破30.45或板块明显退潮",
+              "position": "8%-10%",
+              "risk_flags": [],
+              "premium_type": "冲高型",
+              "sell_plan": "高开不能延续5-10分钟减仓；平低开10分钟不能收复30.68退出"
+            },
+            {
+              "rank": 2,
+              "code": "000938",
+              "name": "紫光股份",
+              "catalyst": "新华三少数股权过户完成；半导体/算力容量核心",
+              "time_class": "pre_move",
+              "theme_role": "强主题容量承接",
+              "current_price": 27.59,
+              "late_session_acceptance": "14:30/14:40/14:52为27.56/27.57/27.59，收在日高27.60附近",
+              "next_buyer": "半导体与算力方向机构/趋势资金",
+              "entry_range": "27.48-27.60",
+              "entry_trigger": "守住27.45且板块前排不炸板扩散",
+              "abandon_condition": "跌破27.30",
+              "position": "8%-10%",
+              "risk_flags": [],
+              "premium_type": "盘中延续型",
+              "sell_plan": "高开冲高不过前高先减；低开10分钟不能收复27.59退出"
+            },
+            {
+              "rank": 3,
+              "code": "601677",
+              "name": "明泰铝业",
+              "catalyst": "再生铝成品产能超100万吨并处于满产状态",
+              "time_class": "pre_move",
+              "theme_role": "金属低位容量票",
+              "current_price": 17.0,
+              "late_session_acceptance": "14:30/14:40/14:52为16.95/17.04/17.00，回踩有限并靠近日高17.14",
+              "next_buyer": "有色轮动与低位趋势资金",
+              "entry_range": "16.88-17.03",
+              "entry_trigger": "不破16.85",
+              "abandon_condition": "跌破16.72",
+              "position": "6%-8%",
+              "risk_flags": [],
+              "premium_type": "冲高型",
+              "sell_plan": "高开冲17.30附近受阻先卖；低开不收复17.00退出"
+            },
+            {
+              "rank": 4,
+              "code": "002756",
+              "name": "永兴材料",
+              "catalyst": "控股子公司签署锂业增资暨合作协议",
+              "time_class": "pre_move",
+              "theme_role": "能源金属硬公告前排",
+              "current_price": 64.3,
+              "late_session_acceptance": "14:30/14:40/14:52为64.30/64.25/64.30，保持高位但当日涨幅较大",
+              "next_buyer": "锂价景气与能源金属接力资金",
+              "entry_range": "63.90-64.35",
+              "entry_trigger": "守住63.80且锂业涨停锚点不松动",
+              "abandon_condition": "跌破63.40",
+              "position": "4%-5%",
+              "risk_flags": [
+                "当日涨8.47%",
+                "次日兑现风险较高"
+              ],
+              "premium_type": "高开型/兑现风险型",
+              "sell_plan": "高开即优先兑现；5分钟不能创新高卖出，不追求格局"
+            },
+            {
+              "rank": 5,
+              "code": "600309",
+              "name": "万华化学",
+              "catalyst": "福建工业园80万吨/年MDI装置停产检修",
+              "time_class": "pre_move",
+              "theme_role": "化工容量核心",
+              "current_price": 74.68,
+              "late_session_acceptance": "14:30/14:40/14:52为74.75/74.68/74.68，承接平稳但低于日高76.00",
+              "next_buyer": "MDI供给预期与化工机构资金",
+              "entry_range": "74.45-74.75",
+              "entry_trigger": "守住74.35",
+              "abandon_condition": "跌破74.05",
+              "position": "5%-6%",
+              "risk_flags": [
+                "日内上影偏长"
+              ],
+              "premium_type": "盘中延续型",
+              "sell_plan": "高开不过75.50减；平低开失守74.68退出"
+            },
+            {
+              "rank": 6,
+              "code": "000739",
+              "name": "普洛药业",
+              "label": "企稳点火票",
+              "catalyst": "海外CDMO项目通过官方审计并投入商业化生产；回购用于注销",
+              "time_class": "pre_move",
+              "theme_role": "医药硬逻辑潜伏",
+              "current_price": 16.83,
+              "late_session_acceptance": "14:30/14:40/14:52为16.89/16.83/16.83，守住开盘但未回收日高",
+              "next_buyer": "CDMO事件再定价与医药轮动资金",
+              "entry_range": "16.76-16.85",
+              "entry_trigger": "不破16.75且尾盘成交不继续萎缩",
+              "abandon_condition": "跌破16.65",
+              "position": "4%-5%",
+              "risk_flags": [
+                "尾盘强度一般"
+              ],
+              "premium_type": "低开修复型",
+              "sell_plan": "明早不能迅速站回16.90即走；冲17.10附近受阻兑现"
+            },
+            {
+              "rank": 7,
+              "code": "000100",
+              "name": "TCL科技",
+              "label": "最强涨停主题低位承接票",
+              "catalyst": "2026年回购社会公众股份首次回购；面板/半导体方向强势",
+              "time_class": "same_session",
+              "theme_role": "半导体/光电低位容量承接",
+              "current_price": 4.85,
+              "late_session_acceptance": "14:30/14:40/14:52为4.85/4.86/4.85，未跳水但尚未突破4.95",
+              "next_buyer": "显示面板与半导体低位轮动资金",
+              "entry_range": "4.83-4.86",
+              "entry_trigger": "守住4.82并放量突破4.88",
+              "abandon_condition": "跌破4.79",
+              "position": "4%-5%",
+              "risk_flags": [
+                "当天未走强，只能条件单思路"
+              ],
+              "premium_type": "低开修复型",
+              "sell_plan": "次日不站4.88不恋战；冲4.95-5.00受阻卖出"
+            },
+            {
+              "rank": 8,
+              "code": "600201",
+              "name": "生物股份",
+              "label": "低位插针反转票",
+              "catalyst": "2026-06-24集中竞价回购报告书",
+              "time_class": "same_session",
+              "theme_role": "医药低位形态确认",
+              "current_price": 12.31,
+              "late_session_acceptance": "14:30/14:40/14:52为12.35/12.31/12.31，守住开盘11.99与MA5；未出现末段跳水",
+              "next_buyer": "回购事件、医药轮动与插针反转资金",
+              "entry_range": "12.25-12.35",
+              "entry_trigger": "守住12.22",
+              "abandon_condition": "跌破12.15",
+              "position": "4%-5%",
+              "risk_flags": [
+                "日高12.50附近有抛压"
+              ],
+              "premium_type": "冲高型",
+              "sell_plan": "冲12.50不能突破先卖；低开10分钟不能收复12.31退出",
+              "pin_evidence": {
+                "pattern_date": "2026-06-22",
+                "confirmation_date": "2026-06-24",
+                "days_since_pin": 2,
+                "pin_low": 11.2,
+                "pin_close": 11.92,
+                "lower_shadow_ratio": 0.7273,
+                "close_position": 0.9351,
+                "recovery_from_low_pct": 6.4286,
+                "range_position_20d": 0.4216,
+                "pattern_amount": 277789667,
+                "confirmation_amount": 316699243,
+                "macd_state": "red_expanding",
+                "macd_histogram": 0.104167,
+                "confirmation_grade": "A-"
+              }
+            }
+          ],
+          "focus_codes": [
+            "002001",
+            "000938",
+            "601677"
+          ],
+          "no_trade": false,
+          "response_summary": "保守新和成、紫光股份；进攻加明泰铝业。市场整体弱，组合总仓不宜超过25%，本方案在收盘后仅作封盘记录。"
+        },
+        {
+          "run_id": "2026-06-24-overnight-150707-2f7cfa6e",
+          "mode": "overnight",
+          "trade_date": "2026-06-24",
+          "recorded_at": "2026-06-24T15:07:07+08:00",
+          "decision_time": "2026-06-24T14:52:18+08:00",
+          "status": "active",
+          "superseded_by": null,
+          "sealed": true,
+          "content_sha256": "ca70344eeb597569faec1a055a05292f91c2d724348771e92cce80d7b813a12d",
+          "market_judgment": "弱市中的局部强轮动：市场广度25.89%，半导体、元件、专业工程、化工和医药局部确认，但下跌家数4058、炸板23，下一交易日优先走容量核心与硬公告低拥挤票，回避高位放量兑现。",
+          "data_context": {
+            "snapshot_id": "20260624T145200_overnight_89c02e8c15",
+            "source_time": "2026-06-24T14:52:00+08:00",
+            "is_complete": true,
+            "history_days": 15,
+            "news_window": "2026-06-10 to 2026-06-24",
+            "next_trade_day": "2026-06-25"
+          },
+          "candidates": [
+            {
+              "rank": 1,
+              "code": "002001",
+              "name": "新和成",
+              "catalyst": "2026-06-24回购公司股份方案",
+              "time_class": "same_session",
+              "theme_role": "化工硬公告容量票",
+              "current_price": 30.68,
+              "late_session_acceptance": "14:30/14:40/14:52为30.72/30.68/30.68，稳定守住开盘与MA5",
+              "next_buyer": "回购预期与化工轮动资金",
+              "entry_range": "30.60-30.75",
+              "entry_trigger": "尾盘不破30.55",
+              "abandon_condition": "跌破30.45或板块明显退潮",
+              "position": "8%-10%",
+              "risk_flags": [],
+              "premium_type": "冲高型",
+              "sell_plan": "高开不能延续5-10分钟减仓；平低开10分钟不能收复30.68退出"
+            },
+            {
+              "rank": 2,
+              "code": "000938",
+              "name": "紫光股份",
+              "catalyst": "新华三少数股权过户完成；半导体/算力容量核心",
+              "time_class": "pre_move",
+              "theme_role": "强主题容量承接",
+              "current_price": 27.59,
+              "late_session_acceptance": "14:30/14:40/14:52为27.56/27.57/27.59，收在日高27.60附近",
+              "next_buyer": "半导体与算力方向机构/趋势资金",
+              "entry_range": "27.48-27.60",
+              "entry_trigger": "守住27.45且板块前排不炸板扩散",
+              "abandon_condition": "跌破27.30",
+              "position": "8%-10%",
+              "risk_flags": [],
+              "premium_type": "盘中延续型",
+              "sell_plan": "高开冲高不过前高先减；低开10分钟不能收复27.59退出"
+            },
+            {
+              "rank": 3,
+              "code": "601677",
+              "name": "明泰铝业",
+              "catalyst": "再生铝成品产能超100万吨并处于满产状态",
+              "time_class": "pre_move",
+              "theme_role": "金属低位容量票",
+              "current_price": 17.0,
+              "late_session_acceptance": "14:30/14:40/14:52为16.95/17.04/17.00，回踩有限并靠近日高17.14",
+              "next_buyer": "有色轮动与低位趋势资金",
+              "entry_range": "16.88-17.03",
+              "entry_trigger": "不破16.85",
+              "abandon_condition": "跌破16.72",
+              "position": "6%-8%",
+              "risk_flags": [],
+              "premium_type": "冲高型",
+              "sell_plan": "高开冲17.30附近受阻先卖；低开不收复17.00退出"
+            },
+            {
+              "rank": 4,
+              "code": "002756",
+              "name": "永兴材料",
+              "catalyst": "控股子公司签署锂业增资暨合作协议",
+              "time_class": "pre_move",
+              "theme_role": "能源金属硬公告前排",
+              "current_price": 64.3,
+              "late_session_acceptance": "14:30/14:40/14:52为64.30/64.25/64.30，保持高位但当日涨幅较大",
+              "next_buyer": "锂价景气与能源金属接力资金",
+              "entry_range": "63.90-64.35",
+              "entry_trigger": "守住63.80且锂业涨停锚点不松动",
+              "abandon_condition": "跌破63.40",
+              "position": "4%-5%",
+              "risk_flags": [
+                "当日涨8.47%",
+                "次日兑现风险较高"
+              ],
+              "premium_type": "高开型/兑现风险型",
+              "sell_plan": "高开即优先兑现；5分钟不能创新高卖出，不追求格局"
+            },
+            {
+              "rank": 5,
+              "code": "600309",
+              "name": "万华化学",
+              "catalyst": "福建工业园80万吨/年MDI装置停产检修",
+              "time_class": "pre_move",
+              "theme_role": "化工容量核心",
+              "current_price": 74.68,
+              "late_session_acceptance": "14:30/14:40/14:52为74.75/74.68/74.68，承接平稳但低于日高76.00",
+              "next_buyer": "MDI供给预期与化工机构资金",
+              "entry_range": "74.45-74.75",
+              "entry_trigger": "守住74.35",
+              "abandon_condition": "跌破74.05",
+              "position": "5%-6%",
+              "risk_flags": [
+                "日内上影偏长"
+              ],
+              "premium_type": "盘中延续型",
+              "sell_plan": "高开不过75.50减；平低开失守74.68退出"
+            },
+            {
+              "rank": 6,
+              "code": "000739",
+              "name": "普洛药业",
+              "label": "企稳点火票",
+              "catalyst": "海外CDMO项目通过官方审计并投入商业化生产；回购用于注销",
+              "time_class": "pre_move",
+              "theme_role": "医药硬逻辑潜伏",
+              "current_price": 16.83,
+              "late_session_acceptance": "14:30/14:40/14:52为16.89/16.83/16.83，守住开盘但未回收日高",
+              "next_buyer": "CDMO事件再定价与医药轮动资金",
+              "entry_range": "16.76-16.85",
+              "entry_trigger": "不破16.75且尾盘成交不继续萎缩",
+              "abandon_condition": "跌破16.65",
+              "position": "4%-5%",
+              "risk_flags": [
+                "尾盘强度一般"
+              ],
+              "premium_type": "低开修复型",
+              "sell_plan": "明早不能迅速站回16.90即走；冲17.10附近受阻兑现"
+            },
+            {
+              "rank": 7,
+              "code": "000100",
+              "name": "TCL科技",
+              "label": "最强涨停主题低位承接票",
+              "catalyst": "2026年回购社会公众股份首次回购；面板/半导体方向强势",
+              "time_class": "same_session",
+              "theme_role": "半导体/光电低位容量承接",
+              "current_price": 4.85,
+              "late_session_acceptance": "14:30/14:40/14:52为4.85/4.86/4.85，未跳水但尚未突破4.95",
+              "next_buyer": "显示面板与半导体低位轮动资金",
+              "entry_range": "4.83-4.86",
+              "entry_trigger": "守住4.82并放量突破4.88",
+              "abandon_condition": "跌破4.79",
+              "position": "4%-5%",
+              "risk_flags": [
+                "当天未走强，只能条件单思路"
+              ],
+              "premium_type": "低开修复型",
+              "sell_plan": "次日不站4.88不恋战；冲4.95-5.00受阻卖出"
+            },
+            {
+              "rank": 8,
+              "code": "600201",
+              "name": "生物股份",
+              "label": "低位插针反转票",
+              "catalyst": "2026-06-24集中竞价回购报告书",
+              "time_class": "same_session",
+              "theme_role": "医药低位形态确认",
+              "current_price": 12.31,
+              "late_session_acceptance": "14:30/14:40/14:52为12.35/12.31/12.31，守住开盘11.99与MA5；未出现末段跳水",
+              "next_buyer": "回购事件、医药轮动与插针反转资金",
+              "entry_range": "12.25-12.35",
+              "entry_trigger": "守住12.22",
+              "abandon_condition": "跌破12.15",
+              "position": "4%-5%",
+              "risk_flags": [
+                "日高12.50附近有抛压"
+              ],
+              "premium_type": "冲高型",
+              "sell_plan": "冲12.50不能突破先卖；低开10分钟不能收复12.31退出",
+              "pin_evidence": {
+                "pattern_date": "2026-06-22",
+                "confirmation_date": "2026-06-24",
+                "days_since_pin": 2,
+                "pin_low": 11.2,
+                "pin_close": 11.92,
+                "lower_shadow_ratio": 0.7273,
+                "close_position": 0.9351,
+                "recovery_from_low_pct": 6.4286,
+                "range_position_20d": 0.4216,
+                "pattern_amount": 277789667,
+                "confirmation_amount": 316699243,
+                "macd_state": "red_expanding",
+                "macd_histogram": 0.104167,
+                "confirmation_grade": "A-"
+              }
+            }
+          ],
+          "focus_codes": [
+            "002001"
+          ],
+          "no_trade": false,
+          "response_summary": "市场广度仅25.89%，按弱市纪律实际只重点新和成；紫光股份和明泰铝业仅为替补观察，不允许三票同时买。本方案在收盘后仅作封盘记录。"
         }
       ]
     }

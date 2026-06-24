@@ -15,6 +15,8 @@ Run first:
 
 `venv/bin/python skills/overnight_stock_picker/scripts/server_context.py`
 
+Run this synchronization only once per recommendation. It must be incremental: download only missing/new server data and reuse the shared dated cache. Do not start a second synchronization merely to wait for a newer snapshot. If the single sync fails or stalls, use the newest complete local server-backed cache with an explicit timestamp/limitation; never let retries consume the trading window.
+
 All stock skills share `data_server_cache/` and `latest_context.json`. Verify:
 
 - context mode, server time, calendar, latest valid snapshot time;
@@ -23,6 +25,8 @@ All stock skills share `data_server_cache/` and `latest_context.json`. Verify:
 - availability of actual 14:30-15:00 snapshots versus historical-close-only data.
 
 Use only server-backed objective data. Fetch relevant news/announcement originals by ID. The server never decides themes, hard logic, lifecycle, risks, candidates, or rankings; Codex does.
+
+Prefer compact structured queries over printing or rereading multi-megabyte raw JSON. Read only the fields and originals needed for the current decision. Run independent local reads/checks concurrently when possible, but keep final judgment with Codex.
 
 Confirm the exact next A-share trading day. If carrying across a weekend/holiday, state the extra nights, reduce position/confidence, and require a catalyst/buyer story capable of surviving the closure. Without a reliable calendar, output research-only observations, not executable prices or normal position sizes.
 
@@ -60,13 +64,16 @@ Do not convert raw factor/channel votes into final rank. Treat channels as indep
 
 1. **Sync and validate.** Read the shared context, recent dated archives, news/announcement indexes, and relevant originals. Use a complete cache only with a timestamp warning if the server fails.
 2. **Classify the market.** Use multi-day breadth, turnover, limit-up/broken-limit quality, theme persistence, and core-stock feedback to classify risk-on repair, risk-off, continuation, cash-out, or fresh rotation. Do not infer lifecycle from one snapshot.
-3. **Build direct evidence paths.** Start from fresh company news, policy/industry events, commodity/overseas mapping, confirmed themes, directly verified beneficiaries, and market-led front-row stocks. Do not load optional industry research or derive upstream/downstream substitutes during a live recommendation.
-4. **Scan the full ordinary tradable market.** Search main-board stocks for directly supported beneficiaries, buyable front-row names, pre-ignition trends, quiet acceptance, and low-position theme extensions. Do not start from a generated candidate pool.
-5. **Keep low-position ideas evidence-based.** A deep-base/no-news chart stays watch-only; an after-close event can support the next session but not the first board; high-volatility emotion reactivation cannot be called quiet ignition. Do not reverse-map upstream/downstream peers from an anchor stock.
-6. **Verify late-session acceptance.** Use the actual observed 14:30 onward snapshots: position versus VWAP/average price, movement toward/away from day high, volume/amount progression, board synchronization, and final-minute fake-pull or dive. Historical close-only data cannot prove this gate.
-7. **Check risk and executability.** Reject unbuyable sealed boards, unresolved material risk, distribution structures, unverified relevance, and names with no credible next buyer.
-8. **Scan the dedicated pin-reversal lane.** Run `venv/bin/python analysis/low_pin_reversal_scanner.py --mode overnight --limit 30`, then verify the relative-best setup against fresh messages, theme strength, risk, and actual 14:30+ acceptance.
-9. **Rank eight, execute fewer.** Output eight unique stocks for comparison, but select normally 1-2 and at most 3. Weak/no-edge markets allow one tiny trial or no trade.
+3. **Run three independent full-market evidence lanes before narrowing.** Never first choose an active-price pool and then inspect news only inside it.
+   - **Message lane:** scan every ordinary tradable stock against the latest week of company filings, reliable news, policy/events, commodity/overseas changes, and public business facts. Include quiet stocks with new hard evidence even when price has not moved.
+   - **Market-structure lane:** independently scan every ordinary tradable stock across 5-15 day position, trend, volume/price structure, crowding, distribution, and current tape. Do not require a same-day headline.
+   - **Special-setup lane:** independently discover pre-ignition/quiet acceptance, strongest-anchor low-position acceptance, and qualified pin-reversal setups. Run `venv/bin/python analysis/low_pin_reversal_scanner.py --mode overnight --limit 30` for objective pin discovery.
+4. **Merge evidence, then form a dynamic verification list.** Deduplicate the three lanes and preserve each stock's evidence path. The intermediate list is not a recommendation pool and must not be fixed at an arbitrary size. In a typical session, compact the merged evidence to roughly 20-30 verification names only after the full-market message and market scans have both run. This prevents missing a flat stock with a fresh catalyst.
+5. **Deep-verify the likely final 10-12.** Check catalyst timing, company relevance, 15-day sticky risks, price consumption, next buyer, cash-out supply, and executability. Read originals for the likely top 1-3 and whenever a title is ambiguous, an amount/term matters, or a risk item could veto the trade. A clear structured filing title may support lower-ranked discovery, but never invent missing terms.
+6. **Keep low-position ideas evidence-based.** A deep-base/no-news chart stays watch-only; an after-close event can support the next session but not the first board; high-volatility emotion reactivation cannot be called quiet ignition. Do not reverse-map upstream/downstream peers from an anchor stock.
+7. **Verify late-session acceptance with available evidence.** Use the latest actual snapshot already available after the request: position versus VWAP/average price, movement toward/away from day high, volume/amount progression, board synchronization, and fake-pull/dive risk. One valid 14:30+ snapshot plus prior intraday evidence can support a qualified judgment; multiple snapshots improve confidence but are not mandatory. Never wait for a future snapshot. If no 14:30+ snapshot exists, label acceptance unconfirmed, reduce confidence/position, and still meet the delivery deadline.
+8. **Check risk and executability.** Reject unbuyable sealed boards, unresolved material risk, distribution structures, unverified relevance, and names with no credible next buyer.
+9. **Rank eight, execute fewer.** Output eight unique stocks for comparison, but select normally 1-2 and at most 3. Weak/no-edge markets allow one tiny trial or no trade. Time pressure never permits lowering evidence or risk gates; reduce the executable list instead of filling it with weak ideas.
 
 ## Full-Market and Permission Rules
 
@@ -126,9 +133,26 @@ Read [the shared pin-reversal rules](../references/low_pin_reversal.md). The sca
 
 ## Timing Discipline
 
-Start when asked, normally around 14:30. Use the latest valid data and aim to deliver the actionable plan around 14:45-14:50, preferably by 14:52. Use 14:55 only for cancellation checks such as a sudden dive, fake pull-up, VWAP loss, or broken sector synchronization.
+Start immediately when asked; do not wait for a fixed clock time or a future snapshot. Use the latest complete, time-valid data already available.
 
-Never wait for a fixed minute when enough valid evidence already exists. Never claim late-session acceptance from a snapshot earlier than the observed window.
+Set the response deadline before analysis:
+
+- target a complete answer within 15 minutes of the request;
+- hard-stop analysis at 20 minutes;
+- when asked at or before 14:30, deliver the formal actionable answer no later than 14:50, preferably by 14:45-14:48;
+- when asked after 14:30, use the earlier of `request time + 20 minutes` and the last realistically tradable decision point. If little time remains, immediately use degraded mode: latest complete cache, fewer executable names, explicit uncertainty, and no repeated tool calls.
+
+Use this default time budget as a guardrail, not as a reason to delay:
+
+1. 0-2 minutes: one incremental sync and data-health/calendar gate.
+2. 2-6 minutes: market regime plus three full-market evidence lanes using compact local indexes.
+3. 6-11 minutes: merge/deduplicate, risk vetoes, and narrow to likely final 10-12.
+4. 11-15 minutes: verify final evidence, next buyer, acceptance, entry/exit, write journal, and answer.
+5. 15-20 minutes: contingency reserve only for a material ambiguity in a top candidate, never for broader re-search.
+
+External web search is fallback-only when the local server feed has a material gap for a likely top candidate. One failed search/backend attempt must not trigger a retry chain during the live window. Do not open dozens of originals; verify the likely top names and all potential veto risks first.
+
+After the formal answer, allow only a brief cancellation update for a sudden dive, fake pull-up, VWAP/support loss, new risk filing, or broken theme synchronization. Do not rerank or rescan the full market. Never claim late-session acceptance from an earlier snapshot without labeling the limitation.
 
 ## Output Contract
 
