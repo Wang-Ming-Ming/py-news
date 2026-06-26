@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0",
-  "updated_at": "2026-06-24T15:07:07+08:00",
+  "updated_at": "2026-06-25T14:48:33+08:00",
   "days": {
     "2026-06-22": {
       "morning": [
@@ -1046,6 +1046,405 @@
           ],
           "no_trade": false,
           "response_summary": "市场广度仅25.89%，按弱市纪律实际只重点新和成；紫光股份和明泰铝业仅为替补观察，不允许三票同时买。本方案在收盘后仅作封盘记录。"
+        }
+      ]
+    },
+    "2026-06-25": {
+      "morning": [
+        {
+          "run_id": "2026-06-25-morning-083230-b6f7a8b4",
+          "mode": "morning",
+          "trade_date": "2026-06-25",
+          "recorded_at": "2026-06-25T08:32:30+08:00",
+          "decision_time": "2026-06-25T08:26:58+08:00",
+          "status": "active",
+          "superseded_by": null,
+          "sealed": true,
+          "content_sha256": "39900e706d4384da76aef843ce286cb7369d829d5843650d699d3b1631fe9c5f",
+          "market_judgment": "竞价前盘前预案；6月24日收盘宽度偏弱（上涨1434/下跌4034，涨停98，炸板率约19%），但隔夜美光/SK海力士/韩国日经与纳指期货带来科技风险偏好修复。按弱修复/轮动市处理，昨日强势只做验证，不追高位一致。",
+          "data_context": {
+            "sync_time": "2026-06-25T08:26:58+08:00",
+            "market_snapshot": "2026-06-24T15:00:00+08:00",
+            "news_newest": "cls 2026-06-25T08:19:50+08:00; eastmoney_global 2026-06-25T08:08:14+08:00; cninfo 2026-06-25T00:00:00+08:00",
+            "mode": "pre_auction_no_auction_data",
+            "tradeable_count": 3031
+          },
+          "overseas_sector_context": [
+            {
+              "theme": "存储/先进封测/半导体设备材料",
+              "benchmark": "美光盘后+16%、纳指100期货早盘+2.2%、SK海力士NEXTRADE盘前+6.7%、韩国KOSPI+5%附近并触发程序交易暂停、日经+2%",
+              "timestamp": "2026-06-25 04:49-08:08+08:00",
+              "impact": "利多但A50夜盘-0.02%，需A股竞价确认",
+              "affected_codes": [
+                "601133",
+                "600584",
+                "603459"
+              ]
+            },
+            {
+              "theme": "AI数据中心/IDC/液冷",
+              "benchmark": "高通盘后+15%；拓邦股份AI数据中心液冷服务器供应商定点；东阳光拟签2亿元IDC服务合同",
+              "timestamp": "2026-06-24 17:48 至 2026-06-25 07:54+08:00",
+              "impact": "利多，低位票需资金点火",
+              "affected_codes": [
+                "600673",
+                "002139",
+                "002050"
+              ]
+            },
+            {
+              "theme": "航运港口",
+              "benchmark": "多航线舱位紧张、全球集运运价走强；上期所原油夜盘-3.78%削弱地缘溢价",
+              "timestamp": "2026-06-25 02:30/07:54+08:00",
+              "impact": "中性偏验证，适合低位承接不追高",
+              "affected_codes": [
+                "002040"
+              ]
+            }
+          ],
+          "holding_actions": [],
+          "candidates": [
+            {
+              "rank": 1,
+              "code": "601133",
+              "name": "柏诚股份",
+              "role": "主候选",
+              "price": "32.37",
+              "score": 84,
+              "evidence": "2026-06-24 16:53 财联社/东财：签署3.59亿元OLED生产线洁净合同；2026-06-25 巨潮：已中标重大项目签订合同进展公告。",
+              "time_class": "盘后新发+昨日首板",
+              "confirmation": "无竞价数据；9:25看是否0-4%高开且竞价额充分，9:30不破均价。",
+              "trigger": "回踩32.4附近/分时均价不破后二次放量；或小高开快速封单增强。",
+              "abandon": "一字买不到；高开>6%后开盘即高点；OLED/半导体工程前排不跟。",
+              "position": "10%-15%",
+              "risks": "昨日已涨停，若竞价一致易兑现。",
+              "next_buyer": "OLED/半导体洁净工程订单资金",
+              "sell_discipline": "跌破开盘价且5分钟不能回均价先撤；冲高无量不封板减半。"
+            },
+            {
+              "rank": 2,
+              "code": "600673",
+              "name": "东阳光",
+              "role": "主候选",
+              "price": "36.34",
+              "score": 82,
+              "evidence": "2026-06-24 17:48 财联社/东财：控股子公司拟签2亿元IDC服务项目采购合同；2026-06-25 巨潮IDC服务合同公告。",
+              "time_class": "盘后新发/非涨停强势",
+              "confirmation": "9:25高开1-4%且不明显撤单优先；5%以上先按兑现测试。",
+              "trigger": "开盘站稳36.3/昨收上方，回踩VWAP不破后再上37附近。",
+              "abandon": "高开>6%跌回开盘价；新增担保/重组风险压制；算力板块不同步。",
+              "position": "10%-15%",
+              "risks": "昨日放量+7.5%，15日区间位置偏高。",
+              "next_buyer": "IDC合同与算力容量资金",
+              "sell_discipline": "跌破35.5或VWAP失守10分钟离场；大高开无二波不恋战。"
+            },
+            {
+              "rank": 3,
+              "code": "603459",
+              "name": "红板科技",
+              "role": "主候选",
+              "price": "86.33",
+              "score": 80,
+              "evidence": "2026-06-24 17:35 财联社/东财：拟不超9亿元建设高阶HDI精密电路板生产线智能化改造项目；2026-06-25 巨潮对外投资公告。",
+              "time_class": "盘后新发+昨日低吸承接",
+              "confirmation": "9:25平开至+3%最好；低开需5-10分钟收回86.3。",
+              "trigger": "放量站回88.5/MA5附近，AI硬件/PCB同步。",
+              "abandon": "继续低开跌破84.8；冲高再收长上影；量大但不翻红。",
+              "position": "8%-12%",
+              "risks": "昨日长上影，需修复而不是再冲回落。",
+              "next_buyer": "HDI/AI PCB扩产预期资金",
+              "sell_discipline": "跌破84.8止损；冲过90无承接减半。"
+            },
+            {
+              "rank": 4,
+              "code": "002108",
+              "name": "沧州明珠",
+              "role": "主候选",
+              "price": "4.73",
+              "score": 76,
+              "evidence": "2026-06-24 16:43 财联社/东财：湿法2亿平方米+干法5亿平方米锂电池隔膜项目全部投产；2026-06-25 巨潮投产公告。",
+              "time_class": "盘后新发+低中位",
+              "confirmation": "9:25平开至+3%、竞价量放大且锂电隔膜有跟随。",
+              "trigger": "开盘站稳4.73并突破4.80，量能不突兀。",
+              "abandon": "低开后10分钟不能翻红；电池板块无宽度；跌破4.60。",
+              "position": "6%-10%",
+              "risks": "主题不是今日最强，只能靠公告和低位预期差。",
+              "next_buyer": "锂电隔膜投产低位重估资金",
+              "sell_discipline": "不封板或不走趋势，冲高分批；跌回4.69下方撤。"
+            },
+            {
+              "rank": 5,
+              "code": "600584",
+              "name": "长电科技",
+              "role": "主候选/板块锚",
+              "price": "94.70",
+              "score": 74,
+              "evidence": "2026-06-24 19:39 财联社/东财：拟投78亿元建设高端先进封测工厂；2026-06-25 巨潮对外投资公告；美光盘后大涨强化先进封测映射。",
+              "time_class": "同日已交易+盘后继续发酵",
+              "confirmation": "只接受换手承接，9:25若一字/大高开不追。",
+              "trigger": "高开不超过4%、开盘换手后回踩VWAP不破，半导体前排继续强。",
+              "abandon": "高开>6%或开盘即最高；板块只剩它一只硬顶；放量开板。",
+              "position": "观察到8%以内",
+              "risks": "3天2板、15日新高、成交237.9亿，兑现压力大。",
+              "next_buyer": "先进封测容量资金",
+              "sell_discipline": "跌破VWAP且板块走弱立即出；板块高潮次日不加仓。"
+            },
+            {
+              "rank": 6,
+              "code": "002139",
+              "name": "拓邦股份",
+              "role": "企稳点火票",
+              "price": "9.57",
+              "score": 83,
+              "evidence": "2026-06-25 07:54 东财：电机产品已获头部企业新一代AI数据中心超节点液冷服务器厂商供应商定点。",
+              "time_class": "今早新硬消息/昨日低位回踩",
+              "confirmation": "9:25平开到+3%最舒服；小低开必须快速翻红，站回9.77/MA5。",
+              "trigger": "放量突破9.80且液冷/AI服务器同步；竞价额明显高于常态。",
+              "abandon": "低开后不收回9.57；高开>5%无承接；新闻被资金无视。",
+              "position": "10%-15%",
+              "risks": "昨日弱，需资金确认，不可盘前直接买。",
+              "next_buyer": "AI液冷服务器低位点火资金",
+              "sell_discipline": "跌破9.57或二次上攻失败离场；弱市只做日内。"
+            },
+            {
+              "rank": 7,
+              "code": "002050",
+              "name": "三花智控",
+              "role": "最强涨停逻辑低位承接票",
+              "price": "43.90",
+              "score": 75,
+              "evidence": "2026-06-24 19:58 东财：数据中心液冷业务推进顺利；承接AI硬件/液冷强主题，位置低于昨日涨停前排。",
+              "time_class": "一周持续主题+低位承接",
+              "confirmation": "9:25不低于43.9，开盘站回44.5/MA5才考虑。",
+              "trigger": "AI液冷前排继续强，三花放量站上44.56。",
+              "abandon": "低开不修复；前排长电/液冷方向兑现；跌破42.7。",
+              "position": "6%-10%",
+              "risks": "不是今早公司级公告，需板块确认补强。",
+              "next_buyer": "液冷容量低吸/承接资金",
+              "sell_discipline": "不能站上MA5就不做；跌破前低42.7撤。"
+            },
+            {
+              "rank": 8,
+              "code": "002040",
+              "name": "南京港",
+              "role": "低位插针反转票/观察级",
+              "price": "8.47",
+              "score": 70,
+              "evidence": "插针扫描：6月22日低点8.03后收至8.29，收回3.24%，20日区间位置0.131，MACD red_turn；6月24日放量至1.44亿、站回MA5。航运消息为多航线舱位紧张/运价走强，但地缘油运溢价降温。",
+              "time_class": "2日前插针+昨日确认，今日未竞价确认",
+              "confirmation": "9:25需平开至+2%，开盘站稳8.47/VWAP并突破8.96才升级。",
+              "trigger": "航运港口低位扩散，回踩8.47不破后二次上攻。",
+              "abandon": "跌破8.29或8.03；招商轮船/中远海能高开兑现拖累；高开>4%无量。",
+              "position": "观察或5%-8%试错",
+              "risks": "6月24日上影较长，且航运不是今日新主线。",
+              "next_buyer": "航运高位退潮后的低位承接资金",
+              "sell_discipline": "跌破8.29直接取消；冲过8.96无封单/无量回落减仓。"
+            }
+          ],
+          "focus_codes": [
+            "002139",
+            "601133"
+          ],
+          "no_trade": false,
+          "response_summary": "重点只看拓邦股份和柏诚股份；红板科技为替代。若9:25科技线不及预期、宽度弱或候选高开兑现，则只看拓邦一只，甚至不交易。"
+        }
+      ],
+      "overnight": [
+        {
+          "run_id": "2026-06-25-overnight-144833-f05a4ab4",
+          "mode": "overnight",
+          "trade_date": "2026-06-25",
+          "recorded_at": "2026-06-25T14:48:33+08:00",
+          "decision_time": "2026-06-25T14:38:43+08:00",
+          "status": "active",
+          "superseded_by": null,
+          "sealed": true,
+          "content_sha256": "ab9d58ae026f945a4730fdff0aca6a77800ce46f6f994a294b9d090f34594968",
+          "market_judgment": "14:30快照显示上涨1122、下跌4191、涨停81、炸板32，广度0.2112，属于弱广度轮动市；科技硬件主线确认但先进封装/存储/元件局部高潮，隔夜只做有新硬消息和真实承接的1-2只。",
+          "data_context": {
+            "snapshot_id": "20260625T143000_overnight_a4b48c8a96",
+            "source_time": "2026-06-25T14:30:00.637783+08:00",
+            "stock_count": 5368,
+            "tradeable_stock_count": 2958,
+            "news_count": 32345,
+            "announcement_count": 17052,
+            "limitations": [
+              "无14:55/收盘快照",
+              "资金流接口失败"
+            ]
+          },
+          "candidates": [
+            {
+              "rank": 1,
+              "code": "002463",
+              "name": "沪电股份",
+              "catalyst_time_class": "持续发酵",
+              "theme_role": "AI服务器/数据通讯PCB主线承接",
+              "current_reference_price": 154.99,
+              "late_session_acceptance": "14:30价154.99，日内区间140.00-156.33，收在区间91.8%，成交144.35亿元、约2.07倍5日均额；无14:55数据，需收盘前确认不回落",
+              "next_buyer": "明早继续买AI服务器PCB、高端材料紧缺逻辑的机构/趋势资金",
+              "entry_trigger_range": "153.5-155.5分批，回踩不破153且板块同步时有效",
+              "abandon_condition": "跌回151或PCB/AI硬件核心集体跳水；高开>4%后5分钟不能新高放弃",
+              "position": "保守15%-20%，进攻20%-25%",
+              "risk_flags": [
+                "高价股",
+                "14:55缺失"
+              ],
+              "premium_type": "盘中延续型",
+              "next_day_sell_plan": "9:35前冲高先卖半；若高开低走跌破开盘价或分时均线清仓，最晚10:30处理完"
+            },
+            {
+              "rank": 2,
+              "code": "600522",
+              "name": "中天科技",
+              "catalyst_time_class": "新硬消息+当日确认",
+              "theme_role": "液冷/算力基础设施补涨核心",
+              "current_reference_price": 67.83,
+              "late_session_acceptance": "14:30价67.83，接近日高68.00，区间位置97.3%，成交181.04亿元、1.61倍5日均额；强但接近高潮边缘",
+              "next_buyer": "明早买液冷/算力电力基础设施、追求大成交容量的趋势资金",
+              "entry_trigger_range": "66.8-67.8，不能追过68.2",
+              "abandon_condition": "跌破66.0或液冷链退潮；高开>5%只卖不追",
+              "position": "15%-20%",
+              "risk_flags": [
+                "单日涨幅大",
+                "成交过大后易分歧"
+              ],
+              "premium_type": "冲高型",
+              "next_day_sell_plan": "高开冲高2%-5%先落袋；若低开修复不过昨高，10:00前退出"
+            },
+            {
+              "rank": 3,
+              "code": "002384",
+              "name": "东山精密",
+              "catalyst_time_class": "近一周硬公告持续发酵",
+              "theme_role": "硅光/光模块+PCB容量趋势票",
+              "current_reference_price": 274.99,
+              "late_session_acceptance": "14:30价274.99，日高275.99，区间位置94.4%，成交194.83亿元、1.68倍5日均额，5日涨幅7.03%尚未高潮",
+              "next_buyer": "明早买光模块扩产和硅光方向的机构趋势资金",
+              "entry_trigger_range": "271-276，回踩272附近缩量承接优先",
+              "abandon_condition": "跌破268或光模块/PCB双线走弱；高开>4%不追",
+              "position": "10%-15%",
+              "risk_flags": [
+                "价格高",
+                "成交容量很大需防兑现"
+              ],
+              "premium_type": "盘中延续型",
+              "next_day_sell_plan": "早盘冲高先卖半，不能站稳分时均线则清；最迟午前卖完"
+            },
+            {
+              "rank": 4,
+              "code": "000725",
+              "name": "京东方A",
+              "catalyst_time_class": "OLED量产+回购支撑，板块验证",
+              "theme_role": "OLED/面板大容量低价承接",
+              "current_reference_price": 7.48,
+              "late_session_acceptance": "14:30价7.48，日内7.14-7.67，区间位置64.2%，成交250.84亿元、1.78倍5日均额；不是最强，但适合低开修复",
+              "next_buyer": "明早买TCL封板后寻找可成交大容量低位替代的资金",
+              "entry_trigger_range": "7.40-7.52，尾盘站回7.50更好",
+              "abandon_condition": "跌破7.36或TCL/面板核心开板转弱；高开>3%只看不追",
+              "position": "10%-15%",
+              "risk_flags": [
+                "大盘股弹性低",
+                "14:30后未知"
+              ],
+              "premium_type": "低开修复型",
+              "next_day_sell_plan": "低开不破7.35可等修复，冲7.60附近分批卖；破7.35止损"
+            },
+            {
+              "rank": 5,
+              "code": "002185",
+              "name": "华天科技",
+              "catalyst_time_class": "先进封装持续发酵+公司封装业务直接相关",
+              "theme_role": "先进封装二线容量承接",
+              "current_reference_price": 22.37,
+              "late_session_acceptance": "14:30价22.37，日内20.73-22.65，区间位置85.4%，成交106.34亿元、1.67倍5日均额；长电封板后承接明显",
+              "next_buyer": "买不到/不愿追长电的先进封装容量资金",
+              "entry_trigger_range": "22.10-22.45，尾盘不破22.0有效",
+              "abandon_condition": "跌破21.85或长电科技开板转弱；明早低开不能快速收复22.0则放弃",
+              "position": "10%-15%",
+              "risk_flags": [
+                "近期涨幅17.4%",
+                "并购问询回复带来公告复杂度"
+              ],
+              "premium_type": "盘中延续型",
+              "next_day_sell_plan": "明早先进封装继续冲时卖，不板不恋战；10:00前弱于板块则出"
+            },
+            {
+              "rank": 6,
+              "code": "601133",
+              "name": "柏诚股份",
+              "catalyst_time_class": "新合同点火",
+              "theme_role": "企稳点火票，OLED洁净工程订单",
+              "current_reference_price": 34.7,
+              "late_session_acceptance": "14:30价34.70，日内33.10-35.13，区间位置78.8%，成交12.33亿元、2.66倍5日均额，5日涨幅4.77%不高",
+              "next_buyer": "明早买OLED量产/洁净工程合同兑现的小中盘资金",
+              "entry_trigger_range": "34.2-34.8，尾盘缩量回踩不破34.0",
+              "abandon_condition": "跌破33.8或OLED/面板线不跟；若高开>5%后秒冲不承接放弃",
+              "position": "8%-12%",
+              "risk_flags": [
+                "合同票次日容易一日游"
+              ],
+              "premium_type": "盘中延续型",
+              "next_day_sell_plan": "高开冲高先卖；若低开，只有快速翻红才留，9:45不翻红出"
+            },
+            {
+              "rank": 7,
+              "code": "603459",
+              "name": "红板科技",
+              "catalyst_time_class": "新投资公告+涨停确认",
+              "theme_role": "最强涨停主题低位承接票，高阶HDI/PCB",
+              "current_reference_price": 94.96,
+              "late_session_acceptance": "14:30封涨停94.96，封单约1.01亿元，首次09:41、最后09:43，炸板2次，成交11.01亿元，5日涨幅6.33%",
+              "next_buyer": "明早买PCB涨停低位弹性、追随中京/沪电方向的接力资金",
+              "entry_trigger_range": "若尾盘炸开回封可小排；封死买不到不强排，次日只看低开承接",
+              "abandon_condition": "尾盘开板不回封、封单急缩；明早高开>6%放量下杀禁止接",
+              "position": "5%-8%",
+              "risk_flags": [
+                "涨停票买不到",
+                "换手14.9%",
+                "6月16日曾披露AI服务器PCB仍处验证环节"
+              ],
+              "premium_type": "高开型",
+              "next_day_sell_plan": "高开冲板失败即卖；低开承接不破昨收可等翻红，不能翻红9:45前退出"
+            },
+            {
+              "rank": 8,
+              "code": "002335",
+              "name": "科华数据",
+              "catalyst_time_class": "低位插针反转观察级",
+              "theme_role": "数据中心电源/算力基础设施低位修复",
+              "current_reference_price": 40.8,
+              "late_session_acceptance": "14:30价40.80，日内37.90-41.14，区间位置89.5%，成交16.30亿元、2.20倍5日均额；低位针后确认，但缺少当日公司级新硬消息",
+              "next_buyer": "明早买液冷/数据中心基础设施扩散且偏好低位反包形态的资金",
+              "entry_trigger_range": "40.2-40.8，只能小仓，尾盘不破40且板块不退潮才看",
+              "abandon_condition": "跌破39.6或明早低开不能收回40.0；板块主线退潮则不做",
+              "position": "观察级5%-8%",
+              "risk_flags": [
+                "消息强度弱于前排",
+                "14:55缺失"
+              ],
+              "premium_type": "低开修复型",
+              "next_day_sell_plan": "高开冲42附近先卖；低开不快速翻红卖，最晚10:00清仓",
+              "pin_macd_evidence": {
+                "pattern_date": "2026-06-24",
+                "confirmation_date": "2026-06-25",
+                "pin_low": 36.96,
+                "pin_close": 38.42,
+                "recovery_from_low_pct": 3.9502,
+                "range_position_20d": 0.4144,
+                "lower_shadow_ratio": 0.5306,
+                "macd": "red_expanding",
+                "confirmation_grade": "观察级通过形态/盘口，消息门偏弱"
+              }
+            }
+          ],
+          "focus_codes": [
+            "002463",
+            "600522",
+            "002384"
+          ],
+          "no_trade": false,
+          "response_summary": "保守只选沪电股份或中天科技；进攻最多加东山精密；弱市只买沪电股份或空仓。"
         }
       ]
     }
