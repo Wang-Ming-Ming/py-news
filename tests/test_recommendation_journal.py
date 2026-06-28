@@ -10,18 +10,56 @@ def payload(prefix: str) -> dict:
         "decision_time": "2026-06-18T09:20:00+08:00",
         "market_judgment": f"{prefix} market",
         "data_context": {"snapshot_time": "2026-06-18T09:19:00+08:00"},
+        "theme_radar": [],
         "overseas_sector_context": [],
         "holding_actions": [],
+        "new_theme_candidate": None,
         "candidates": [
             {
                 "rank": rank,
                 "code": str(600000 + rank),
                 "name": f"{prefix}-{rank}",
+                "fact_first_disclosed_at": "2026-06-17T18:00:00+08:00",
+                "freshness_class": "new_material_fact",
+                "materiality_grade": "A" if rank == 1 else "B",
+                "original_source_verified": True,
+                "incremental_change": "new quantified order confirmed after the close",
+                "economic_magnitude": "contract value is material to annual revenue",
+                "market_confirmation": "auction and theme breadth confirmed",
+                "buyability": "liquid and below the no-chase gap",
                 "buy_trigger": "test trigger",
                 "abandon_condition": "test abandon",
+                "t1_survivability": "catalyst and liquidity remain valid through next session",
             }
             for rank in range(1, 9)
         ],
+        "risk_gate": {
+            "market_breadth_pct": 55.0,
+            "risk_off": False,
+            "countertrend_exception": False,
+            "basis": "broad market and overseas benchmarks are stable",
+        },
+        "primary_pick": {
+            "code": "600001",
+            "name": f"{prefix}-1",
+            "trigger_status": "triggered",
+            "latest_article_at": "2026-06-18T08:00:00+08:00",
+            "fact_first_disclosed_at": "2026-06-17T18:00:00+08:00",
+            "oldest_matching_disclosure": "120-day search found no earlier matching fact",
+            "freshness_lookback_days": 180,
+            "freshness_class": "new_material_fact",
+            "materiality_grade": "A",
+            "original_source_verified": True,
+            "incremental_change": "new quantified order confirmed after the close",
+            "economic_magnitude": "contract value is material to annual revenue",
+            "counterevidence": "gap risk and contract execution uncertainty checked",
+            "market_confirmation": "auction and theme breadth confirmed",
+            "buyability": "liquid and below the no-chase gap",
+            "t1_survivability": "catalyst and liquidity remain valid through next session",
+            "why_first": "strongest verified repricing path and execution quality",
+            "max_position_pct": 10,
+        },
+        "provisional_focus_codes": [],
         "focus_codes": ["600001", "600002"],
         "no_trade": False,
         "response_summary": f"{prefix} summary",
@@ -49,6 +87,235 @@ def test_morning_record_requires_overseas_and_holding_context(tmp_path: Path) ->
 
     with pytest.raises(ValueError, match="holding_actions"):
         record_recommendation(path, "morning", "2026-06-18", missing)
+
+
+def test_morning_record_requires_theme_radar(tmp_path: Path) -> None:
+    path = tmp_path / "recommendations.json"
+    missing = payload("missing-theme")
+    missing.pop("theme_radar")
+
+    with pytest.raises(ValueError, match="theme_radar"):
+        record_recommendation(path, "morning", "2026-06-18", missing)
+
+
+def test_morning_record_requires_optional_ninth_slot_field(tmp_path: Path) -> None:
+    path = tmp_path / "recommendations.json"
+    missing = payload("missing-slot")
+    missing.pop("new_theme_candidate")
+
+    with pytest.raises(ValueError, match="new_theme_candidate"):
+        record_recommendation(path, "morning", "2026-06-18", missing)
+
+
+def test_new_theme_slot_requires_strict_evidence_and_can_be_focus(
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "recommendations.json"
+    record = payload("theme-slot")
+    record["focus_codes"] = ["002674"]
+    record["new_theme_candidate"] = {
+        "slot": 9,
+        "code": "002674",
+        "name": "兴业科技",
+        "theme_name": "磷化铟",
+        "theme_stage": "emerging",
+        "first_signal_time": "2026-06-16T01:12:34+08:00",
+        "independent_evidence_count": 3,
+        "public_at_cutoff": True,
+        "primary_source_verified": True,
+        "novelty_verified": True,
+        "denial_or_loose_mapping": False,
+        "freshness_class": "new_external_causal_shock",
+        "materiality_grade": "A",
+        "incremental_change": "overseas supply shock created a new domestic repricing path",
+        "economic_magnitude": "supply constraint can materially change product pricing",
+        "overseas_hard_evidence": "海外公司扩产且出口许可影响交付",
+        "direct_company_evidence": "公司公告直接取得相关经营业务",
+        "market_confirmation": "题材已有直接锚点并获得资金确认",
+        "buyability": "非一字，存在可成交窗口",
+        "buy_trigger": "主题与个股开盘同步确认",
+        "abandon_condition": "题材锚点转弱或个股失去均价",
+        "t1_survivability": "主题证据与流动性可维持至下一交易日",
+    }
+    record["primary_pick"].update(
+        {
+            "code": "002674",
+            "name": "兴业科技",
+            "latest_article_at": "2026-06-18T08:10:00+08:00",
+            "fact_first_disclosed_at": "2026-06-16T01:12:34+08:00",
+            "oldest_matching_disclosure": "180-day search found this as the first signal",
+            "freshness_class": "new_external_causal_shock",
+            "incremental_change": "overseas supply shock created a new domestic repricing path",
+            "economic_magnitude": "supply constraint can materially change product pricing",
+            "promotion_evidence": "slot 9 led the confirmed new theme after the open",
+        }
+    )
+
+    saved = record_recommendation(path, "morning", "2026-06-18", record)
+
+    assert saved["new_theme_candidate"]["slot"] == 9
+    assert saved["new_theme_candidate"]["code"] == "002674"
+    assert saved["focus_codes"] == ["002674"]
+
+
+def test_new_theme_slot_rejects_loose_or_unverified_theme(tmp_path: Path) -> None:
+    path = tmp_path / "recommendations.json"
+    record = payload("weak-theme")
+    record["focus_codes"] = []
+    record["new_theme_candidate"] = {
+        "slot": 9,
+        "code": "002674",
+        "name": "兴业科技",
+        "theme_name": "磷化铟",
+        "theme_stage": "seed",
+        "independent_evidence_count": 1,
+    }
+
+    with pytest.raises(ValueError, match="theme_stage"):
+        record_recommendation(path, "morning", "2026-06-18", record)
+
+
+def test_provisional_focus_is_normalized_and_limited(tmp_path: Path) -> None:
+    path = tmp_path / "recommendations.json"
+    record = payload("provisional")
+    record["focus_codes"] = []
+    record["provisional_focus_codes"] = ["600001", "600002"]
+    record["primary_pick"]["trigger_status"] = "pending"
+    record["primary_pick"]["market_confirmation"] = "pending auction confirmation"
+
+    saved = record_recommendation(path, "morning", "2026-06-18", record)
+
+    assert saved["focus_codes"] == []
+    assert saved["provisional_focus_codes"] == ["600001", "600002"]
+
+
+def test_no_trade_rejects_executable_focus(tmp_path: Path) -> None:
+    path = tmp_path / "recommendations.json"
+    record = payload("no-trade")
+    record["no_trade"] = True
+
+    with pytest.raises(ValueError, match="cannot contain focus codes"):
+        record_recommendation(path, "morning", "2026-06-18", record)
+
+
+def test_record_allows_fewer_than_eight_quality_candidates(tmp_path: Path) -> None:
+    path = tmp_path / "recommendations.json"
+    record = payload("short-list")
+    record["candidates"] = record["candidates"][:2]
+    record["provisional_focus_codes"] = ["600001"]
+    record["focus_codes"] = []
+    record["primary_pick"]["trigger_status"] = "pending"
+    record["primary_pick"]["market_confirmation"] = "pending auction confirmation"
+
+    saved = record_recommendation(path, "morning", "2026-06-18", record)
+
+    assert [item["rank"] for item in saved["candidates"]] == [1, 2]
+    assert saved["provisional_focus_codes"] == ["600001"]
+
+
+def test_empty_candidate_list_requires_no_trade(tmp_path: Path) -> None:
+    path = tmp_path / "recommendations.json"
+    record = payload("empty")
+    record["candidates"] = []
+    record["provisional_focus_codes"] = []
+    record["focus_codes"] = []
+    record["primary_pick"] = None
+
+    with pytest.raises(ValueError, match="requires no_trade"):
+        record_recommendation(path, "morning", "2026-06-18", record)
+
+    record["no_trade"] = True
+    saved = record_recommendation(path, "morning", "2026-06-18", record)
+    assert saved["candidates"] == []
+
+
+def test_executable_focus_requires_t1_survivability(tmp_path: Path) -> None:
+    path = tmp_path / "recommendations.json"
+    record = payload("t1")
+    record["candidates"][0].pop("t1_survivability")
+
+    with pytest.raises(ValueError, match="requires t1_survivability"):
+        record_recommendation(path, "morning", "2026-06-18", record)
+
+
+def test_primary_pick_rejects_stale_republication(tmp_path: Path) -> None:
+    path = tmp_path / "recommendations.json"
+    record = payload("stale")
+    record["candidates"][0]["freshness_class"] = "stale_republication"
+    record["primary_pick"]["freshness_class"] = "stale_republication"
+
+    with pytest.raises(ValueError, match="execution-grade freshness_class"):
+        record_recommendation(path, "morning", "2026-06-18", record)
+
+
+def test_primary_pick_must_be_first_execution_code(tmp_path: Path) -> None:
+    path = tmp_path / "recommendations.json"
+    record = payload("order")
+    record["primary_pick"]["code"] = "600002"
+    record["primary_pick"]["name"] = "order-2"
+
+    with pytest.raises(ValueError, match="must be first in focus_codes"):
+        record_recommendation(path, "morning", "2026-06-18", record)
+
+
+def test_pending_primary_cannot_promote_special_role_candidate(
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "recommendations.json"
+    record = payload("premarket-promotion")
+    record["focus_codes"] = []
+    record["provisional_focus_codes"] = ["600006"]
+    record["primary_pick"].update(
+        {
+            "code": "600006",
+            "name": "premarket-promotion-6",
+            "trigger_status": "pending",
+            "market_confirmation": "pending auction confirmation",
+        }
+    )
+
+    with pytest.raises(ValueError, match="regular rank 1 or slot 9"):
+        record_recommendation(path, "morning", "2026-06-18", record)
+
+
+def test_triggered_rank_six_promotion_requires_new_market_evidence(
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "recommendations.json"
+    record = payload("opening-promotion")
+    record["focus_codes"] = ["600006"]
+    record["primary_pick"].update(
+        {
+            "code": "600006",
+            "name": "opening-promotion-6",
+        }
+    )
+
+    with pytest.raises(ValueError, match="promotion_evidence"):
+        record_recommendation(path, "morning", "2026-06-18", record)
+
+    record["primary_pick"]["promotion_evidence"] = (
+        "after the open, rank 6 led its theme, held VWAP, and broke the attack high"
+    )
+    saved = record_recommendation(path, "morning", "2026-06-18", record)
+    assert saved["primary_pick"]["code"] == "600006"
+
+
+def test_weak_breadth_allows_only_triggered_small_countertrend_exception(
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "recommendations.json"
+    record = payload("risk-off")
+    record["risk_gate"]["market_breadth_pct"] = 26.2
+    record["risk_gate"]["risk_off"] = True
+
+    with pytest.raises(ValueError, match="countertrend exception"):
+        record_recommendation(path, "morning", "2026-06-18", record)
+
+    record["risk_gate"]["countertrend_exception"] = True
+    record["primary_pick"]["max_position_pct"] = 5
+    saved = record_recommendation(path, "morning", "2026-06-18", record)
+    assert saved["primary_pick"]["max_position_pct"] == 5
 
 
 def test_review_context_uses_today_morning_and_previous_overnight(tmp_path: Path) -> None:
