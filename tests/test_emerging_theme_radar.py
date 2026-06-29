@@ -52,6 +52,20 @@ def test_discovers_cross_source_emerging_theme_before_stock_ranking() -> None:
     assert inp["direct_stock_codes"] == ["002674"]
 
 
+def test_memory_event_cluster_is_discovered() -> None:
+    cutoff = datetime(2026, 6, 18, 8, 30, tzinfo=BEIJING)
+    rows = [
+        item("DRAM合约价格上涨并出现供应缺口", 60, "reuters"),
+        item("海外大厂宣布扩大HBM和DRAM产能", 40, "eastmoney_global"),
+        item("国内客户签署长期存储芯片采购合同", 20, "cninfo", "600001"),
+    ]
+
+    themes = discover_themes(rows, cutoff, recent_hours=72, baseline_days=30)
+    terms = {row["term"] for row in themes}
+
+    assert "DRAM" in terms or "高带宽存储" in terms or "存储芯片" in terms
+
+
 def test_future_news_is_excluded_from_historical_cutoff() -> None:
     cutoff = datetime(2026, 6, 18, 8, 30, tzinfo=BEIJING)
     rows = [
@@ -85,9 +99,7 @@ def test_duplicate_reposts_and_denials_do_not_create_a_theme() -> None:
         item("另一公司澄清没有相关固态电池业务", 8, "cls"),
     ]
 
-    themes = discover_themes(rows, cutoff, recent_hours=72, baseline_days=21)
-
-    assert themes == []
+    assert discover_themes(rows, cutoff, recent_hours=72, baseline_days=21) == []
 
 
 def test_generic_daily_chatter_can_return_no_new_theme() -> None:
@@ -98,6 +110,4 @@ def test_generic_daily_chatter_can_return_no_new_theme() -> None:
         item("机器人公司召开股东会", 12, "cninfo"),
     ]
 
-    themes = discover_themes(rows, cutoff, recent_hours=72, baseline_days=21)
-
-    assert themes == []
+    assert discover_themes(rows, cutoff, recent_hours=72, baseline_days=21) == []

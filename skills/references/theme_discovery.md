@@ -1,169 +1,97 @@
-# Emerging Theme Discovery
+# 新题材与持续主线发现
 
-Use this reference before individual-stock ranking. The goal is to identify a new capital-market theme while it is moving from industry evidence to A-share recognition, without turning every overseas headline into speculative beneficiary mapping.
+在个股排序前使用本规则。目标不仅是发现全新的题材，也要发现旧主题因新事件簇而重新进入加速阶段。
 
-## Theme Before Stock
+## 动态雷达
 
-Run the theme process in this order:
+完成一次服务器增量同步后运行：
 
-1. discover fast-rising terms and causal phrases in recent news;
-2. verify the physical/economic bottleneck through original or highly reliable sources;
-3. locate direct A-share evidence and the first market-recognized anchors;
-4. classify the theme lifecycle;
-5. only then rank buyable stocks inside the verified theme.
+`python analysis/emerging_theme_radar.py --as-of DECISION_TIME --recent-hours 168 --baseline-days 30 --limit 15`
 
-Do not begin with a favorite stock and search backward for a fashionable label.
+雷达只负责发现词频、来源和硬事件变化，不负责推荐股票。检查：
 
-## Dynamic Novelty Radar
+- 最近七天独立事件数，而不是转载文章数量；
+- 来源是否包括公告、监管、政府、公司IR、路透等；
+- 是否出现订单、涨价、短缺、扩产、采购、认证、政策、合同或技术迁移；
+- 是否同时存在海外事实、国内产业变化和A股市场确认；
+- 是否存在否认、澄清、监管或“影响极小”等反证。
 
-After the single server synchronization, run:
+## 必做外部核查
 
-`venv/bin/python analysis/emerging_theme_radar.py --as-of DECISION_TIME --recent-hours 72 --baseline-days 21 --limit 12`
+服务器索引是基础，但不是互联网信息的全部。对排名最高的三个主题做一次批量联网核查：
 
-The radar compares the last 72 hours with a 21-day baseline. It surfaces suddenly accelerating material names, technical abbreviations, product bottlenecks, and industry terms. It is a discovery list, not a recommendation engine.
+1. 官方公告、交易所、监管和政府文件；
+2. 公司官网、投资者关系和正式活动资料；
+3. 路透、金融时报等可靠媒体的产业报道；
+4. 可靠财经媒体对原始来源的转述。
 
-For each leading term inspect:
+外部报道可以建立高质量预期，但必须保留“谈判、申请、考虑、传闻、正式合同”的区别。不能把潜在采购写成已经下单。
 
-- recent frequency versus baseline;
-- source diversity rather than duplicate article count;
-- hard-cue density: shortage, price, backlog, export license, capacity, order, acquisition, joint venture;
-- whether a primary foreign source still needs verification;
-- whether a direct A-share filing/company exists;
-- whether current market data confirms the theme.
+## 事件簇
 
-A familiar broad word such as `AI`, `semiconductor`, or `robot` is not a new theme by itself. Prefer the newly scarce component or changed economic node inside the broad industry.
+为每个主题建立一张事实卡：
 
-## Overseas Seed Signals
+- 主题标准名和别名；
+- 最近七天的独立事件；
+- 最近三十天的基线事件；
+- 第一条信号、最新增量和下一事件；
+- 被改变的价格、供给、需求、产能、技术或政策变量；
+- 直接核心、硬映射配套、情绪锚点和被否认公司；
+- 板块宽度、涨停锚点、容量核心和相对强度；
+- 当前阶段、主要反证和失效条件。
 
-Overseas evidence is useful when it changes a concrete variable. Check these in priority order:
+## 生命周期
 
-1. company earnings calls and investor materials: backlog, lead time, utilization, capacity expansion, customer demand, product mix;
-2. government/customs/trade actions: export control, licensing delay, sanction, tariff, subsidy, standard;
-3. physical prices and delivery data: spot price, contract price, inventory, delivery cycle, supply interruption;
-4. major-customer product and capex changes: speed generation, architecture migration, order lock-up, long-term supply agreement;
-5. directly relevant listed peers and commodities.
+- `seed`：产业证据存在，但A股尚未形成直接锚点；
+- `emerging`：至少两个独立事件指向同一变量，直接公司或市场锚点开始出现；
+- `confirmed`：直接核心、硬映射公司和板块宽度形成确认；
+- `acceleration`：多个锚点加速，资金从核心向配套扩散；
+- `overheat`：后排乱涨、澄清增多、成交异常放大而新增信息减少；
+- `retreat`：核心跌破支撑、宽度收缩、炸板和亏钱效应扩大。
 
-An overseas index rising or falling is a risk/confirmation input, not sufficient evidence for a new A-share theme. Require a causal chain:
+文章多不等于主题确认。旧主题出现新的客户、价格、订单、扩产或政策事件后，可以重新从`confirmed`进入`acceleration`。
 
-`overseas fact → changed supply/demand/price/technology → exact domestic product node → direct public company evidence → A-share market recognition`
+## 股票映射
 
-For a top-three emerging theme, make one batched external verification attempt when the local feed lacks the original foreign source. Preserve the original publication time and never use a later article as if it existed earlier.
+按照 [主题、产业链与趋势共振选股](theme_chain_selection.md) 分层：
 
-## Theme Fact Card
+- 一级直接核心；
+- 二级硬映射配套；
+- 三级弱映射概念。
 
-Maintain one compact fact card per emerging theme:
+一级和二级都可以进入推荐，谁排名更高取决于事件传导、业绩弹性、趋势、资金和可买性。三级只观察。
 
-- canonical theme name and aliases;
-- first public signal and latest incremental signal;
-- physical bottleneck or economic variable;
-- overseas primary evidence and measured magnitude;
-- domestic direct evidence;
-- first A-share anchor and first-board date;
-- breadth, amount, limit-up quality, and relative strength;
-- lifecycle stage;
-- direct companies, new-identity companies, emotion fronts, denied/loose mappings;
-- next known event;
-- invalidation and crowding/regulatory risks.
+## 新题材专席
 
-The theme card is rebuilt from current evidence; it is not a permanent concept list.
+用户要求第九只新题材专席时，只有同时满足以下条件才填入：
 
-## Lifecycle
+1. 主题至少处于`emerging`；
+2. 至少两个去重后的独立正面事件；
+3. 至少一个原始或高可靠来源；
+4. 产业变量发生具体变化；
+5. 普通主板公司具有一级或二级证据；
+6. 已有A股锚点、板块宽度或竞价/开盘确认；
+7. 股票可以买到且能承受T+1；
+8. 没有否认或重大硬风险。
 
-- `seed`: overseas/industry evidence exists, but no direct A-share filing or market anchor is confirmed. Research only.
-- `emerging`: at least two independent evidence channels show the same bottleneck and A-share price/announcement evidence begins to appear. Highest discovery priority.
-- `confirmed`: at least one direct anchor plus breadth/relative-strength confirmation; preferably two directly verified companies or a second independent market anchor. Candidate selection is allowed.
-- `acceleration`: multiple boards, one-word leaders, rapid media expansion, and crowded replacement demand. Prefer buyable direct cores; do not chase sealed anchors.
-- `overheat`: repeated one-word boards, denials/clarifications, abnormal-movement warnings, exchange monitoring, or loose-concept proliferation. No new high-position entries.
-- `retreat`: anchors lose VWAP/support, breadth contracts, failed boards spread, and no fresh evidence arrives. Remove execution priority.
+专席可以空缺，但普通推荐列表不得因此为空。
 
-Do not call a theme `confirmed` from article count alone.
+## 时间归因
 
-## Dedicated Ninth Slot
+- `pre_move`：上涨前公开，可用于预测；
+- `same_session`：盘中公开，只能从发布时间后使用；
+- `after_close`：只能用于下一交易日；
+- `post_board`：只能解释后续，不得倒填首板原因。
 
-Morning output keeps the normal zero-to-eight candidate list unchanged and adds one optional `第9只新题材专席`. This slot is not a quota and cannot be filled by the best available weak idea.
+记录`published_at`和`event_at`。已经公开的会议、交付、调价和政策执行日在T-3、T-1、T0重新进入主题扫描。
 
-Show a stock in slot 9 only when all conditions pass:
+## 漏票审计
 
-1. the radar finds a genuinely accelerating specific term rather than a broad industry label;
-2. at least two independent positive evidence events exist after duplicate syndication is collapsed;
-3. at least one original/primary source is verified;
-4. overseas evidence changes a concrete supply, demand, price, technology, policy, backlog, capacity, or delivery variable;
-5. an ordinary tradable A-share has direct company evidence, not reverse-inferred concept relevance;
-6. a direct anchor or theme breadth provides market confirmation;
-7. the selected stock is not a denial/loose mapping and is realistically buyable;
-8. the setup passes the T+1 survivability gate.
+复盘大涨股时先判断：
 
-If any condition fails, record `new_theme_candidate: null` and output `第9只：空缺（无合格新题材）`. Do not substitute an old theme, generic AI story, pure chart setup, or sealed limit-up.
+1. 主题在上涨前是否可发现；
+2. 公司一级/二级映射是否已公开；
+3. 当时是否存在真实买点；
+4. 是主题漏掉、产业链漏掉、趋势权重过低，还是股票根本买不到。
 
-An `emerging` theme may occupy slot 9 only with direct A-share and market confirmation. A `seed` remains in the research card and cannot occupy the slot.
-
-## Direct A-Share Mapping
-
-Theme discovery does not authorize free-form industrial-chain inference. A stock can enter the theme registry only through:
-
-- a company/exchange filing that directly names the product/business;
-- a reliable report quoting verifiable capacity, revenue, order, customer, production, or acquisition facts;
-- current market recognition plus older public evidence that clearly predates the decision.
-
-Classify each stock:
-
-- `direct_current_business`;
-- `new_identity_transaction`;
-- `verified_future_capacity`;
-- `emotion_front`;
-- `denied_or_loose`.
-
-Only the first three may become research candidates. `emotion_front` is a theme anchor; `denied_or_loose` is excluded.
-
-## New-Business and Cross-Industry Radar
-
-Within a confirmed/emerging theme, scan company filings for:
-
-- acquisition of an operating business;
-- joint venture or subsidiary formation;
-- asset/team/patent/contract transfer;
-- change of business scope or control;
-- formal capacity project with funding, timetable, technology, and customers;
-- strategic investment that grants operating control rather than a passive minority label.
-
-Score the identity change separately from earnings:
-
-- complete assets + team + intellectual property + contracts/clients: strong identity jump;
-- controlled subsidiary/JV with credible technology and funded capacity: medium, pending execution;
-- framework agreement, passive fund investment, business-scope registration, or generic cooperation: weak;
-- company denial, zero staff/patents/revenue, or regulator challenge: risk downgrade.
-
-The strongest identity jump still needs a buyable first/second-board window. A sealed board validates the theme but is not an executable recommendation.
-
-## Case Calibration: InP, June 2026
-
-The reusable sequence was:
-
-1. overseas optical companies disclosed InP capacity/backlog pressure and AI data-center demand;
-2. a direct A-share company announced a cross-industry InP project and became the first anchor;
-3. export licensing and supply concentration turned the material into a geopolitical/AI bottleneck story;
-4. domestic news and research repeated measurable shortage/capacity evidence;
-5. another small-cap company acquired a complete InP operating business and received a new market identity.
-
-The theme should therefore have been in the `emerging` registry before the later company's acquisition announcement. The later company was not predictable from undisclosed information, but the theme itself was discoverable and deserved priority over stale individual-company stories.
-
-## Audit
-
-For every missed large winner, first ask:
-
-1. Was the theme discoverable before the move?
-2. Was the company directly mapped before the move?
-3. Was the stock buyable when confirmation appeared?
-
-Use one primary failure label:
-
-- `theme_discovery_failure`;
-- `foreign_source_gap`;
-- `direct_mapping_failure`;
-- `identity_change_missed`;
-- `market_confirmation_missed`;
-- `unbuyable`;
-- `information_unavailable`;
-- `execution_rejected`.
-
-Only the first five justify changing discovery logic. Do not loosen risk controls for information that was unavailable or a stock that was never realistically buyable.
+不能使用上涨后的公告制造“本来应该知道”的假历史。

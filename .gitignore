@@ -62,6 +62,7 @@ Thumbs.db
 data_server_cache/
 
 # Temporary files
+tmp/
 *.tmp
 *.bak
 *.swp

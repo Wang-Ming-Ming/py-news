@@ -1,19 +1,19 @@
 ---
 name: overnight_stock_picker
-description: 'Use when the user asks for a late-session A-share overnight plan, normally from 14:30 onward: scan the full ordinary tradable market, rank eight candidates including a dedicated low-position pin-reversal/MACD-turn stock, identify only the best 1-3 executable names, and provide a next-trading-day exit plan using fresh news/announcements, multi-day market structure, real late-session acceptance, announcement risk, and next-buyer logic.'
+description: 'Use for late-session A-share selection and overnight plans. Independently scan the full ordinary main-board market, output five main candidates plus three dedicated special-logic candidates, verify real late-session acceptance, and give a strict next-trading-day exit plan.'
 ---
 
 # Overnight Stock Picker
 
-Recommend eight ranked ordinary A-share candidates for buying late in the session and selling no later than the next trading day. The primary objective for ranks 1-2 is not maximum theoretical upside; it is a realistic positive/red exit window after the user's cost, supported by a clear next buyer.
+从全市场寻找尾盘可买、下一交易日具有接力或兑现窗口的普通主板股票。固定输出八只：前五只主候选，第六企稳点火、第七最强涨停逻辑低位承接、第八低位插针反转。
 
-Never promise a rise or limit-up. Separate research quality from execution quality and say when no normal-size trade exists.
+重大消息优先，但主题多事件共振、产业链硬映射、健康强趋势和启动前预期差同样可以排第一。市场弱时降仓，不用空推荐回避风险。
 
 ## Data and Calendar Gate
 
 Run first:
 
-`venv/bin/python skills/overnight_stock_picker/scripts/server_context.py`
+`python skills/overnight_stock_picker/scripts/server_context.py`
 
 Run this synchronization only once per recommendation. It must be incremental: download only missing/new server data and reuse the shared dated cache. Do not start a second synchronization merely to wait for a newer snapshot. If the single sync fails or stalls, use the newest complete local server-backed cache with an explicit timestamp/limitation; never let retries consume the trading window.
 
@@ -25,6 +25,8 @@ All stock skills share `data_server_cache/` and `latest_context.json`. Verify:
 - availability of actual 14:30-15:00 snapshots versus historical-close-only data.
 
 Use only server-backed objective data. Fetch relevant news/announcement originals by ID. The server never decides themes, hard logic, lifecycle, risks, candidates, or rankings; Codex does.
+
+读取并遵守 [主题、产业链与趋势共振选股](../references/theme_chain_selection.md)。一级直接核心和二级硬映射均可推荐；二级公司若正处于扩产、洁净室、设备、材料、IC载板等当期资本开支兑现环节，可以排名高于一级公司。三级概念只能观察。
 
 Prefer compact structured queries over printing or rereading multi-megabyte raw JSON. Read only the fields and originals needed for the current decision. Run independent local reads/checks concurrently when possible, but keep final judgment with Codex.
 
@@ -67,13 +69,13 @@ Do not convert raw factor/channel votes into final rank. Treat channels as indep
 3. **Run three independent full-market evidence lanes before narrowing.** Never first choose an active-price pool and then inspect news only inside it.
    - **Message lane:** scan every ordinary tradable stock against the latest week of company filings, reliable news, policy/events, commodity/overseas changes, and public business facts. Include quiet stocks with new hard evidence even when price has not moved.
    - **Market-structure lane:** independently scan every ordinary tradable stock across 5-15 day position, trend, volume/price structure, crowding, distribution, and current tape. Do not require a same-day headline.
-   - **Special-setup lane:** independently discover pre-ignition/quiet acceptance, strongest-anchor low-position acceptance, and qualified pin-reversal setups. Run `venv/bin/python analysis/low_pin_reversal_scanner.py --mode overnight --limit 30` for objective pin discovery.
+   - **Special-setup lane:** independently discover pre-ignition/quiet acceptance, strongest-anchor low-position acceptance, and qualified pin-reversal setups. Run `python analysis/low_pin_reversal_scanner.py --mode overnight --limit 30` for objective pin discovery.
 4. **Merge evidence, then form a dynamic verification list.** Deduplicate the three lanes and preserve each stock's evidence path. The intermediate list is not a recommendation pool and must not be fixed at an arbitrary size. In a typical session, compact the merged evidence to roughly 20-30 verification names only after the full-market message and market scans have both run. This prevents missing a flat stock with a fresh catalyst.
 5. **Deep-verify the likely final 10-12.** Check catalyst timing, company relevance, 15-day sticky risks, price consumption, next buyer, cash-out supply, and executability. Read originals for the likely top 1-3 and whenever a title is ambiguous, an amount/term matters, or a risk item could veto the trade. A clear structured filing title may support lower-ranked discovery, but never invent missing terms.
-6. **Keep low-position ideas evidence-based.** A deep-base/no-news chart stays watch-only; an after-close event can support the next session but not the first board; high-volatility emotion reactivation cannot be called quiet ignition. Do not reverse-map upstream/downstream peers from an anchor stock.
+6. **Keep low-position ideas evidence-based.** A deep-base/no-news chart stays watch-only; an after-close event can support the next session but not the first board; high-volatility emotion reactivation cannot be called quiet ignition. Upstream/downstream mapping is allowed only at tier 1 or tier 2 with public evidence.
 7. **Verify late-session acceptance with available evidence.** Use the latest actual snapshot already available after the request: position versus VWAP/average price, movement toward/away from day high, volume/amount progression, board synchronization, and fake-pull/dive risk. One valid 14:30+ snapshot plus prior intraday evidence can support a qualified judgment; multiple snapshots improve confidence but are not mandatory. Never wait for a future snapshot. If no 14:30+ snapshot exists, label acceptance unconfirmed, reduce confidence/position, and still meet the delivery deadline.
 8. **Check risk and executability.** Reject unbuyable sealed boards, unresolved material risk, distribution structures, unverified relevance, and names with no credible next buyer.
-9. **Rank eight, execute fewer.** Output eight unique stocks for comparison, but select normally 1-2 and at most 3. Weak/no-edge markets allow one tiny trial or no trade. Time pressure never permits lowering evidence or risk gates; reduce the executable list instead of filling it with weak ideas.
+9. **Rank eight, execute fewer.** 固定输出八只且代码唯一：前五只来自综合质量排序，第六至第八只来自独立特殊扫描。最终重点通常1-2只、最多3只。弱市仍给完整排序，但只允许触发级股票小仓执行。
 
 ## Full-Market and Permission Rules
 
@@ -93,12 +95,14 @@ Use this hierarchy, then test whether price has already consumed it:
 4. Overseas, commodity, FX, or rate mapping.
 5. Repeated old theme, loose concept, or media imagination.
 
-Classify beneficiary type:
+Classify beneficiary type and evidence level:
 
 - `current_hard_logic`: current business/order/revenue/capacity evidence.
 - `future_expectation`: sample, certification, expansion, customer validation, or transaction expectation; label it honestly.
 - `emotion_front_row`: market-recognized but not hard-logic.
 - `pure_concept`: loose label or company denial; reject from execution priority.
+
+同时标记 `tier1_direct`、`tier2_verified` 或 `tier3_concept`。不得乱猜产业链，但也不得把推荐范围缩成主题名称完全一致的制造商。公开客户、项目、订单、扩产用途、正式业务披露或可靠报道可以证明二级硬映射。
 
 Hard news does not override an unbuyable price, absent acceptance, or cash-out risk. Missing company news is not positive evidence.
 
@@ -114,9 +118,11 @@ Reject fake quiet structures:
 - a modest green/red candle that is merely self-rescue after distribution;
 - high ATR and repeated abnormal-movement/risk filings presented as “stable”.
 
-Large gain is not automatically rejected. It ranks high only when incremental relay demand is specific and stronger than available profit inventory.
+Large gain is not automatically rejected. 强势股票只要主题、业绩预期、趋势和接力买盘仍在，可以连续推荐；真正否决的是爆量滞涨、长上影、板块退潮、预期兑现完毕或尾盘承接失败。
 
-## Eight-Candidate Structure
+## Candidate Structure
+
+固定使用以下八只结构：
 
 1. Strongest executable next-day premium setup.
 2. Independent replacement with a similarly clear exit path.
@@ -130,6 +136,12 @@ Large gain is not automatically rejected. It ranks high only when incremental re
 Ranks 6-8 are real candidates, not filler. Keep all eight codes unique. If the best pin setup is already in ranks 1-7, move it to rank 8 and replace its former slot. Rank 8 may enter the final 1-3 only after passing shape, message, theme, risk, and late-tape gates. If no setup passes all gates, show the relative-best scanner result as observation-only without inventing execution confidence.
 
 Read [the shared pin-reversal rules](../references/low_pin_reversal.md). The scanner is an objective discovery tool, not a recommendation engine. Inspect `recent_pin_breakouts` first, then same-day `confirmed` and `scouts`. Prefer MACD `red_turn`/`red_expanding`; allow a fast near-cross only after a qualified recent pin plus a current break above the pin high/MA5. Reject high-position self-rescue, negative-announcement pins, extreme-volume distribution, and any candidate that loses VWAP/support after 14:30.
+
+同时运行：
+
+`python analysis/market_leadership_scanner.py --mode overnight --limit 40`
+
+用它补充健康强趋势、分歧承接和启动前候选，但不得用价格结构替代消息、产业链、风险和下一买家验证。
 
 ## Timing Discipline
 
@@ -150,7 +162,7 @@ Use this default time budget as a guardrail, not as a reason to delay:
 4. 11-15 minutes: verify final evidence, next buyer, acceptance, entry/exit, write journal, and answer.
 5. 15-20 minutes: contingency reserve only for a material ambiguity in a top candidate, never for broader re-search.
 
-External web search is fallback-only when the local server feed has a material gap for a likely top candidate. One failed search/backend attempt must not trigger a retry chain during the live window. Do not open dozens of originals; verify the likely top names and all potential veto risks first.
+对前三个主题进行一次批量外部核查，补充最近七天的官方政策、公司IR、可靠产业新闻、海外资本开支和供需变化。搜索是主题发现与交叉验证的一部分，不只在服务器失败时使用。控制为一次批量查询，优先验证前两名和重大否决风险，不陷入重试链。
 
 After the formal answer, allow only a brief cancellation update for a sudden dive, fake pull-up, VWAP/support loss, new risk filing, or broken theme synchronization. Do not rerank or rescan the full market. Never claim late-session acceptance from an earlier snapshot without labeling the limitation.
 
@@ -161,24 +173,26 @@ Write concise Chinese and include:
 - calendar header: current time, latest completed trading day, exact next trading day, extra closed nights;
 - data scope and limitations, including actual late-session snapshot coverage;
 - market regime, theme lifecycle, and next-day capital path;
-- exactly eight ranked candidates;
+- 严格八只：前五主候选加第六至第八特殊席位；
 - for each: code/name, current price/change, evidence type, catalyst timestamp class, theme role, multi-day structure, late-session acceptance, announcement-risk result, next buyer, premium/exit type, buy area/trigger, abandon condition, position, and next-day sell plan;
 - rank 6/7 labels;
 - rank 8 `低位插针反转票` with pattern date, confirmation date/days since pin, low/recovery, range position, shadow/close position, pattern/current amount, MACD state, message/theme confirmation, next buyer, trigger, invalidation, position, and next-day exit;
-- conservative 1-2 stock plan and aggressive maximum-3 plan only when justified;
-- explicit “small trial/no normal trade” statement when confidence is insufficient.
+- 最终重点1-2只，只有逻辑独立且证据充分时才允许第3只；
+- 弱市标注“小仓触发”或“观察级”，但仍给出完整八只排序。
 
-Read [strategy reference](references/strategy.md) only for detailed scoring, lifecycle edge cases, and examples. Do not load optional industry-research resources during a normal recommendation run.
+Read [strategy reference](references/strategy.md) for detailed scoring, lifecycle edge cases, and examples. Load only the industry material needed to verify a top theme or candidate; Serenity or other research files are knowledge supplements, never the candidate pool.
 
 ## Mandatory Recommendation Journal
 
 Before sending the final answer, seal the final eight-stock plan in `data_recommendations/daily_recommendations.json` with:
 
-`venv/bin/python analysis/recommendation_journal.py record --mode overnight --trade-date YYYY-MM-DD --input /tmp/overnight_recommendation.json`
+`python analysis/recommendation_journal.py record --mode overnight --trade-date YYYY-MM-DD --input tmp/overnight_recommendation.json`
 
-Use the buy-date as `trade-date`. The input must contain `decision_time`, `market_judgment`, `data_context`, exactly eight `candidates`, `focus_codes`, `no_trade`, and `response_summary`. Each candidate must include rank/code/name plus catalyst/time class, theme role, current/reference price, late-session acceptance, next buyer, entry trigger/range, abandon condition, position, risk flags, premium type, and next-trading-day sell plan. Rank 8 must also preserve its objective pin/MACD evidence and confirmation grade.
+Use the buy-date as `trade-date`. The input must contain `decision_time`, `market_judgment`, `data_context`, exactly eight `candidates`, `focus_codes`, `no_trade`, and `response_summary`. Each candidate must include rank/code/name plus catalyst/time class, theme role, current/reference price, late-session acceptance, next buyer, entry trigger/range, abandon condition, position, risk flags, premium type, and next-trading-day sell plan. Ranks 6-8 must set `slot_type` to `stabilization_ignition`, `strong_anchor_low_position_acceptance`, and `low_pin_reversal` respectively. Rank 8 must retain objective pin/MACD evidence and confirmation grade.
 
 Do not edit or delete a sealed run after outcomes are known. A revised recommendation creates a new run; the journal preserves the earlier version and marks it superseded. If journaling fails, state that failure in the final answer instead of pretending it was recorded.
+
+临时JSON、网页下载和PDF只能放在`tmp/`，记录完成后删除，不得加入Git。
 
 ## Next-Day Sell Discipline
 

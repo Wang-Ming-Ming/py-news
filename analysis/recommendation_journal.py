@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Append-only journal for sealed morning and overnight recommendations."""
+"""Append-only journal for sealed stock recommendations."""
 
 from __future__ import annotations
 
@@ -18,14 +18,36 @@ from typing import Any
 CST = timezone(timedelta(hours=8))
 DEFAULT_JOURNAL = Path("data_recommendations/daily_recommendations.json")
 DEFAULT_MARKET_ARCHIVE = Path("data_server_cache/archive")
-VALID_MODES = {"morning", "overnight"}
+VALID_MODES = {"morning", "overnight", "trend"}
 EXECUTION_FRESHNESS_CLASSES = {
     "new_material_fact",
     "new_certainty_upgrade",
     "new_external_causal_shock",
     "scheduled_repricing",
+    "confirmed_fact",
+    "high_quality_expectation",
+    "old_fact_new_context",
 }
-MATERIALITY_GRADES = {"A", "B"}
+MATERIALITY_GRADES = {"A", "B+", "B"}
+EXECUTION_PATHS = {
+    "major_fact",
+    "theme_cluster_repricing",
+    "verified_chain_expansion",
+    "trend_continuation",
+    "pre_activation",
+}
+THEME_LED_PATHS = {
+    "theme_cluster_repricing",
+    "verified_chain_expansion",
+    "trend_continuation",
+    "pre_activation",
+}
+VERIFIED_CHAIN_LEVELS = {"tier1_direct", "tier2_verified"}
+SPECIAL_SLOT_TYPES = {
+    6: "stabilization_ignition",
+    7: "strong_anchor_low_position_acceptance",
+    8: "low_pin_reversal",
+}
 
 
 def now_iso() -> str:
@@ -104,7 +126,7 @@ def validate_execution_evidence(
             f"focus candidate {code} requires an execution-grade freshness_class"
         )
     if str(candidate.get("materiality_grade") or "").strip() not in MATERIALITY_GRADES:
-        raise ValueError(f"focus candidate {code} requires materiality_grade A or B")
+        raise ValueError(f"focus candidate {code} requires materiality_grade A, B+ or B")
 
     source_verified = (
         candidate.get("primary_source_verified")
@@ -120,6 +142,7 @@ def validate_execution_evidence(
         "economic_magnitude",
         "market_confirmation",
         "buyability",
+        "next_buyer",
         "t1_survivability",
     ):
         require_text(candidate, field, f"focus candidate {code}")
@@ -174,14 +197,25 @@ def validate_primary_pick(
     freshness_class = str(primary_pick.get("freshness_class") or "").strip()
     if freshness_class not in EXECUTION_FRESHNESS_CLASSES:
         raise ValueError("primary_pick requires an execution-grade freshness_class")
-    if str(primary_pick.get("materiality_grade") or "").strip() != "A":
-        raise ValueError("primary_pick requires materiality_grade A")
+    materiality_grade = str(primary_pick.get("materiality_grade") or "").strip()
+    if materiality_grade not in MATERIALITY_GRADES:
+        raise ValueError("primary_pick requires materiality_grade A, B+ or B")
     if primary_pick.get("original_source_verified") is not True:
         raise ValueError("primary_pick requires original_source_verified=true")
 
+    execution_path = str(primary_pick.get("execution_path") or "").strip()
+    if not execution_path:
+        execution_path = "major_fact" if materiality_grade == "A" else ""
+    if execution_path not in EXECUTION_PATHS:
+        raise ValueError("primary_pick requires a valid execution_path")
+
     lookback_days = int(primary_pick.get("freshness_lookback_days") or 0)
-    if lookback_days < 120:
-        raise ValueError("primary_pick requires at least a 120-day freshness lookback")
+    minimum_lookback = 120 if materiality_grade == "A" else 30
+    if lookback_days < minimum_lookback:
+        raise ValueError(
+            f"primary_pick {materiality_grade} requires at least a "
+            f"{minimum_lookback}-day freshness lookback"
+        )
 
     for field in (
         "name",
@@ -193,6 +227,7 @@ def validate_primary_pick(
         "counterevidence",
         "market_confirmation",
         "buyability",
+        "next_buyer",
         "t1_survivability",
         "why_first",
     ):
@@ -201,6 +236,26 @@ def validate_primary_pick(
     max_position_pct = float(primary_pick.get("max_position_pct") or 0)
     if max_position_pct <= 0 or max_position_pct > 15:
         raise ValueError("primary_pick max_position_pct must be within (0, 15]")
+
+    if materiality_grade in {"B+", "B"}:
+        if execution_path not in THEME_LED_PATHS:
+            raise ValueError(
+                "B+/B primary_pick must use a theme, verified-chain, trend, "
+                "or pre-activation execution_path"
+            )
+        if int(primary_pick.get("independent_theme_evidence_count") or 0) < 2:
+            raise ValueError(
+                "B+/B primary_pick requires at least two independent theme evidence events"
+            )
+        chain_level = str(primary_pick.get("chain_evidence_level") or "").strip()
+        if chain_level not in VERIFIED_CHAIN_LEVELS:
+            raise ValueError(
+                "B+/B primary_pick requires tier1_direct or tier2_verified "
+                "chain_evidence_level"
+            )
+        require_text(primary_pick, "trend_confirmation", "B+/B primary_pick")
+        if max_position_pct > 5:
+            raise ValueError("B+/B primary_pick max_position_pct must be <= 5")
 
     if trigger_status == "triggered" and candidate_rank != 1:
         require_text(
@@ -214,20 +269,22 @@ def validate_primary_pick(
         isinstance(breadth, (int, float)) and breadth < 30
     )
     if risk_off:
-        if (
-            trigger_status != "triggered"
-            or risk_gate["countertrend_exception"] is not True
-            or max_position_pct > 5
-        ):
+        if trigger_status == "pending":
+            if max_position_pct > 3:
+                raise ValueError(
+                    "risk-off pending primary_pick max_position_pct must be <= 3"
+                )
+        elif risk_gate["countertrend_exception"] is not True or max_position_pct > 5:
             raise ValueError(
-                "risk-off/under-30% breadth primary_pick requires a triggered "
+                "risk-off/under-30% breadth triggered primary_pick requires a "
                 "countertrend exception and max_position_pct <= 5"
             )
 
     primary_pick["code"] = code
     primary_pick["trigger_status"] = trigger_status
     primary_pick["freshness_class"] = freshness_class
-    primary_pick["materiality_grade"] = "A"
+    primary_pick["materiality_grade"] = materiality_grade
+    primary_pick["execution_path"] = execution_path
     primary_pick["freshness_lookback_days"] = lookback_days
     primary_pick["max_position_pct"] = max_position_pct
     return primary_pick
@@ -236,8 +293,12 @@ def validate_primary_pick(
 def validate_payload(payload: dict[str, Any], mode: str | None = None) -> dict[str, Any]:
     result = deepcopy(payload)
     candidates = result.get("candidates")
-    if not isinstance(candidates, list) or len(candidates) > 8:
-        raise ValueError("morning/overnight record must contain zero to eight candidates")
+    if not isinstance(candidates, list):
+        raise ValueError("recommendation record candidates must be a list")
+    if mode in {"morning", "overnight"} and len(candidates) != 8:
+        raise ValueError(f"{mode} recommendation record must contain exactly eight candidates")
+    if mode not in {"morning", "overnight"} and not 2 <= len(candidates) <= 8:
+        raise ValueError("trend recommendation record must contain two to eight candidates")
 
     ranks: set[int] = set()
     candidate_codes: set[str] = set()
@@ -256,11 +317,20 @@ def validate_payload(payload: dict[str, Any], mode: str | None = None) -> dict[s
         candidate["code"] = code
         candidate["name"] = name
         ranks.add(rank)
+        if code in candidate_codes:
+            raise ValueError("candidate codes must be unique")
         candidate_codes.add(code)
 
     if ranks != expected_ranks:
         raise ValueError("candidate ranks must cover 1 through candidate count")
     candidates.sort(key=lambda item: item["rank"])
+    if mode in {"morning", "overnight"}:
+        for rank, slot_type in SPECIAL_SLOT_TYPES.items():
+            candidate = next(item for item in candidates if item["rank"] == rank)
+            if str(candidate.get("slot_type") or "").strip() != slot_type:
+                raise ValueError(
+                    f"{mode} candidate rank {rank} requires slot_type={slot_type}"
+                )
 
     new_theme_candidate = result.get("new_theme_candidate")
     if mode == "morning":
@@ -341,8 +411,6 @@ def validate_payload(payload: dict[str, Any], mode: str | None = None) -> dict[s
         raise ValueError("provisional_focus_codes must be present in candidates")
     result["provisional_focus_codes"] = provisional_focus_codes
     no_trade = bool(result.get("no_trade", False))
-    if not candidates and new_theme_candidate is None and not no_trade:
-        raise ValueError("empty candidate list requires no_trade")
     if no_trade and (focus_codes or provisional_focus_codes):
         raise ValueError("no_trade record cannot contain focus codes")
     result["market_judgment"] = str(result.get("market_judgment") or "").strip()
@@ -365,17 +433,6 @@ def validate_payload(payload: dict[str, Any], mode: str | None = None) -> dict[s
             if not isinstance(breadth, (int, float)) or not 0 <= breadth <= 100:
                 raise ValueError("risk_gate market_breadth_pct must be null or 0-100")
 
-        for code in dict.fromkeys(provisional_focus_codes + focus_codes):
-            candidate = candidates_by_code[code]
-            validate_execution_evidence(
-                candidate,
-                code,
-                is_new_theme=bool(
-                    isinstance(new_theme_candidate, dict)
-                    and new_theme_candidate.get("code") == code
-                ),
-            )
-
         if "primary_pick" not in result:
             raise ValueError("morning record requires primary_pick")
         result["primary_pick"] = validate_primary_pick(
@@ -385,6 +442,16 @@ def validate_payload(payload: dict[str, Any], mode: str | None = None) -> dict[s
             provisional_focus_codes=provisional_focus_codes,
             focus_codes=focus_codes,
             risk_gate=risk_gate,
+        )
+    for code in dict.fromkeys(provisional_focus_codes + focus_codes):
+        candidate = candidates_by_code[code]
+        validate_execution_evidence(
+            candidate,
+            code,
+            is_new_theme=bool(
+                isinstance(new_theme_candidate, dict)
+                and new_theme_candidate.get("code") == code
+            ),
         )
     return result
 
@@ -417,9 +484,12 @@ def record_recommendation(
     }
 
     journal = load_journal(path)
-    day_bucket = journal["days"].setdefault(trade_date, {"morning": [], "overnight": []})
-    day_bucket.setdefault("morning", [])
-    day_bucket.setdefault("overnight", [])
+    day_bucket = journal["days"].setdefault(
+        trade_date,
+        {"morning": [], "overnight": [], "trend": []},
+    )
+    for valid_mode in VALID_MODES:
+        day_bucket.setdefault(valid_mode, [])
     for existing in day_bucket[mode]:
         if existing.get("status") == "active":
             existing["status"] = "superseded"

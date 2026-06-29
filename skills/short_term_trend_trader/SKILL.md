@@ -1,116 +1,145 @@
 ---
 name: short_term_trend_trader
-description: 'Use this skill when the user wants A-share short-term trend trading or position management over several trading days: decide what to buy, hold, add, reduce, or sell based on latest news, one-week message flow, market/sector strength, trend health, capital acceptance, and strict turn-weak sell discipline. This is for swing-like short-term trades, not same-day scalping or one-night-only overnight trades.'
+description: 'Use for A-share short-term trend selection or holding management over roughly 2-7 trading days. Independently scan the full ordinary main-board market using one-week event clusters, verified industrial-chain evidence, healthy trend leadership and capital acceptance, always return at least two ranked new-stock recommendations, and manage holdings with concrete hold/add/reduce/sell conditions.'
 ---
 
 # Short-Term Trend Trader
 
-This skill handles the user's new short-term mode: hold a strong stock for several trading days while the trend and thesis remain intact, and sell when the trend turns weak. The mindset is a top financial analyst plus elite short-term trend trader.
+寻找未来约2-7个交易日仍可能获得连续买盘的普通主板股票。买入后趋势和逻辑未坏就持有，转弱、证伪或资金撤退才退出。
 
-The core question is: **is this stock still in a tradable short-term uptrend with a valid reason for funds to keep buying over the next 1-5 trading days?**
+重大消息是高权重，不是唯一入口。主题多事件共振、产业链扩产受益、健康强趋势延续和启动前预期差都可以成为首推。近期上涨不自动代表高位；强者在逻辑升级、量价健康和下一买家仍在时可以连续推荐。
 
-This is not a promise of profit. Use probability language such as "趋势仍健康", "转弱信号未出现", "只适合小仓试错", "跌破关键位就退出", and "不满足触发条件不买".
+## 固定边界
 
-## Objective Server Data Boundary
+- 新股票从全市场独立筛选，不受持仓、历史聊天、用户偏好和以前推荐结果影响。
+- 持仓先单独给出留、减、卖、禁止加仓或可加仓，但不进入新股排序权重。
+- 默认普通主板：`000/001/002/003/600/601/603/605`。排除`300/301/688/689`、北交所、ST、退市风险和权限标的，除非用户明确允许。
+- 至少给两只、正常五只；用户指定数量时在二至八只内按要求输出。弱市降低仓位，不输出空候选。
+- 涨停封死、连续一字或无法正常成交的股票仅作主题锚点，寻找同主题可买核心或二级硬映射。
+- 新买严格遵守T+1。买入当日不能用“跌破即卖”作为可执行风控，必须通过入场触发、仓位和次日退出预案控制。
 
-The server has no AI and supplies objective data only. It must not determine trend state, announcement risk, catalyst relevance, candidates, or trades. At the start of analysis run:
+## 一次增量同步
 
-`venv/bin/python skills/short_term_trend_trader/scripts/server_context.py`
+开始后只运行一次：
 
-This sync is mandatory and must be the first data action even when a local cache already exists. Connection settings resolve from process `STOCK_DATA_SERVER`/`STOCK_DATA_TOKEN`, then the repository-root `.env`, then the legacy `~/.config/stock-data-client/config.json`. All three stock skills share the single `data_server_cache` directory and `data_server_cache/latest_context.json`; never create a skill-specific objective-data cache. Verify health/calendar/snapshot time, expected counts, `sync_duration_seconds`, `using_cached_data`, and that the context `mode` matches this run, then query objective multi-day fields and fetch relevant original news/announcement text by ID. Keep all trend, thesis, risk, and position decisions in Codex. If the server is unavailable, use a complete local cache only with an explicit timestamp warning.
+`python skills/short_term_trend_trader/scripts/server_context.py`
 
-## Strategy Boundary
+核对交易日、市场阶段、服务器时间、最新快照、历史覆盖、完整数量、缓存复用和同步错误。只补缺失日期或新增数据，不重复全量同步，不启动本地采集器。
 
-- This is a several-day short-term trend strategy, usually 2-7 trading days.
-- It is not the morning `buy after auction and sell quickly` mode.
-- It is not the overnight `buy near close and sell next day` mode.
-- It can recommend holding after a profitable day if the trend is still healthy.
-- It can recommend selling before a day ends if price action proves the trend is broken.
-- It must not mechanically hold every red/up day or sell every green/down day. In A-shares, red means up and green means down; day color is a warning signal, not the whole strategy.
+同步失败时使用最新完整服务器缓存，明确数据时间和陈旧程度；陈旧数据只能支持研究排序，不能伪装成实时触发。
 
-## Required Mindset
+## 二十分钟工作流
 
-Prioritize hard logic plus trend health:
+### 0-3分钟：市场状态
 
-1. Message flow over at least the latest week, not only today's headline.
-2. Theme strength and stock relevance confirmed by market data and direct public evidence.
-3. The stock's own trend: higher lows, moving-average support, volume quality, VWAP/average-price behavior, and relative strength.
-4. Capital acceptance: repeated pullback absorption, afternoon/late-session support, and lack of heavy distribution.
-5. Clear sell discipline: once the trend turns weak, exit without arguing with the tape.
+1. 读取最近5-15个交易日的宽度、成交、涨停/炸板、主线和风格。
+2. 将市场归类为风险偏好、轮动、修复、分歧、高潮、退潮或risk-off。
+3. 判断趋势策略适合追随、等回踩、小仓试错还是降低总仓位。
 
-Do not recommend based on the user's holdings, historical chat, or preference. For new ideas, scan the full tradable market. For holding analysis, evaluate the user's positions first, but do not defend them just because the user owns them.
+### 3-8分钟：七天消息和主题事件簇
 
-## Data Workflow
+1. 运行：
 
-Before analysis, use the newest valid server-backed local cache available:
+   `python analysis/emerging_theme_radar.py --as-of DECISION_TIME --recent-hours 168 --baseline-days 30 --limit 15`
 
-1. Run `venv/bin/python skills/short_term_trend_trader/scripts/server_context.py` and verify the resulting context, health, calendar, and snapshot version.
-2. Use only the server-backed news/announcement indexes under `data_server_cache` and fetch relevant original text by ID. Do not run local collectors or read `data_dev`.
-3. Read social market signals when available:
-   `data_social/latest_social_signals.json`
-4. Read the latest valid snapshot, features, and pools referenced by `data_server_cache/latest_context.json`; never use legacy local `data_market` files.
-5. Review recent objective market history only from `data_server_cache/archive/YYYY-MM-DD/market/`.
+2. 读取 [新题材与持续主线发现](../references/theme_discovery.md)。
+3. 扫描政策、公告、订单、价格、产能、客户采购、技术迁移、海外财报和资本开支。
+4. 对前三个主题做一次批量联网核查，使用官方、公司IR和可靠产业新闻补充服务器数据。
+5. 合并转载，区分确认事实、高质量预期、计划重估、旧事实新环境和纯情绪。
 
-If server sync fails, use only the latest complete context already under `data_server_cache`, clearly state its timestamp and age, and lower confidence when stale.
+### 8-13分钟：五通道全市场扫描
 
-## Full-Market Selection
+1. `major_fact`：重大公司事实；
+2. `theme_cluster_repricing`：多个独立事件强化同一主线；
+3. `verified_chain_expansion`：一级核心或二级硬映射的扩产、设备、材料、洁净室、IC载板等受益；
+4. `trend_continuation`：主题和业绩预期未坏的健康强趋势；
+5. `pre_activation`：逻辑硬、趋势改善、尚未高潮的启动前候选。
 
-For new buys, do not start from `rankings.overnight_candidates` or `rankings.active_candidates`. Candidate pools can overfit today's active stocks and miss hard-logic trend stocks before ignition.
+运行：
 
-Build candidates in this order:
+`python analysis/market_leadership_scanner.py --mode trend --limit 40`
 
-1. Extract one-week hard themes: policy, company公告, orders, price rises, supply-demand shifts, overseas mapping, industry events, and social attention only as secondary evidence.
-2. Search all tradable A-share stocks for directly named companies, verified business beneficiaries, and market-recognized theme leaders or low-position candidates.
-3. Filter by tradability: default exclude STAR Market `688/689`, Beijing Stock Exchange-style restricted names, ST/delisting risk, and names requiring 500K RMB permission. Keep caution on `300/301` unless the user allows them.
-4. Evaluate trend health and position: early trend, confirmed trend, acceleration, healthy pullback, climax, or broken trend.
-5. Validate with current market data: sector strength, leader confirmation, turnover, fund flow, limit-up anchors, relative strength, and recent support.
+扫描器只发现早期重估、趋势延续、健康回踩和启动前结构。候选仍必须逐项核验主题、产业链、公司证据、公告风险和下一批买家。
 
-## Direct-Evidence Boundary
+产业链统一遵守 [主题、产业链与趋势共振选股](../references/theme_chain_selection.md)：
 
-Do not load optional industry-research resources or perform upstream/downstream or scarcity inference during a normal trend recommendation. Those resources and data remain stored but are intentionally disabled until separately improved.
+- 一级：直接核心业务；
+- 二级：有公开客户、项目、订单、扩产用途或可靠业务披露的设备、洁净室、材料、IC载板等硬映射；
+- 三级：只有概念标签，只观察。
 
-For candidate relevance, use only original announcements, reliable reports that name the company, verified public company business facts, and current market recognition. Expectation trades remain eligible when labeled honestly and confirmed by trend, volume, and theme behavior; loose concepts or company-denied stories are rejected.
+产业链层级表示证据直接程度，不是排名。若市场交易的是资本开支、扩产和瓶颈，二级公司可以排第一。
 
-Check issuer official news, investor interactions, or event notices only when the server feed is insufficient for a leading candidate. Do not reverse-map upstream/downstream peers from an anchor stock.
+### 13-18分钟：深度验证
 
-## Holding Decisions
+对最可能入选的十只检查：
 
-When the user provides holdings, evaluate each position as:
+- 最新文章和底层事实首次披露时间，本次新增内容及是否旧闻重发；
+- 主题事件数量、持续性和生命周期；
+- 一级/二级证据、订单/收入/利润/产能/估值弹性；
+- 5-15日高低点、MA5/MA10、平台、量价和相对强度；
+- 回踩承接、板块宽度、锚点与容量核心表现；
+- 下一批买家和未来1-5日可验证节点；
+- 减持、监管、澄清、诉讼、业绩、异动和派发风险；
+- 买点、失效位和T+1生存能力。
 
-- `继续持有`: thesis valid, sector not broken, price above key trend support, no distribution.
-- `减仓`: trend still alive but near climax, heavy divergence, high gap, or concentration risk.
-- `清仓/卖出`: hard break of trend, negative announcement, sector fade, heavy-volume down move, or original thesis invalidated.
-- `不加仓`: holding can remain, but new money should wait for confirmation.
-- `可加仓`: only after profit cushion and new confirmation; never add to a falling broken trend.
+只为前两名和可能否决的重大风险读取原文全文。
 
-Always give concrete prices or zones when market data supports them: key support, invalidation level, add-on trigger, and sell zone.
+### 18-20分钟：排序与记录
 
-## Trend Health Rules
+至少两只、正常五只，最终重点一至两只。第一名按“硬逻辑 × 主题强度 × 趋势质量 × 下一买家 × 可买性”选择，不按当日涨幅榜机械排序。
 
-Read `references/strategy.md` for detailed scoring, trend-state definitions, buy/hold/sell gates, and output templates.
+二十分钟到点后停止扩展搜索，使用已验证证据输出；不等待下一根分时或下一时点。
 
-Core rules:
+## 强趋势不机械否决
 
-- Hold while the stock remains above its key trend support, theme remains valid, and pullbacks are absorbed.
-- Do not hold a stock just because it was strong yesterday if today's trend breaks.
-- Do not sell a normal low-volume pullback if the stock remains above support and the theme is still strengthening.
-- Sell or reduce when price breaks key support with volume, loses sector status, shows distribution, or the catalyst is invalidated.
-- A profitable stock can be held several days, but every day must re-earn the right to be held.
+可以继续推荐已经上涨的股票，条件是：
 
-## Output Requirements
+- 催化、价格、订单、产能、客户或政策预期仍在升级；
+- 高低点继续抬高，MA5/MA10向上；
+- 回踩缩量、上攻放量，平台或VWAP承接有效；
+- 板块锚点和容量核心未退潮；
+- 下一买家清晰，潜在接力大于兑现库存。
 
-For a short-term trend stock-picking request, output in Chinese:
+真正需要降级的是爆量滞涨、连续长上影、高开低走、反复炸板、偏离均线后无承接、板块核心转弱或逻辑兑现完毕。详细趋势状态按 [趋势策略参考](references/strategy.md)。
 
-1. Data scope and market regime.
-2. The strongest one-week message themes and current funding path.
-3. Exactly five ranked candidates from the full market.
-4. For each: stock/code, theme, current/reference price, trend state, reason, buy trigger, hold condition, sell/abandon condition, position suggestion, expected holding window.
-5. Final focus: only the best 1-2 candidates. If confidence is weak, say only observe or small trial.
+## 持仓管理
 
-For a holding-management request, output:
+逐票给：
 
-1. Overall account risk and theme concentration.
-2. Each holding: `留/减/卖/加` decision, reason, key price, intraday/tomorrow plan.
-3. Which holding is strongest, which should be sold first, and whether any new buy is better than existing holdings.
+- `继续持有`：逻辑、板块和趋势支撑仍在；
+- `减仓`：趋势尚存但加速过热、分歧加大或集中度过高；
+- `卖出`：原逻辑证伪、放量破位、板块退潮或硬风险出现；
+- `禁止加仓`：可以持有，但新资金缺乏确认；
+- `可加仓`：已有盈利垫，回踩关键位承接后重新放量，主题继续加强。
 
-Never turn a weak trend into a high-confidence recommendation. If no clean trend setup exists, say so directly.
+新买当日不能卖。已有隔夜仓可按实时转弱信号处理。
+
+## 必须输出
+
+用中文，先给总判断：
+
+1. 数据时间、完整性、市场环境和总仓位建议；
+2. 最近七天最强主题事件簇及产业链一级/二级/三级；
+3. 已确认持仓的留、减、卖、加；
+4. 至少两只、正常五只排名；
+5. 每只写明：
+   - 代码、名称、当前/参考价；
+   - 候选通道、证据等级和产业链层级；
+   - 推荐理由、直接证据、消息时间和本次新增；
+   - 趋势阶段、量价、板块确认和下一买家；
+   - 买入区间/触发、加仓条件、持有条件；
+   - 放弃条件、失效位、减仓/卖出条件；
+   - 仓位和预计持有窗口；
+6. 明确今天适合买的、只等回踩的，以及最终重点一至两只。
+
+必须明确概率排序，不承诺上涨。弱市可以将重点标为3%-5%试错，但不能用空泛风险提示替代推荐。
+
+## 推荐日志
+
+发送前记录：
+
+`python analysis/recommendation_journal.py record --mode trend --trade-date YYYY-MM-DD --input tmp/trend_recommendation.json`
+
+记录二至八只候选、重点代码、主题事件数、产业链层级、趋势状态、下一买家、买点、仓位、T+1与后续退出纪律。修订生成新记录，不覆盖旧结论。
+
+临时JSON、网页和PDF只放`tmp/`，完成后删除，不得加入Git。

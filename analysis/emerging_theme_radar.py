@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Discover emerging market-theme terms before ranking individual stocks."""
+"""Discover fast-rising, multi-event market themes before stock ranking."""
 
 from __future__ import annotations
 
@@ -17,9 +17,16 @@ from typing import Any, Iterable
 DEFAULT_NEWS_INDEX = Path("data_server_cache/latest_news_index.json")
 BEIJING = timezone(timedelta(hours=8))
 
-PRIMARY_SOURCES = {"cninfo", "ndrc", "sse", "szse"}
-OVERSEAS_SOURCES = {"eastmoney_global", "reuters", "company_ir"}
-FOREIGN_PRIMARY_SOURCES = {"reuters", "company_ir"}
+PRIMARY_SOURCES = {
+    "cninfo",
+    "ndrc",
+    "sse",
+    "szse",
+    "gov",
+    "company_ir",
+}
+OVERSEAS_SOURCES = {"eastmoney_global", "reuters", "company_ir", "ft"}
+FOREIGN_PRIMARY_SOURCES = {"reuters", "company_ir", "ft"}
 
 HARD_CUES = (
     "出口管制",
@@ -30,30 +37,41 @@ HARD_CUES = (
     "缺口",
     "涨价",
     "提价",
+    "价格上涨",
     "订单",
+    "合同",
+    "采购",
+    "供应协议",
     "积压",
     "扩产",
     "产能",
+    "量产",
+    "认证",
     "收购",
     "合资",
     "重组",
     "切入",
-    "进军",
-    "核心材料",
-    "瓶颈",
-    "卡点",
+    "进入供应链",
+    "资本开支",
+    "政策落地",
+    "获批",
+    "中标",
+    "投产",
 )
 
 NEGATIVE_CUES = (
     "不涉及",
-    "尚未涉足",
-    "未涉足",
+    "尚未涉及",
+    "未涉及",
     "没有相关",
     "未有生产",
     "影响极小",
+    "收入占比较小",
     "风险提示",
     "过度解读",
     "公司澄清",
+    "终止",
+    "取消",
 )
 
 GENERIC_TERMS = {
@@ -73,40 +91,44 @@ GENERIC_TERMS = {
     "材料",
     "芯片",
     "半导体",
+    "设备",
     "数据中心",
 }
 
 ALIAS_GROUPS: dict[str, tuple[str, ...]] = {
     "磷化铟": ("磷化铟", "indium phosphide", "inp"),
-    "玻纤布": ("玻纤布", "电子布", "glass fiber cloth"),
-    "高带宽存储": ("hbm", "高带宽存储"),
+    "电子布": ("玻纤布", "电子布", "glass fiber cloth"),
+    "高带宽存储": ("hbm", "高带宽存储", "高带宽内存"),
+    "DRAM": ("dram", "动态随机存储", "内存芯片"),
+    "NAND": ("nand", "闪存芯片", "nand flash"),
+    "存储芯片": ("存储芯片", "存储器", "memory chip"),
+    "先进封装": ("先进封装", "2.5d封装", "3d封装", "cowos"),
+    "IC载板": ("ic载板", "封装载板", "abf载板"),
+    "半导体设备": ("半导体设备", "晶圆设备", "刻蚀设备", "薄膜沉积"),
+    "洁净室": ("洁净室", "无尘室", "洁净厂房", "厂务系统"),
     "共封装光学": ("cpo", "共封装光学"),
+    "光模块": ("光模块", "optical module"),
+    "液冷": ("液冷", "冷板", "浸没式冷却"),
+    "固态电池": ("固态电池", "全固态电池"),
+    "可控核聚变": ("可控核聚变", "核聚变", "fusion"),
+    "核电": ("核电", "核能设备"),
+    "人形机器人": ("人形机器人", "具身智能", "humanoid robot"),
+    "制冷剂": ("制冷剂", "冷媒", "hfc"),
+    "氟化工": ("氟化工", "含氟材料"),
+    "稀土": ("稀土", "稀土永磁"),
+    "创新药": ("创新药", "抗体药", "小分子药"),
 }
 
-CHEMICAL_RE = re.compile(
-    r"[氢硼碳氮氧氟硅磷硫氯镓锗砷硒溴铟锡锑碲碘锂钠镁铝钾钙钛钒铬锰铁钴镍铜锌锆钼银镉钨铅铋]{1,3}"
-    r"化"
-    r"[氢硼碳氮氧氟硅磷硫氯镓锗砷硒溴铟锡锑碲碘锂钠镁铝钾钙钛钒铬锰铁钴镍铜锌锆钼银镉钨铅铋]{1,3}"
-)
 LATIN_TECH_RE = re.compile(
-    r"(?<![A-Za-z0-9])(?:CPO|OCS|NPO|LPO|LRO|HBM\d*|InP|GaAs|SiC|GPU|ASIC|1\.6T|3\.2T)(?![A-Za-z0-9])",
+    r"(?<![A-Za-z0-9])"
+    r"(?:CPO|OCS|NPO|LPO|LRO|HBM\d*|DRAM|NAND|InP|GaAs|SiC|GPU|ASIC|"
+    r"CoWoS|DDR\d*|LPDDR\d*|1\.6T|3\.2T)"
+    r"(?![A-Za-z0-9])",
     re.IGNORECASE,
 )
-DOMAIN_TERMS = (
-    "衬底",
-    "晶圆",
-    "光模块",
-    "光芯片",
-    "光互联",
-    "光通信",
-    "光刻胶",
-    "玻纤布",
-    "电子布",
-    "固态电池",
-    "人形机器人",
-    "液冷",
-    "小金属",
-    "稀土",
+CHINESE_THEME_RE = re.compile(
+    r"[\u4e00-\u9fff]{2,8}"
+    r"(?:存储|芯片|载板|光模块|制冷剂|电池|机器人|核聚变|核电|稀土|液冷)"
 )
 
 
@@ -118,6 +140,21 @@ class NewsItem:
     stock_code: str
     stock_name: str
     url: str
+
+
+def repair_text(value: Any) -> str:
+    """Repair the common UTF-8-as-Latin-1 mojibake found in old indexes."""
+
+    text = str(value or "").strip()
+    if not text:
+        return ""
+    try:
+        repaired = text.encode("latin1").decode("utf-8")
+    except (UnicodeEncodeError, UnicodeDecodeError):
+        return text
+    chinese_before = len(re.findall(r"[\u4e00-\u9fff]", text))
+    chinese_after = len(re.findall(r"[\u4e00-\u9fff]", repaired))
+    return repaired if chinese_after >= chinese_before else text
 
 
 def parse_time(value: Any) -> datetime | None:
@@ -145,12 +182,13 @@ def load_news(path: Path) -> list[NewsItem]:
     rows = payload.get("data", payload) if isinstance(payload, dict) else payload
     if not isinstance(rows, list):
         return []
+
     result: list[NewsItem] = []
     seen: set[tuple[str, str, str]] = set()
     for row in rows:
         if not isinstance(row, dict):
             continue
-        title = str(row.get("title") or "").strip()
+        title = repair_text(row.get("title"))
         published_at = parse_time(
             row.get("publish_time_bj")
             or row.get("source_time")
@@ -170,7 +208,7 @@ def load_news(path: Path) -> list[NewsItem]:
                 source=source,
                 published_at=published_at,
                 stock_code=str(row.get("stock_code") or ""),
-                stock_name=str(row.get("stock_name") or ""),
+                stock_name=repair_text(row.get("stock_name")),
                 url=url,
             )
         )
@@ -178,7 +216,7 @@ def load_news(path: Path) -> list[NewsItem]:
 
 
 def normalize_term(term: str) -> str:
-    stripped = term.strip(" ·:：,，。；;（）()【】[]-'\"")
+    stripped = term.strip(" :，。；;（）()【】[]-'\"")
     lowered = stripped.lower()
     for canonical, aliases in ALIAS_GROUPS.items():
         if lowered in {alias.lower() for alias in aliases}:
@@ -189,14 +227,20 @@ def normalize_term(term: str) -> str:
 
 
 def extract_terms(title: str) -> set[str]:
-    lowered = title.lower()
+    repaired = repair_text(title)
+    lowered = repaired.lower()
     terms: set[str] = set()
+
     for canonical, aliases in ALIAS_GROUPS.items():
         if any(alias.lower() in lowered for alias in aliases):
             terms.add(canonical)
-    terms.update(normalize_term(match.group(0)) for match in CHEMICAL_RE.finditer(title))
-    terms.update(normalize_term(match.group(0)) for match in LATIN_TECH_RE.finditer(title))
-    terms.update(normalize_term(term) for term in DOMAIN_TERMS if term in title)
+
+    terms.update(normalize_term(match.group(0)) for match in LATIN_TECH_RE.finditer(repaired))
+    for match in CHINESE_THEME_RE.finditer(repaired):
+        phrase = normalize_term(match.group(0))
+        if len(phrase) <= 10:
+            terms.add(phrase)
+
     return {
         term
         for term in terms
@@ -205,7 +249,8 @@ def extract_terms(title: str) -> set[str]:
 
 
 def _hard_cue_count(title: str) -> int:
-    return sum(cue in title for cue in HARD_CUES)
+    lowered = title.lower()
+    return sum(cue.lower() in lowered for cue in HARD_CUES)
 
 
 def _event_key(title: str) -> str:
@@ -222,11 +267,7 @@ def _theme_stage(
     primary_count: int,
     hard_event_count: int,
 ) -> str:
-    if (
-        recent_event_count >= 3
-        and source_count >= 2
-        and hard_event_count >= 2
-    ):
+    if recent_event_count >= 3 and source_count >= 2 and hard_event_count >= 2:
         return "emerging"
     if recent_event_count >= 2 and hard_event_count >= 2 and (
         source_count >= 2 or primary_count
@@ -238,9 +279,9 @@ def _theme_stage(
 def discover_themes(
     items: Iterable[NewsItem],
     as_of: datetime,
-    recent_hours: int = 72,
-    baseline_days: int = 21,
-    limit: int = 12,
+    recent_hours: int = 168,
+    baseline_days: int = 30,
+    limit: int = 15,
 ) -> list[dict[str, Any]]:
     as_of = as_of.astimezone(BEIJING)
     recent_start = as_of - timedelta(hours=recent_hours)
@@ -271,6 +312,7 @@ def discover_themes(
             recent_events[_event_key(row.title)].append(row)
         for row in baseline.get(term, []):
             baseline_events[_event_key(row.title)].append(row)
+
         event_count = len(recent_events)
         baseline_count = len(baseline_events)
         source_count = len({row.source for row in rows})
@@ -303,24 +345,30 @@ def discover_themes(
             event_count * 2.0
             + source_count * 2.5
             + primary_count * 2.5
-            + min(hard_event_count, 5) * 1.5
-            + min(overseas_count, 3) * 1.0
+            + min(hard_event_count, 6) * 1.5
+            + min(overseas_count, 4)
             + min(math.log1p(velocity) * 2.0, 8.0)
             - negative_event_count * 2.0
         )
+
         if positive_event_count < 2:
             continue
         if source_count < 2 and not primary_count:
             continue
         if hard_event_count < 2 and not (primary_count and positive_event_count >= 2):
             continue
-        if velocity < 3:
+        if velocity < 2.5:
             continue
+
         stage = _theme_stage(
-            event_count, source_count, primary_count, hard_event_count
+            event_count,
+            source_count,
+            primary_count,
+            hard_event_count,
         )
         if stage == "weak_signal":
             continue
+
         evidence = sorted(
             (
                 max(event_rows, key=lambda row: row.published_at)
@@ -328,7 +376,7 @@ def discover_themes(
             ),
             key=lambda row: row.published_at,
             reverse=True,
-        )[:4]
+        )[:5]
         results.append(
             {
                 "term": term,
@@ -360,11 +408,9 @@ def discover_themes(
                 ],
             }
         )
+
     results.sort(
-        key=lambda row: (
-            row["stage"] == "emerging",
-            row["score"],
-        ),
+        key=lambda row: (row["stage"] == "emerging", row["score"]),
         reverse=True,
     )
     return results[:limit]
@@ -378,16 +424,16 @@ def _default_as_of(items: list[NewsItem]) -> datetime:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Find fast-rising theme terms before individual stock ranking."
+        description="Find fast-rising multi-event themes before stock ranking."
     )
     parser.add_argument("--news-index", type=Path, default=DEFAULT_NEWS_INDEX)
     parser.add_argument(
         "--as-of",
         help="Decision cutoff in ISO-8601; defaults to the newest indexed item.",
     )
-    parser.add_argument("--recent-hours", type=int, default=72)
-    parser.add_argument("--baseline-days", type=int, default=21)
-    parser.add_argument("--limit", type=int, default=12)
+    parser.add_argument("--recent-hours", type=int, default=168)
+    parser.add_argument("--baseline-days", type=int, default=30)
+    parser.add_argument("--limit", type=int, default=15)
     args = parser.parse_args()
 
     items = load_news(args.news_index)

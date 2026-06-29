@@ -19,6 +19,11 @@ def payload(prefix: str) -> dict:
                 "rank": rank,
                 "code": str(600000 + rank),
                 "name": f"{prefix}-{rank}",
+                "slot_type": {
+                    6: "stabilization_ignition",
+                    7: "strong_anchor_low_position_acceptance",
+                    8: "low_pin_reversal",
+                }.get(rank, "main_candidate"),
                 "fact_first_disclosed_at": "2026-06-17T18:00:00+08:00",
                 "freshness_class": "new_material_fact",
                 "materiality_grade": "A" if rank == 1 else "B",
@@ -27,6 +32,7 @@ def payload(prefix: str) -> dict:
                 "economic_magnitude": "contract value is material to annual revenue",
                 "market_confirmation": "auction and theme breadth confirmed",
                 "buyability": "liquid and below the no-chase gap",
+                "next_buyer": "theme followers and trend funds have room to add",
                 "buy_trigger": "test trigger",
                 "abandon_condition": "test abandon",
                 "t1_survivability": "catalyst and liquidity remain valid through next session",
@@ -55,6 +61,7 @@ def payload(prefix: str) -> dict:
             "counterevidence": "gap risk and contract execution uncertainty checked",
             "market_confirmation": "auction and theme breadth confirmed",
             "buyability": "liquid and below the no-chase gap",
+            "next_buyer": "theme followers and trend funds have room to add",
             "t1_survivability": "catalyst and liquidity remain valid through next session",
             "why_first": "strongest verified repricing path and execution quality",
             "max_position_pct": 10,
@@ -133,6 +140,7 @@ def test_new_theme_slot_requires_strict_evidence_and_can_be_focus(
         "direct_company_evidence": "公司公告直接取得相关经营业务",
         "market_confirmation": "题材已有直接锚点并获得资金确认",
         "buyability": "非一字，存在可成交窗口",
+        "next_buyer": "主题扩散资金和趋势资金",
         "buy_trigger": "主题与个股开盘同步确认",
         "abandon_condition": "题材锚点转弱或个股失去均价",
         "t1_survivability": "主题证据与流动性可维持至下一交易日",
@@ -198,7 +206,7 @@ def test_no_trade_rejects_executable_focus(tmp_path: Path) -> None:
         record_recommendation(path, "morning", "2026-06-18", record)
 
 
-def test_record_allows_fewer_than_eight_quality_candidates(tmp_path: Path) -> None:
+def test_morning_record_requires_exactly_eight_candidates(tmp_path: Path) -> None:
     path = tmp_path / "recommendations.json"
     record = payload("short-list")
     record["candidates"] = record["candidates"][:2]
@@ -207,13 +215,11 @@ def test_record_allows_fewer_than_eight_quality_candidates(tmp_path: Path) -> No
     record["primary_pick"]["trigger_status"] = "pending"
     record["primary_pick"]["market_confirmation"] = "pending auction confirmation"
 
-    saved = record_recommendation(path, "morning", "2026-06-18", record)
-
-    assert [item["rank"] for item in saved["candidates"]] == [1, 2]
-    assert saved["provisional_focus_codes"] == ["600001"]
+    with pytest.raises(ValueError, match="exactly eight"):
+        record_recommendation(path, "morning", "2026-06-18", record)
 
 
-def test_empty_candidate_list_requires_no_trade(tmp_path: Path) -> None:
+def test_empty_candidate_list_is_rejected_even_for_no_trade(tmp_path: Path) -> None:
     path = tmp_path / "recommendations.json"
     record = payload("empty")
     record["candidates"] = []
@@ -221,12 +227,34 @@ def test_empty_candidate_list_requires_no_trade(tmp_path: Path) -> None:
     record["focus_codes"] = []
     record["primary_pick"] = None
 
-    with pytest.raises(ValueError, match="requires no_trade"):
+    with pytest.raises(ValueError, match="exactly eight"):
         record_recommendation(path, "morning", "2026-06-18", record)
 
     record["no_trade"] = True
-    saved = record_recommendation(path, "morning", "2026-06-18", record)
-    assert saved["candidates"] == []
+    with pytest.raises(ValueError, match="exactly eight"):
+        record_recommendation(path, "morning", "2026-06-18", record)
+
+
+def test_overnight_record_requires_exactly_eight_candidates(tmp_path: Path) -> None:
+    path = tmp_path / "recommendations.json"
+    record = payload("overnight-short")
+    record["candidates"] = record["candidates"][:5]
+    record["focus_codes"] = []
+    record["provisional_focus_codes"] = []
+
+    with pytest.raises(ValueError, match="exactly eight"):
+        record_recommendation(path, "overnight", "2026-06-18", record)
+
+
+def test_morning_special_slots_cannot_drift_into_generic_candidates(
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "recommendations.json"
+    record = payload("slot-drift")
+    record["candidates"][5]["slot_type"] = "main_candidate"
+
+    with pytest.raises(ValueError, match="rank 6 requires slot_type"):
+        record_recommendation(path, "morning", "2026-06-18", record)
 
 
 def test_executable_focus_requires_t1_survivability(tmp_path: Path) -> None:
@@ -316,6 +344,89 @@ def test_weak_breadth_allows_only_triggered_small_countertrend_exception(
     record["primary_pick"]["max_position_pct"] = 5
     saved = record_recommendation(path, "morning", "2026-06-18", record)
     assert saved["primary_pick"]["max_position_pct"] == 5
+
+
+def test_theme_cluster_b_plus_can_be_primary_with_strict_evidence(
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "recommendations.json"
+    record = payload("theme-cluster")
+    record["candidates"][0]["materiality_grade"] = "B+"
+    record["candidates"][0]["freshness_class"] = "old_fact_new_context"
+    record["primary_pick"].update(
+        {
+            "freshness_class": "old_fact_new_context",
+            "materiality_grade": "B+",
+            "execution_path": "theme_cluster_repricing",
+            "freshness_lookback_days": 30,
+            "independent_theme_evidence_count": 3,
+            "chain_evidence_level": "tier2_verified",
+            "trend_confirmation": "theme breadth expanded and the stock held VWAP",
+            "max_position_pct": 5,
+        }
+    )
+
+    saved = record_recommendation(path, "morning", "2026-06-18", record)
+
+    assert saved["primary_pick"]["materiality_grade"] == "B+"
+    assert saved["primary_pick"]["execution_path"] == "theme_cluster_repricing"
+
+
+def test_theme_cluster_primary_requires_two_events_and_small_position(
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "recommendations.json"
+    record = payload("weak-cluster")
+    record["primary_pick"].update(
+        {
+            "materiality_grade": "B",
+            "execution_path": "trend_continuation",
+            "freshness_lookback_days": 30,
+            "independent_theme_evidence_count": 1,
+            "chain_evidence_level": "tier1_direct",
+            "trend_confirmation": "trend remains healthy",
+            "max_position_pct": 6,
+        }
+    )
+
+    with pytest.raises(ValueError, match="at least two independent"):
+        record_recommendation(path, "morning", "2026-06-18", record)
+
+
+def test_risk_off_pending_research_pick_allows_three_percent(
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "recommendations.json"
+    record = payload("risk-off-pending")
+    record["risk_gate"]["market_breadth_pct"] = 25
+    record["risk_gate"]["risk_off"] = True
+    record["focus_codes"] = []
+    record["provisional_focus_codes"] = ["600001"]
+    record["primary_pick"]["trigger_status"] = "pending"
+    record["primary_pick"]["max_position_pct"] = 3
+
+    saved = record_recommendation(path, "morning", "2026-06-18", record)
+
+    assert saved["primary_pick"]["max_position_pct"] == 3
+
+
+def test_trend_mode_is_supported(tmp_path: Path) -> None:
+    path = tmp_path / "recommendations.json"
+    record = payload("trend")
+    for field in (
+        "theme_radar",
+        "overseas_sector_context",
+        "holding_actions",
+        "new_theme_candidate",
+        "risk_gate",
+        "primary_pick",
+    ):
+        record.pop(field)
+
+    saved = record_recommendation(path, "trend", "2026-06-18", record)
+
+    assert saved["mode"] == "trend"
+    assert len(saved["candidates"]) == 8
 
 
 def test_review_context_uses_today_morning_and_previous_overnight(tmp_path: Path) -> None:
