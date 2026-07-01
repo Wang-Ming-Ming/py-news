@@ -1,6 +1,6 @@
 ---
 name: morning_stock_picker
-description: 'Use for pre-market, auction, and opening-session A-share selection. Independently scan the full ordinary main-board market, output five main candidates plus three dedicated special-logic candidates and an optional ninth new-theme seat, with detailed evidence, triggers, T+1 controls, and separate holding actions.'
+description: 'Use for pre-market, auction, and opening-session A-share selection. Independently scan the full ordinary main-board market, require five high-conviction main candidates, add stabilization, quality-selloff repair, and low-pin reversal seats plus an optional ninth new-theme seat, with detailed evidence, triggers, T+1 controls, and separate holding actions.'
 ---
 
 # Morning Stock Picker
@@ -15,7 +15,8 @@ description: 'Use for pre-market, auction, and opening-session A-share selection
 - 持仓只用于单独给出留、减、卖、禁止加仓，不参与新股票排序。
 - 默认只推荐普通主板：`000/001/002/003/600/601/603/605`。排除`300/301/688/689`、北交所、ST、退市风险和其他权限受限标的，除非用户明确允许。
 - 允许全产业链分析，但必须遵守 [主题、产业链与趋势共振选股](../references/theme_chain_selection.md)：一级直接核心、二级硬映射配套可以推荐，三级弱概念只观察。
-- 每次固定输出八只且代码不重复：前五只主候选，第六企稳点火、第七最强涨停逻辑低位承接、第八低位插针反转。市场弱时降低仓位和信心，不得减少数量。
+- 每次固定输出八只且代码不重复：前五只强主候选，第六企稳点火、第七优质强股错杀修复、第八低位插针反转。市场弱时降低仓位和信心，不得减少数量。
+- 前五只都必须通过强候选门槛，不得用旧IR、普通公司、泛产业链映射或“看起来安全”凑数。若全市场确实不足五只完全确认的强票，剩余席位仍必须达到A/B+公司与证据门槛，只能因竞价/开盘确认尚缺而标记“仅观察”，不得降低到B级凑数或进入最终重点。
 - 另设第九只新题材专席；只有达到`emerging`及以上并通过证据、映射和盘口门槛才填写，否则明确“第九只空缺”。
 - 强势股票可以连续推荐。近期上涨不是自动否决，只有趋势、主题、资金或预期破坏才降级。
 - 涨停封死或无法成交的股票只作主题锚点，立即寻找同主题可买的一级/二级公司。
@@ -76,8 +77,14 @@ description: 'Use for pre-market, auction, and opening-session A-share selection
 第六至第八名必须使用独立扫描，不是把综合榜第六至第八名直接改标签：
 
 - 第六`企稳点火票`：低中位、MA结构停止恶化、量能由衰竭转温和，并出现真实消息或板块资金点火；
-- 第七`最强涨停逻辑低位承接票`：先确定当日最强且不可买的涨停锚点，再寻找具有一级/二级公开证据、位置更低且已经获得资金承接的可买股票；
+- 第七`优质强股错杀修复票`：从最近一至三个交易日明显下跌的股票中，寻找下跌前趋势强、公司质量达到A/B+、逻辑未坏且次日可能获得修复买盘的标的；优先叠加新消息、主题继续加强或机构容量属性，不再使用“涨停锚点的普通低位映射”作为该席位；
 - 第八`低位插针反转票`：从最近一至三个交易日的下探收回结构独立扫描，再叠加MACD、消息、板块、风险和竞价/开盘确认。
+
+第七席固定运行一次：
+
+`python analysis/quality_selloff_reversal_scanner.py --mode morning --limit 30`
+
+按 [优质强股错杀修复](references/quality_selloff_reversal.md) 复核。大跌必须来自分歧、拥挤交易或市场风险释放，不能来自业绩雷、减持、监管、诉讼、澄清或产业逻辑破坏。扫描器只作技术初筛。
 
 固定运行一次：
 
@@ -99,11 +106,13 @@ description: 'Use for pre-market, auction, and opening-session A-share selection
 - 减持、监管、调查、诉讼、澄清、业绩和异常交易风险；
 - 当前能否成交以及T+1隔夜生存能力。
 
+对前五名额外执行强候选门槛：A/B+质量、当前增量、一级/二级证据、主题/资金确认、下一批买家五项不得缺失。仅有长期业务资料或旧IR、没有当前增量和盘口优势的股票退出前五。
+
 只为前两名和可能否决的重大风险读取原文全文。不要把二十分钟耗在所有候选的长篇背景资料上。
 
 ### 18-20分钟：排名、记录与输出
 
-1. 固定输出八只普通候选：前五主候选加第六至第八特殊席位。
+1. 固定输出八只普通候选：五只A/B+强主候选，加第六至第八特殊席位；若不足五只完全确认的强票，只允许保留A/B+但盘口待确认的观察席，不得降低公司与证据标准。
 2. 第一名必须是综合上涨概率、主线地位、预期空间和可买性最优者。
 3. 第二名必须具备独立逻辑或更好的风险收益替代。
 4. 早盘另给第九只新题材专席或明确空缺。
@@ -111,6 +120,20 @@ description: 'Use for pre-market, auction, and opening-session A-share selection
 6. 封存推荐日志后发送答案。
 
 到二十分钟必须停止扩展搜索，用已验证证据完成答案。不得等待下一竞价节点或下一根分时。
+
+## 前五强候选门槛
+
+前五名每只必须同时满足：
+
+- **公司与证据**：证据等级A或B+，且属于一级核心或二级硬映射；三级概念不得进入前五；
+- **当前增量**：最近七天存在新业绩、订单、涨价、扩产、客户验证、政策、产业事件簇或“旧事实进入新兑现阶段”；单纯重发旧闻不算；
+- **预期弹性**：能够说明对收入、利润、价格、产能利用率、估值或市场份额的影响方向，不能只说“公司不错”；
+- **主题与资金**：主题处于启动、加强或健康分歧，个股具备竞价/开盘资金确认，或有清晰的待确认条件；
+- **下一买家**：明确谁会继续买，以及为什么接力需求可能大于获利兑现。
+
+优先顺序为：`A级重大事实/超预期业绩` > `多事件主题核心` > `有公开兑现证据的产业链核心` > `催化仍升级的健康强趋势`。同等条件下，当前事实强度和预期空间优先于“平开更安全”。
+
+不得因为3%-7%高开就把A级重大事实核心降到普通候选。若竞价金额强、同主题共振且回踩仍保留大部分缺口，高开应视为需求强度；只有接近涨停无法成交、失去承接或出现高开兑现才降级。
 
 ## 首推资格
 
@@ -157,7 +180,7 @@ description: 'Use for pre-market, auction, and opening-session A-share selection
 - 9:15前：给完整盘前排序和至少两只优先推荐，明确竞价确认条件；不得伪造竞价确认。
 - 9:15-9:30：使用当前已有的最新竞价，立即确认、降级或替换，不等待9:25。
 - 9:30后：使用当前开盘数据，结合VWAP、相对强度、板块宽度和二次放量确认；不得等待下一个时间点。
-- 高开不是自动否决。强主题核心在3%-7%高开后若承接、板块和二次上攻完整，仍可小仓；接近涨停或炸板则只作锚点。
+- 高开不是自动否决。A级业绩、订单或涨价核心在3%-7%高开且竞价金额、同链共振和回踩承接完整时，应保留前二并允许小仓；接近涨停无法成交或高开失去VWAP才只作锚点。
 
 ## 必须输出
 
@@ -167,7 +190,7 @@ description: 'Use for pre-market, auction, and opening-session A-share selection
 2. 市场环境与最近七天最强主题事件簇；
 3. 产业链分层：一级核心、二级硬映射、三级概念；
 4. 已确认持仓处理；
-5. 八只排名：前五主候选、第六企稳点火、第七最强涨停逻辑低位承接、第八低位插针反转；
+5. 八只排名：前五强主候选、第六企稳点火、第七优质强股错杀修复、第八低位插针反转；
 6. 第九只新题材专席或空缺；
 7. 每只给出：
    - 代码、名称、当前/参考价；
@@ -188,6 +211,6 @@ description: 'Use for pre-market, auction, and opening-session A-share selection
 
 `python analysis/recommendation_journal.py record --mode morning --trade-date YYYY-MM-DD --input tmp/morning_recommendation.json`
 
-普通候选必须严格为八只。第六至第八名的`slot_type`依次为`stabilization_ignition`、`strong_anchor_low_position_acceptance`、`low_pin_reversal`；`new_theme_candidate`为独立第九只，可以为null。`primary_pick`可以是A级重大事实，也可以是证据完整的B+/B主题共振、产业链硬映射或趋势延续。记录主题证据数、产业链层级、趋势确认、反证、买点、仓位和T+1纪律。
+普通候选必须严格为八只。第六至第八名的`slot_type`依次为`stabilization_ignition`、`quality_selloff_reversal`、`low_pin_reversal`；`new_theme_candidate`为独立第九只，可以为null。前五名必须记录`candidate_path`、A/B+等级、一级/二级证据、当前增量、资金确认和下一买家。第七名必须记录`selloff_date`、`selloff_pct`、`selloff_cause_assessed`、`thesis_intact=true`、`hard_risk_checked=true`、`repair_trigger`和`structural_invalidation`。`primary_pick`可以是A级重大事实，也可以是证据完整的B+/B主题共振、产业链硬映射、趋势延续或错杀修复。记录主题证据数、产业链层级、趋势确认、反证、买点、仓位和T+1纪律。
 
 临时JSON或下载原文只能放在`tmp/`，记录完成后删除；不得把PDF或临时研究文件加入Git。

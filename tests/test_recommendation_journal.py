@@ -21,12 +21,16 @@ def payload(prefix: str) -> dict:
                 "name": f"{prefix}-{rank}",
                 "slot_type": {
                     6: "stabilization_ignition",
-                    7: "strong_anchor_low_position_acceptance",
+                    7: "quality_selloff_reversal",
                     8: "low_pin_reversal",
                 }.get(rank, "main_candidate"),
+                "candidate_path": (
+                    "major_fact" if rank == 1 else "theme_cluster_repricing"
+                ),
+                "chain_evidence_level": "tier1_direct",
                 "fact_first_disclosed_at": "2026-06-17T18:00:00+08:00",
                 "freshness_class": "new_material_fact",
-                "materiality_grade": "A" if rank == 1 else "B",
+                "materiality_grade": "A" if rank == 1 else "B+" if rank <= 5 else "B",
                 "original_source_verified": True,
                 "incremental_change": "new quantified order confirmed after the close",
                 "economic_magnitude": "contract value is material to annual revenue",
@@ -36,6 +40,19 @@ def payload(prefix: str) -> dict:
                 "buy_trigger": "test trigger",
                 "abandon_condition": "test abandon",
                 "t1_survivability": "catalyst and liquidity remain valid through next session",
+                **(
+                    {
+                        "selloff_date": "2026-06-17",
+                        "selloff_pct": -5.2,
+                        "selloff_cause_assessed": "market divergence, no company negative",
+                        "thesis_intact": True,
+                        "hard_risk_checked": True,
+                        "repair_trigger": "reclaim VWAP and one-third of the selloff body",
+                        "structural_invalidation": "break the selloff low and MA20",
+                    }
+                    if rank == 7
+                    else {}
+                ),
             }
             for rank in range(1, 9)
         ],
@@ -71,6 +88,12 @@ def payload(prefix: str) -> dict:
         "no_trade": False,
         "response_summary": f"{prefix} summary",
     }
+
+
+def overnight_payload(prefix: str) -> dict:
+    record = payload(prefix)
+    record["candidates"][6]["slot_type"] = "strong_anchor_low_position_acceptance"
+    return record
 
 
 def test_record_keeps_revisions_and_seals_latest(tmp_path: Path) -> None:
@@ -237,7 +260,7 @@ def test_empty_candidate_list_is_rejected_even_for_no_trade(tmp_path: Path) -> N
 
 def test_overnight_record_requires_exactly_eight_candidates(tmp_path: Path) -> None:
     path = tmp_path / "recommendations.json"
-    record = payload("overnight-short")
+    record = overnight_payload("overnight-short")
     record["candidates"] = record["candidates"][:5]
     record["focus_codes"] = []
     record["provisional_focus_codes"] = []
@@ -255,6 +278,58 @@ def test_morning_special_slots_cannot_drift_into_generic_candidates(
 
     with pytest.raises(ValueError, match="rank 6 requires slot_type"):
         record_recommendation(path, "morning", "2026-06-18", record)
+
+
+def test_morning_top_five_rejects_b_grade_filler(tmp_path: Path) -> None:
+    path = tmp_path / "recommendations.json"
+    record = payload("weak-top-five")
+    record["candidates"][4]["materiality_grade"] = "B"
+
+    with pytest.raises(ValueError, match="materiality_grade A or B\\+"):
+        record_recommendation(path, "morning", "2026-06-18", record)
+
+
+def test_quality_selloff_slot_requires_intact_thesis_and_risk_check(
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "recommendations.json"
+    record = payload("bad-selloff")
+    record["candidates"][6]["thesis_intact"] = False
+
+    with pytest.raises(ValueError, match="thesis_intact=true"):
+        record_recommendation(path, "morning", "2026-06-18", record)
+
+
+def test_quality_selloff_b_plus_can_be_promoted_after_live_repair(
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "recommendations.json"
+    record = payload("selloff-promotion")
+    record["candidates"][6]["materiality_grade"] = "B+"
+    record["focus_codes"] = ["600007"]
+    record["primary_pick"].update(
+        {
+            "code": "600007",
+            "name": "selloff-promotion-7",
+            "materiality_grade": "B+",
+            "execution_path": "quality_selloff_reversal",
+            "freshness_lookback_days": 30,
+            "quality_repair_evidence_count": 3,
+            "chain_evidence_level": "tier1_direct",
+            "trend_confirmation": "held the selloff low and reclaimed VWAP",
+            "thesis_intact": True,
+            "hard_risk_checked": True,
+            "selloff_cause_assessed": "crowded unwind without a company negative",
+            "repair_confirmation": "reclaimed half of the selloff body on volume",
+            "promotion_evidence": "live repair led the theme after the open",
+            "max_position_pct": 5,
+        }
+    )
+
+    saved = record_recommendation(path, "morning", "2026-06-18", record)
+
+    assert saved["primary_pick"]["code"] == "600007"
+    assert saved["primary_pick"]["execution_path"] == "quality_selloff_reversal"
 
 
 def test_executable_focus_requires_t1_survivability(tmp_path: Path) -> None:
@@ -431,9 +506,19 @@ def test_trend_mode_is_supported(tmp_path: Path) -> None:
 
 def test_review_context_uses_today_morning_and_previous_overnight(tmp_path: Path) -> None:
     path = tmp_path / "recommendations.json"
-    record_recommendation(path, "overnight", "2026-06-17", payload("overnight"))
+    record_recommendation(
+        path,
+        "overnight",
+        "2026-06-17",
+        overnight_payload("overnight"),
+    )
     record_recommendation(path, "morning", "2026-06-18", payload("morning"))
-    record_recommendation(path, "overnight", "2026-06-18", payload("pending"))
+    record_recommendation(
+        path,
+        "overnight",
+        "2026-06-18",
+        overnight_payload("pending"),
+    )
 
     result = review_context(path, "2026-06-18")
 
@@ -450,7 +535,12 @@ def test_review_context_does_not_substitute_an_older_overnight(tmp_path: Path) -
     snapshot = archive / "2026-06-17" / "market" / "snapshot"
     snapshot.mkdir(parents=True)
     (snapshot / "stocks.ndjson.gz").touch()
-    record_recommendation(path, "overnight", "2026-06-16", payload("too-old"))
+    record_recommendation(
+        path,
+        "overnight",
+        "2026-06-16",
+        overnight_payload("too-old"),
+    )
     record_recommendation(path, "morning", "2026-06-18", payload("morning"))
 
     result = review_context(path, "2026-06-18", archive)

@@ -35,18 +35,31 @@ EXECUTION_PATHS = {
     "verified_chain_expansion",
     "trend_continuation",
     "pre_activation",
+    "quality_selloff_reversal",
 }
 THEME_LED_PATHS = {
     "theme_cluster_repricing",
     "verified_chain_expansion",
     "trend_continuation",
     "pre_activation",
+    "quality_selloff_reversal",
 }
 VERIFIED_CHAIN_LEVELS = {"tier1_direct", "tier2_verified"}
-SPECIAL_SLOT_TYPES = {
+MORNING_SPECIAL_SLOT_TYPES = {
+    6: "stabilization_ignition",
+    7: "quality_selloff_reversal",
+    8: "low_pin_reversal",
+}
+OVERNIGHT_SPECIAL_SLOT_TYPES = {
     6: "stabilization_ignition",
     7: "strong_anchor_low_position_acceptance",
     8: "low_pin_reversal",
+}
+TOP_FIVE_PATHS = {
+    "major_fact",
+    "theme_cluster_repricing",
+    "verified_chain_expansion",
+    "trend_continuation",
 }
 
 
@@ -148,6 +161,63 @@ def validate_execution_evidence(
         require_text(candidate, field, f"focus candidate {code}")
 
 
+def validate_top_five_candidate(candidate: dict[str, Any]) -> None:
+    rank = candidate["rank"]
+    code = candidate["code"]
+    materiality = str(candidate.get("materiality_grade") or "").strip()
+    if materiality not in {"A", "B+"}:
+        raise ValueError(
+            f"morning candidate rank {rank} ({code}) requires materiality_grade A or B+"
+        )
+    path = str(candidate.get("candidate_path") or "").strip()
+    if path not in TOP_FIVE_PATHS:
+        raise ValueError(
+            f"morning candidate rank {rank} ({code}) requires a strong top-five candidate_path"
+        )
+    chain_level = str(candidate.get("chain_evidence_level") or "").strip()
+    if chain_level not in VERIFIED_CHAIN_LEVELS:
+        raise ValueError(
+            f"morning candidate rank {rank} ({code}) requires tier1_direct or tier2_verified"
+        )
+    if candidate.get("original_source_verified") is not True:
+        raise ValueError(
+            f"morning candidate rank {rank} ({code}) requires original_source_verified=true"
+        )
+    freshness = str(candidate.get("freshness_class") or "").strip()
+    if freshness not in EXECUTION_FRESHNESS_CLASSES:
+        raise ValueError(
+            f"morning candidate rank {rank} ({code}) requires execution-grade freshness_class"
+        )
+    for field in (
+        "incremental_change",
+        "economic_magnitude",
+        "market_confirmation",
+        "buyability",
+        "next_buyer",
+        "t1_survivability",
+    ):
+        require_text(candidate, field, f"morning top-five candidate {code}")
+
+
+def validate_quality_selloff_candidate(candidate: dict[str, Any]) -> None:
+    code = candidate["code"]
+    require_text(candidate, "selloff_date", f"quality selloff candidate {code}")
+    selloff_pct = candidate.get("selloff_pct")
+    if not isinstance(selloff_pct, (int, float)) or not -12 < selloff_pct < -2:
+        raise ValueError(
+            f"quality selloff candidate {code} requires selloff_pct between -12 and -2"
+        )
+    for flag in ("thesis_intact", "hard_risk_checked"):
+        if candidate.get(flag) is not True:
+            raise ValueError(f"quality selloff candidate {code} requires {flag}=true")
+    for field in (
+        "selloff_cause_assessed",
+        "repair_trigger",
+        "structural_invalidation",
+    ):
+        require_text(candidate, field, f"quality selloff candidate {code}")
+
+
 def validate_primary_pick(
     primary_pick: Any,
     *,
@@ -241,9 +311,21 @@ def validate_primary_pick(
         if execution_path not in THEME_LED_PATHS:
             raise ValueError(
                 "B+/B primary_pick must use a theme, verified-chain, trend, "
-                "or pre-activation execution_path"
+                "pre-activation, or quality-selloff execution_path"
             )
-        if int(primary_pick.get("independent_theme_evidence_count") or 0) < 2:
+        if execution_path == "quality_selloff_reversal":
+            if int(primary_pick.get("quality_repair_evidence_count") or 0) < 2:
+                raise ValueError(
+                    "quality selloff primary_pick requires at least two repair evidence items"
+                )
+            for flag in ("thesis_intact", "hard_risk_checked"):
+                if primary_pick.get(flag) is not True:
+                    raise ValueError(
+                        f"quality selloff primary_pick requires {flag}=true"
+                    )
+            for field in ("selloff_cause_assessed", "repair_confirmation"):
+                require_text(primary_pick, field, "quality selloff primary_pick")
+        elif int(primary_pick.get("independent_theme_evidence_count") or 0) < 2:
             raise ValueError(
                 "B+/B primary_pick requires at least two independent theme evidence events"
             )
@@ -324,13 +406,24 @@ def validate_payload(payload: dict[str, Any], mode: str | None = None) -> dict[s
     if ranks != expected_ranks:
         raise ValueError("candidate ranks must cover 1 through candidate count")
     candidates.sort(key=lambda item: item["rank"])
-    if mode in {"morning", "overnight"}:
-        for rank, slot_type in SPECIAL_SLOT_TYPES.items():
+    special_slot_types = (
+        MORNING_SPECIAL_SLOT_TYPES
+        if mode == "morning"
+        else OVERNIGHT_SPECIAL_SLOT_TYPES
+        if mode == "overnight"
+        else {}
+    )
+    if special_slot_types:
+        for rank, slot_type in special_slot_types.items():
             candidate = next(item for item in candidates if item["rank"] == rank)
             if str(candidate.get("slot_type") or "").strip() != slot_type:
                 raise ValueError(
                     f"{mode} candidate rank {rank} requires slot_type={slot_type}"
                 )
+    if mode == "morning":
+        for candidate in candidates[:5]:
+            validate_top_five_candidate(candidate)
+        validate_quality_selloff_candidate(candidates[6])
 
     new_theme_candidate = result.get("new_theme_candidate")
     if mode == "morning":
