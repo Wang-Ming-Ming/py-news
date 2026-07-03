@@ -1,13 +1,13 @@
 ---
 name: overnight_stock_picker
-description: 'Use for late-session A-share selection and overnight plans. Independently scan the full ordinary main-board market, output five main candidates plus three dedicated special-logic candidates, verify real late-session acceptance, and give a strict next-trading-day exit plan.'
+description: 'Use for late-session A-share selection and overnight plans. Independently scan the full ordinary main-board market for persistent expectation, healthy trends, active themes, retained capital and buyable late-session setups, then give a strict next-trading-day exit plan.'
 ---
 
 # Overnight Stock Picker
 
-从全市场寻找尾盘可买、下一交易日具有接力或兑现窗口的普通主板股票。固定输出八只：前五只主候选，第六企稳点火、第七最强涨停逻辑低位承接、第八低位插针反转。
+从全市场寻找尾盘可买、下一交易日具有接力或兑现窗口的普通主板股票。核心方向是`持续预期 + 健康趋势 + 活跃主题 + 资金仍在 + 尾盘买得到`。固定输出八只：前五只主候选，第六企稳点火，第七优质强股错杀修复，第八低位插针反转。
 
-重大消息优先，但主题多事件共振、产业链硬映射、健康强趋势和启动前预期差同样可以排第一。市场弱时降仓，不用空推荐回避风险。
+重大消息只是证据通道之一，不自动优先。预计一字、接近涨停或只能靠旧消息高开的股票只作主题锚点；没有持续主题和尾盘资金承接的公司独立消息，不得向松散关联股扩散。第一名可以是小涨蓄势、健康回调或优质错杀修复，但必须证明明天仍有预期和买盘路径。
 
 ## Data and Calendar Gate
 
@@ -54,11 +54,11 @@ For each top execution candidate answer:
 
 Rank 1-2 priority:
 
-1. Positive/red exit-window probability.
-2. Next-buyer clarity.
-3. Catalyst freshness/hardness and beneficiary uniqueness.
+1. Persistent expectation and a concrete next-session verification node.
+2. Healthy trend or repairable reset, plus retained capital.
+3. Active-theme confirmation and next-buyer clarity.
 4. Late-session acceptance and tradability.
-5. Multi-day crowding, distribution, and announcement risk.
+5. Catalyst quality, crowding, distribution, and announcement risk.
 
 Do not convert raw factor/channel votes into final rank. Treat channels as independent evidence and vetoes. Require ranks 1-2 to pass both buyer/red-exit and drawdown/cash-out-risk gates. Morning and overnight channel reliability must be tracked separately and changed only after enough forward samples.
 
@@ -66,15 +66,16 @@ Do not convert raw factor/channel votes into final rank. Treat channels as indep
 
 1. **Sync and validate.** Read the shared context, recent dated archives, news/announcement indexes, and relevant originals. Use a complete cache only with a timestamp warning if the server fails.
 2. **Classify the market.** Use multi-day breadth, turnover, limit-up/broken-limit quality, theme persistence, and core-stock feedback to classify risk-on repair, risk-off, continuation, cash-out, or fresh rotation. Do not infer lifecycle from one snapshot.
-3. **Run three independent full-market evidence lanes before narrowing.** Never first choose an active-price pool and then inspect news only inside it.
-   - **Message lane:** scan every ordinary tradable stock against the latest week of company filings, reliable news, policy/events, commodity/overseas changes, and public business facts. Include quiet stocks with new hard evidence even when price has not moved.
-   - **Market-structure lane:** independently scan every ordinary tradable stock across 5-15 day position, trend, volume/price structure, crowding, distribution, and current tape. Do not require a same-day headline.
-   - **Special-setup lane:** independently discover pre-ignition/quiet acceptance, strongest-anchor low-position acceptance, and qualified pin-reversal setups. Run `python analysis/low_pin_reversal_scanner.py --mode overnight --limit 30` for objective pin discovery.
-4. **Merge evidence, then form a dynamic verification list.** Deduplicate the three lanes and preserve each stock's evidence path. The intermediate list is not a recommendation pool and must not be fixed at an arbitrary size. In a typical session, compact the merged evidence to roughly 20-30 verification names only after the full-market message and market scans have both run. This prevents missing a flat stock with a fresh catalyst.
+3. **Run four independent full-market evidence lanes before narrowing.** Never first choose an active-price pool and then inspect news only inside it.
+   - **Expectation-trend-theme lane:** scan 5-15 day structure for small-gain pre-acceleration, healthy pullbacks and continuing trends whose theme still has a future event or earnings path and whose liquidity has not left.
+   - **Quality-reset lane:** discover fundamentally sound, liquid strong stocks that fell roughly 3%-9% for market divergence or profit-taking while the thesis, MA20/platform and active theme remain intact. Run `python analysis/quality_selloff_reversal_scanner.py --mode overnight --limit 30`.
+   - **Verified-theme/message lane:** scan the latest week of company filings, policies, supply-demand changes, overseas mapping and public business facts. Major news must also pass expectation, trend, capital-retention and buyability gates.
+   - **Special-shape lane:** independently discover quiet ignition and qualified pin-reversal setups. Run `python analysis/low_pin_reversal_scanner.py --mode overnight --limit 30` for objective pin discovery.
+4. **Merge evidence, then form a dynamic verification list.** Deduplicate the four lanes and preserve each stock's evidence path. The intermediate list is not a recommendation pool and must not be fixed at an arbitrary size. In a typical session, compact the merged evidence to roughly 20-30 verification names only after all lanes have run.
 5. **Deep-verify the likely final 10-12.** Check catalyst timing, company relevance, 15-day sticky risks, price consumption, next buyer, cash-out supply, and executability. Read originals for the likely top 1-3 and whenever a title is ambiguous, an amount/term matters, or a risk item could veto the trade. A clear structured filing title may support lower-ranked discovery, but never invent missing terms.
 6. **Keep low-position ideas evidence-based.** A deep-base/no-news chart stays watch-only; an after-close event can support the next session but not the first board; high-volatility emotion reactivation cannot be called quiet ignition. Upstream/downstream mapping is allowed only at tier 1 or tier 2 with public evidence.
 7. **Verify late-session acceptance with available evidence.** Use the latest actual snapshot already available after the request: position versus VWAP/average price, movement toward/away from day high, volume/amount progression, board synchronization, and fake-pull/dive risk. One valid 14:30+ snapshot plus prior intraday evidence can support a qualified judgment; multiple snapshots improve confidence but are not mandatory. Never wait for a future snapshot. If no 14:30+ snapshot exists, label acceptance unconfirmed, reduce confidence/position, and still meet the delivery deadline.
-8. **Check risk and executability.** Reject unbuyable sealed boards, unresolved material risk, distribution structures, unverified relevance, and names with no credible next buyer.
+8. **Check risk and executability.** Reject unbuyable sealed boards, unresolved material risk, distribution structures, unverified relevance, names with no credible next buyer, and passive low-position followers whose only thesis is that an unavailable leader is strong.
 9. **Rank eight, execute fewer.** 固定输出八只且代码唯一：前五只来自综合质量排序，第六至第八只来自独立特殊扫描。最终重点通常1-2只、最多3只。弱市仍给完整排序，但只允许触发级股票小仓执行。
 
 ## Full-Market and Permission Rules
@@ -87,7 +88,7 @@ Do not convert raw factor/channel votes into final rank. Treat channels as indep
 
 ## Catalyst and Beneficiary Gate
 
-Use this hierarchy, then test whether price has already consumed it:
+Use this evidence hierarchy inside each candidate path, then test whether price has already consumed it. Evidence strength alone never determines rank:
 
 1. Direct company filing with amount/counterparty/date or material transaction.
 2. Policy landing or supply-demand change with clear physical beneficiaries.
@@ -104,7 +105,7 @@ Classify beneficiary type and evidence level:
 
 同时标记 `tier1_direct`、`tier2_verified` 或 `tier3_concept`。不得乱猜产业链，但也不得把推荐范围缩成主题名称完全一致的制造商。公开客户、项目、订单、扩产用途、正式业务披露或可靠报道可以证明二级硬映射。
 
-Hard news does not override an unbuyable price, absent acceptance, or cash-out risk. Missing company news is not positive evidence.
+Hard news does not override an unbuyable price, absent acceptance, or cash-out risk. A stock can rank first without same-day company news when its theme has a new environment, the business link is verified, the trend is healthy and capital remains. Missing company news is not positive evidence by itself.
 
 ## Pre-Ignition and Distribution Gate
 
@@ -124,13 +125,13 @@ Large gain is not automatically rejected. 强势股票只要主题、业绩预�
 
 固定使用以下八只结构：
 
-1. Strongest executable next-day premium setup.
-2. Independent replacement with a similarly clear exit path.
-3. Main-theme capacity/core or buyable front-row substitute.
-4. Under-priced hard-logic/pre-ignition trend.
-5. Controlled higher-elasticity or independent backup theme.
+1. Strongest executable expectation-trend-theme or verified quality-reset setup.
+2. Independent replacement with the same five gates and a clear exit path.
+3. Active-theme capacity/core, verified chain beneficiary, or healthy pullback.
+4. Under-priced hard-logic/pre-ignition trend with capital retention.
+5. Controlled higher-elasticity or independent backup theme with a future node.
 6. **企稳点火票**: stable/quiet hard-catalyst or confirmed latent setup that passes anti-distribution gates.
-7. **最强涨停逻辑低位承接票**: buyable low-/middle-position extension of the day's strongest unavailable anchor.
+7. **优质强股错杀修复票**: a liquid, fundamentally sound active-theme stock after a non-fundamental 3%-9% reset, with the thesis intact, hard risks checked and a concrete repair trigger. This model may also rank in the top five or first; rank 7 remains an independent comparison slot.
 8. **低位插针反转票**: a low/middle-position sweep-and-recovery base from today or the latest 1-3 sessions, followed when needed by a current breakout/MACD turn, healthy volume, real 14:30+ acceptance, and a verified next-day discovery path.
 
 Ranks 6-8 are real candidates, not filler. Keep all eight codes unique. If the best pin setup is already in ranks 1-7, move it to rank 8 and replace its former slot. Rank 8 may enter the final 1-3 only after passing shape, message, theme, risk, and late-tape gates. If no setup passes all gates, show the relative-best scanner result as observation-only without inventing execution confidence.
@@ -142,6 +143,8 @@ Read [the shared pin-reversal rules](../references/low_pin_reversal.md). The sca
 `python analysis/market_leadership_scanner.py --mode overnight --limit 40`
 
 用它补充健康强趋势、分歧承接和启动前候选，但不得用价格结构替代消息、产业链、风险和下一买家验证。
+
+尾盘重点核对两类可买结构：小涨或温和回调仍站在MA5/MA10/MA20或平台上方、成交保持活跃且收盘靠近日内强区；以及跌幅约3%-9%但未破中期结构、低位回收且没有公司级利空的优质错杀。若板块龙头或容量核心退潮、个股跌回均价/平台、爆量滞涨或最后几分钟急拉，资金保留判定失败。
 
 ## Timing Discipline
 
@@ -175,7 +178,8 @@ Write concise Chinese and include:
 - market regime, theme lifecycle, and next-day capital path;
 - 严格八只：前五主候选加第六至第八特殊席位；
 - for each: code/name, current price/change, evidence type, catalyst timestamp class, theme role, multi-day structure, late-session acceptance, announcement-risk result, next buyer, premium/exit type, buy area/trigger, abandon condition, position, and next-day sell plan;
-- rank 6/7 labels;
+- for every top-five and executable focus: `expectation_basis`, `trend_state`, `capital_retention`, and `theme_stage`;
+- rank 6/7 labels; rank 7 additionally records selloff date/pct, assessed cause, intact thesis, hard-risk check, repair trigger and structural invalidation;
 - rank 8 `低位插针反转票` with pattern date, confirmation date/days since pin, low/recovery, range position, shadow/close position, pattern/current amount, MACD state, message/theme confirmation, next buyer, trigger, invalidation, position, and next-day exit;
 - 最终重点1-2只，只有逻辑独立且证据充分时才允许第3只；
 - 弱市标注“小仓触发”或“观察级”，但仍给出完整八只排序。
@@ -188,7 +192,7 @@ Before sending the final answer, seal the final eight-stock plan in `data_recomm
 
 `python analysis/recommendation_journal.py record --mode overnight --trade-date YYYY-MM-DD --input tmp/overnight_recommendation.json`
 
-Use the buy-date as `trade-date`. The input must contain `decision_time`, `market_judgment`, `data_context`, exactly eight `candidates`, `focus_codes`, `no_trade`, and `response_summary`. Each candidate must include rank/code/name plus catalyst/time class, theme role, current/reference price, late-session acceptance, next buyer, entry trigger/range, abandon condition, position, risk flags, premium type, and next-trading-day sell plan. Ranks 6-8 must set `slot_type` to `stabilization_ignition`, `strong_anchor_low_position_acceptance`, and `low_pin_reversal` respectively. Rank 8 must retain objective pin/MACD evidence and confirmation grade.
+Use the buy-date as `trade-date`. The input must contain `decision_time`, `market_judgment`, `data_context`, exactly eight `candidates`, `focus_codes`, `no_trade`, and `response_summary`. Each candidate must include rank/code/name plus candidate path, catalyst/time class, theme role, current/reference price, late-session acceptance, next buyer, entry trigger/range, abandon condition, position, risk flags, premium type, and next-trading-day sell plan. The top five and every executable focus must retain `expectation_basis`, `trend_state`, `capital_retention`, and `theme_stage`. Ranks 6-8 must set `slot_type` to `stabilization_ignition`, `quality_selloff_reversal`, and `low_pin_reversal` respectively. Rank 7 must retain objective selloff/thesis/risk/repair evidence; rank 8 must retain objective pin/MACD evidence and confirmation grade.
 
 Do not edit or delete a sealed run after outcomes are known. A revised recommendation creates a new run; the journal preserves the earlier version and marks it superseded. If journaling fails, state that failure in the final answer instead of pretending it was recorded.
 

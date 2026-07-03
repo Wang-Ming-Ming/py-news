@@ -68,6 +68,7 @@ def _base_metrics(row: dict[str, Any]) -> dict[str, float] | None:
         "high": high,
         "low": low,
         "amount": amount,
+        "amount_ratio_5d": number(row, "amount_ratio_5d"),
         "vwap": vwap,
         "pct": number(row, "pct"),
         "gap_pct": (open_price / previous_close - 1) * 100,
@@ -94,6 +95,36 @@ def _lane_scores(row: dict[str, Any], mode: str) -> list[tuple[str, float]]:
 
     scores: list[tuple[str, float]] = []
     liquidity_bonus = min(math.log10(m["amount"] / 50_000_000 + 1) * 5, 6)
+
+    expectation_trend = (
+        -1.2 <= m["pct"] <= 3.5
+        and -2.0 <= m["gap_pct"] <= 4.0
+        and -2 <= m["return_5d"] <= 15
+        and 0 <= m["return_10d"] <= 30
+        and m["return_15d"] <= 45
+        and 0.35 <= m["range_position_15d"] <= 0.88
+        and m["amount"] >= 100_000_000
+        and m["vwap_distance_pct"] >= -0.25
+        and m["distance_from_high_pct"] <= 3.0
+        and m["ma5"] > 0
+        and m["ma10"] > 0
+        and m["ma20"] > 0
+        and m["price"] >= m["ma5"] * 0.99
+        and m["price"] >= m["ma10"] * 0.99
+        and m["price"] >= m["ma20"]
+        and m["amount_ratio_5d"] >= 0.55
+    )
+    if expectation_trend:
+        score = (
+            44
+            + max(0, 3 - abs(m["pct"] - 1.2)) * 1.5
+            + min(max(m["return_10d"], 0), 20) * 0.25
+            + max(0, 3 - m["distance_from_high_pct"]) * 2
+            + min(max(m["vwap_distance_pct"], 0), 2) * 2
+            + max(0, 0.88 - m["range_position_15d"]) * 5
+            + liquidity_bonus
+        )
+        scores.append(("expectation_trend_theme", score))
 
     emerging = (
         1.5 <= m["pct"] < 9.5
@@ -192,7 +223,13 @@ def _lane_scores(row: dict[str, Any], mode: str) -> list[tuple[str, float]]:
         scores = [
             (lane, score)
             for lane, score in scores
-            if lane in {"trend_continuation", "healthy_pullback", "early_repricing"}
+            if lane
+            in {
+                "expectation_trend_theme",
+                "trend_continuation",
+                "healthy_pullback",
+                "early_repricing",
+            }
         ]
     return scores
 
@@ -216,11 +253,21 @@ def score_row(row: dict[str, Any], mode: str) -> dict[str, Any] | None:
         "vwap_distance_pct": round(m["vwap_distance_pct"], 4),
         "distance_from_high_pct": round(m["distance_from_high_pct"], 4),
         "amount": round(m["amount"], 2),
+        "amount_ratio_5d": round(m["amount_ratio_5d"], 4),
         "range_position_15d": round(m["range_position_15d"], 4),
         "return_5d": round(m["return_5d"], 4),
         "return_10d": round(m["return_10d"], 4),
         "return_15d": round(m["return_15d"], 4),
         "selection_tag": "objective_market_leadership",
+        "expectation_trend_candidate": lane == "expectation_trend_theme",
+        "capital_retention_signal": bool(
+            m["price"] >= max(m["ma10"], m["ma20"])
+            and m["distance_from_high_pct"] <= 3
+            and m["amount_ratio_5d"] >= 0.55
+        ),
+        "morning_execution_eligible_at_snapshot": bool(
+            m["pct"] <= 5 and m["gap_pct"] <= 5
+        ),
         "needs_theme_verification": True,
         "needs_chain_verification": True,
         "needs_hard_risk_check": True,

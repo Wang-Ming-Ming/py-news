@@ -164,6 +164,11 @@ def evaluate_selloff(
     score += 7 if selloff["close"] >= ma20_after else 3
     score += 6 if amount_ratio is not None and 0.8 <= amount_ratio <= 2.5 else 1
     score += max(0.0, 3.0 - abs(abs(selloff["pct"]) - 5.5))
+    capital_retention_signal = bool(
+        selloff["close"] >= ma20_after * 0.97
+        and close_position >= 0.20
+        and (amount_ratio is None or amount_ratio <= 2.5)
+    )
 
     return {
         "code": code,
@@ -193,6 +198,9 @@ def evaluate_selloff(
         "prior_trend_strong": prior_trend_strong,
         "trend_structure_intact": trend_structure_intact,
         "objective_score": round(score, 2),
+        "price_reset_type": "quality_trend_selloff",
+        "capital_retention_signal": capital_retention_signal,
+        "top_rank_eligible_after_verification": capital_retention_signal,
         "requires_direct_business_evidence": True,
         "requires_selloff_cause_check": True,
         "requires_hard_risk_check": True,
@@ -389,7 +397,9 @@ def scan(
         "method": (
             "technical discovery only; require A/B+ company quality, intact thesis, "
             "non-fundamental selloff cause, theme or fresh catalyst, hard-risk check, "
-            "and live VWAP/repair confirmation"
+            "and a verifiable next-buyer path. Candidates may rank first before the "
+            "open when expectation, trend, theme, capital retention, and buyability "
+            "are complete; live VWAP repair is an execution check, not a discovery gate"
         ),
         "candidate_count": len(candidates),
         "live_confirmed_count": len(live_confirmed),
@@ -402,7 +412,11 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Scan quality-stock selloffs for next-session repair evidence."
     )
-    parser.add_argument("--mode", choices=["morning", "overnight"], required=True)
+    parser.add_argument(
+        "--mode",
+        choices=["morning", "overnight", "trend"],
+        required=True,
+    )
     parser.add_argument("--cache-dir", default=str(DEFAULT_CACHE_DIR))
     parser.add_argument("--selloff-date", default="")
     parser.add_argument("--limit", type=int, default=30)

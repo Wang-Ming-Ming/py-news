@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from analysis.quality_selloff_reversal_scanner import (
     evaluate_live_repair,
     evaluate_selloff,
@@ -77,6 +79,8 @@ def test_strong_stock_selloff_passes_technical_prefilter() -> None:
     assert result["selloff_pct"] == -5.0
     assert result["prior_trend_strong"] is True
     assert result["trend_structure_intact"] is True
+    assert result["top_rank_eligible_after_verification"] is True
+    assert result["capital_retention_signal"] is True
     assert result["requires_selloff_cause_check"] is True
 
 

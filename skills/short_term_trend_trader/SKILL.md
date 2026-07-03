@@ -1,13 +1,13 @@
 ---
 name: short_term_trend_trader
-description: 'Use for A-share short-term trend selection or holding management over roughly 2-7 trading days. Independently scan the full ordinary main-board market using one-week event clusters, verified industrial-chain evidence, healthy trend leadership and capital acceptance, always return at least two ranked new-stock recommendations, and manage holdings with concrete hold/add/reduce/sell conditions.'
+description: 'Use for A-share short-term trend selection or holding management over roughly 2-7 trading days. Independently scan the full ordinary main-board market for persistent expectation, healthy trends or quality resets, active themes, retained capital and buyability, then manage holdings with concrete conditions.'
 ---
 
 # Short-Term Trend Trader
 
 寻找未来约2-7个交易日仍可能获得连续买盘的普通主板股票。买入后趋势和逻辑未坏就持有，转弱、证伪或资金撤退才退出。
 
-重大消息是高权重，不是唯一入口。主题多事件共振、产业链扩产受益、健康强趋势延续和启动前预期差都可以成为首推。近期上涨不自动代表高位；强者在逻辑升级、量价健康和下一买家仍在时可以连续推荐。
+核心方向是`持续预期 + 健康趋势或优质错杀 + 活跃主题 + 资金仍在 + 当前可买`。重大消息只是辅助证据，不自动优先；若预计开盘即封板或只靠旧闻高开，只作主题锚点。小涨蓄势、健康回调、非基本面大跌后的强股修复，只要逻辑未坏且资金仍在，都可以成为首推。
 
 ## 固定边界
 
@@ -47,19 +47,24 @@ description: 'Use for A-share short-term trend selection or holding management o
 4. 对前三个主题做一次批量联网核查，使用官方、公司IR和可靠产业新闻补充服务器数据。
 5. 合并转载，区分确认事实、高质量预期、计划重估、旧事实新环境和纯情绪。
 
-### 8-13分钟：五通道全市场扫描
+### 8-13分钟：六通道全市场扫描
 
-1. `major_fact`：重大公司事实；
-2. `theme_cluster_repricing`：多个独立事件强化同一主线；
-3. `verified_chain_expansion`：一级核心或二级硬映射的扩产、设备、材料、洁净室、IC载板等受益；
-4. `trend_continuation`：主题和业绩预期未坏的健康强趋势；
-5. `pre_activation`：逻辑硬、趋势改善、尚未高潮的启动前候选。
+1. `expectation_trend_theme`：未来1-5日仍有验证节点、趋势健康、主题活跃、资金未退出的核心通道；
+2. `quality_selloff_reversal`：基本面和主题逻辑未坏、非基本面下跌约3%-9%、中期结构仍完整的强股修复；
+3. `theme_cluster_repricing`：多个独立事件强化同一主线；
+4. `verified_chain_expansion`：一级核心或二级硬映射的扩产、设备、材料、洁净室、IC载板等受益；
+5. `trend_continuation` / `pre_activation`：健康趋势延续、小涨蓄势或启动前预期差；
+6. `major_fact`：重大公司事实，但只有同时通过主题/独立买盘、趋势、资金和可买性门槛时才进入前排。
 
 运行：
 
 `python analysis/market_leadership_scanner.py --mode trend --limit 40`
 
-扫描器只发现早期重估、趋势延续、健康回踩和启动前结构。候选仍必须逐项核验主题、产业链、公司证据、公告风险和下一批买家。
+同时运行：
+
+`python analysis/quality_selloff_reversal_scanner.py --mode trend --limit 30`
+
+扫描器只发现早期重估、趋势延续、健康回踩、优质错杀和启动前结构。候选仍必须逐项核验主题、产业链、公司证据、下跌原因、公告风险和下一批买家。
 
 产业链统一遵守 [主题、产业链与趋势共振选股](../references/theme_chain_selection.md)：
 
@@ -77,7 +82,8 @@ description: 'Use for A-share short-term trend selection or holding management o
 - 主题事件数量、持续性和生命周期；
 - 一级/二级证据、订单/收入/利润/产能/估值弹性；
 - 5-15日高低点、MA5/MA10、平台、量价和相对强度；
-- 回踩承接、板块宽度、锚点与容量核心表现；
+- 当天上涨/下跌是否属于小涨蓄势、健康回踩、优质错杀还是结构破坏；
+- 回踩承接、资金保留、板块宽度、锚点与容量核心表现；
 - 下一批买家和未来1-5日可验证节点；
 - 减持、监管、澄清、诉讼、业绩、异动和派发风险；
 - 买点、失效位和T+1生存能力。
@@ -86,7 +92,7 @@ description: 'Use for A-share short-term trend selection or holding management o
 
 ### 18-20分钟：排序与记录
 
-至少两只、正常五只，最终重点一至两只。第一名按“硬逻辑 × 主题强度 × 趋势质量 × 下一买家 × 可买性”选择，不按当日涨幅榜机械排序。
+至少两只、正常五只，最终重点一至两只。第一名按“持续预期 × 趋势/修复质量 × 主题阶段 × 资金保留 × 下一买家 × 可买性”选择，不按当日涨幅榜或消息标题机械排序。优质错杀通过完整核验后可以直接排第一。
 
 二十分钟到点后停止扩展搜索，使用已验证证据输出；不等待下一根分时或下一时点。
 
@@ -102,6 +108,13 @@ description: 'Use for A-share short-term trend selection or holding management o
 
 真正需要降级的是爆量滞涨、连续长上影、高开低走、反复炸板、偏离均线后无承接、板块核心转弱或逻辑兑现完毕。详细趋势状态按 [趋势策略参考](references/strategy.md)。
 
+## 回调和错杀不是机械抄底
+
+- 当天小涨：若站在MA5/MA10/MA20或平台上、成交保持活跃、收盘靠近强区且未来预期未兑现，可视为起飞前蓄势。
+- 当天温和下跌：若缩量或量能受控、关键位不破、主题核心未退潮，可视为健康回踩。
+- 当天下跌约3%-9%：只有基本面稳定、原主题逻辑仍硬、公司级利空已排除、MA20/平台仍完整、资金出现回收时，才进入优质错杀通道。
+- 直接否决：跌停或接近跌停、放量破平台、龙头/容量核心同步退潮、减持/监管/业绩证伪、仅因“跌多了”而推荐。
+
 ## 持仓管理
 
 逐票给：
@@ -111,6 +124,8 @@ description: 'Use for A-share short-term trend selection or holding management o
 - `卖出`：原逻辑证伪、放量破位、板块退潮或硬风险出现；
 - `禁止加仓`：可以持有，但新资金缺乏确认；
 - `可加仓`：已有盈利垫，回踩关键位承接后重新放量，主题继续加强。
+
+每天同时复核四个字段：`expectation_basis`是否仍在、`trend_state`是否完整、`capital_retention`是否恶化、`theme_stage`是否进入高潮/退潮。任一项实质破坏都不能只用“基本面好”继续扛。
 
 新买当日不能卖。已有隔夜仓可按实时转弱信号处理。
 
@@ -126,7 +141,7 @@ description: 'Use for A-share short-term trend selection or holding management o
    - 代码、名称、当前/参考价；
    - 候选通道、证据等级和产业链层级；
    - 推荐理由、直接证据、消息时间和本次新增；
-   - 趋势阶段、量价、板块确认和下一买家；
+   - 持续预期依据、趋势/修复阶段、主题阶段、资金保留、量价、板块确认和下一买家；
    - 买入区间/触发、加仓条件、持有条件；
    - 放弃条件、失效位、减仓/卖出条件；
    - 仓位和预计持有窗口；
@@ -140,6 +155,6 @@ description: 'Use for A-share short-term trend selection or holding management o
 
 `python analysis/recommendation_journal.py record --mode trend --trade-date YYYY-MM-DD --input tmp/trend_recommendation.json`
 
-记录二至八只候选、重点代码、主题事件数、产业链层级、趋势状态、下一买家、买点、仓位、T+1与后续退出纪律。修订生成新记录，不覆盖旧结论。
+记录二至八只候选、重点代码、候选通道、主题事件数、产业链层级、`expectation_basis`、`trend_state`、`capital_retention`、`theme_stage`、下一买家、买点、仓位、T+1与后续退出纪律。前两名和所有重点代码缺少上述四项时不得完成记录。修订生成新记录，不覆盖旧结论。
 
 临时JSON、网页和PDF只放`tmp/`，完成后删除，不得加入Git。

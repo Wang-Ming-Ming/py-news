@@ -31,6 +31,7 @@ EXECUTION_FRESHNESS_CLASSES = {
 MATERIALITY_GRADES = {"A", "B+", "B"}
 EXECUTION_PATHS = {
     "major_fact",
+    "expectation_trend_theme",
     "theme_cluster_repricing",
     "verified_chain_expansion",
     "trend_continuation",
@@ -38,6 +39,7 @@ EXECUTION_PATHS = {
     "quality_selloff_reversal",
 }
 THEME_LED_PATHS = {
+    "expectation_trend_theme",
     "theme_cluster_repricing",
     "verified_chain_expansion",
     "trend_continuation",
@@ -52,14 +54,29 @@ MORNING_SPECIAL_SLOT_TYPES = {
 }
 OVERNIGHT_SPECIAL_SLOT_TYPES = {
     6: "stabilization_ignition",
-    7: "strong_anchor_low_position_acceptance",
+    7: "quality_selloff_reversal",
     8: "low_pin_reversal",
 }
 TOP_FIVE_PATHS = {
     "major_fact",
+    "expectation_trend_theme",
     "theme_cluster_repricing",
     "verified_chain_expansion",
     "trend_continuation",
+    "pre_activation",
+    "quality_selloff_reversal",
+}
+EXPECTATION_TREND_PATHS = {
+    "expectation_trend_theme",
+    "trend_continuation",
+    "pre_activation",
+    "quality_selloff_reversal",
+}
+MORNING_DECISION_STAGES = {
+    "pre_market",
+    "call_auction",
+    "opening_session",
+    "confirmed_morning_session",
 }
 
 
@@ -161,32 +178,37 @@ def validate_execution_evidence(
         require_text(candidate, field, f"focus candidate {code}")
 
 
-def validate_top_five_candidate(candidate: dict[str, Any]) -> None:
+def validate_top_five_candidate(
+    candidate: dict[str, Any],
+    *,
+    mode: str = "morning",
+    require_expectation_context: bool = False,
+) -> None:
     rank = candidate["rank"]
     code = candidate["code"]
     materiality = str(candidate.get("materiality_grade") or "").strip()
     if materiality not in {"A", "B+"}:
         raise ValueError(
-            f"morning candidate rank {rank} ({code}) requires materiality_grade A or B+"
+            f"{mode} candidate rank {rank} ({code}) requires materiality_grade A or B+"
         )
     path = str(candidate.get("candidate_path") or "").strip()
     if path not in TOP_FIVE_PATHS:
         raise ValueError(
-            f"morning candidate rank {rank} ({code}) requires a strong top-five candidate_path"
+            f"{mode} candidate rank {rank} ({code}) requires a strong candidate_path"
         )
     chain_level = str(candidate.get("chain_evidence_level") or "").strip()
     if chain_level not in VERIFIED_CHAIN_LEVELS:
         raise ValueError(
-            f"morning candidate rank {rank} ({code}) requires tier1_direct or tier2_verified"
+            f"{mode} candidate rank {rank} ({code}) requires tier1_direct or tier2_verified"
         )
     if candidate.get("original_source_verified") is not True:
         raise ValueError(
-            f"morning candidate rank {rank} ({code}) requires original_source_verified=true"
+            f"{mode} candidate rank {rank} ({code}) requires original_source_verified=true"
         )
     freshness = str(candidate.get("freshness_class") or "").strip()
     if freshness not in EXECUTION_FRESHNESS_CLASSES:
         raise ValueError(
-            f"morning candidate rank {rank} ({code}) requires execution-grade freshness_class"
+            f"{mode} candidate rank {rank} ({code}) requires execution-grade freshness_class"
         )
     for field in (
         "incremental_change",
@@ -196,7 +218,41 @@ def validate_top_five_candidate(candidate: dict[str, Any]) -> None:
         "next_buyer",
         "t1_survivability",
     ):
-        require_text(candidate, field, f"morning top-five candidate {code}")
+        require_text(candidate, field, f"{mode} ranked candidate {code}")
+    if mode == "morning":
+        if candidate.get("unbuyable_anchor") is not False:
+            raise ValueError(
+                f"morning candidate rank {rank} ({code}) requires unbuyable_anchor=false"
+            )
+        if candidate.get("not_passive_laggard") is not True:
+            raise ValueError(
+                f"morning candidate rank {rank} ({code}) requires not_passive_laggard=true"
+            )
+        for field in (
+            "market_theme_strength",
+            "acceptance_evidence",
+            "previous_session_strength_assessed",
+            "next_morning_exit_plan",
+        ):
+            require_text(candidate, field, f"morning accepted candidate {code}")
+        for field in ("auction_gap_pct", "current_pct"):
+            value = candidate.get(field)
+            if value is not None and (
+                not isinstance(value, (int, float)) or value > 5
+            ):
+                raise ValueError(
+                    f"morning candidate rank {rank} ({code}) requires {field} <= 5"
+                )
+    if require_expectation_context or path in EXPECTATION_TREND_PATHS:
+        for field in (
+            "expectation_basis",
+            "trend_state",
+            "capital_retention",
+            "theme_stage",
+        ):
+            require_text(candidate, field, f"{mode} expectation/trend candidate {code}")
+    if path == "quality_selloff_reversal":
+        validate_quality_selloff_candidate(candidate)
 
 
 def validate_quality_selloff_candidate(candidate: dict[str, Any]) -> None:
@@ -336,6 +392,18 @@ def validate_primary_pick(
                 "chain_evidence_level"
             )
         require_text(primary_pick, "trend_confirmation", "B+/B primary_pick")
+        if execution_path in EXPECTATION_TREND_PATHS:
+            for field in (
+                "expectation_basis",
+                "trend_state",
+                "capital_retention",
+                "theme_stage",
+            ):
+                require_text(
+                    primary_pick,
+                    field,
+                    "expectation/trend primary_pick",
+                )
         if max_position_pct > 5:
             raise ValueError("B+/B primary_pick max_position_pct must be <= 5")
 
@@ -374,6 +442,22 @@ def validate_primary_pick(
 
 def validate_payload(payload: dict[str, Any], mode: str | None = None) -> dict[str, Any]:
     result = deepcopy(payload)
+    if mode == "morning":
+        decision_stage = str(result.get("decision_stage") or "").strip()
+        if decision_stage not in MORNING_DECISION_STAGES:
+            raise ValueError(
+                "morning record requires decision_stage=pre_market, call_auction, "
+                "opening_session, or confirmed_morning_session"
+            )
+        if result.get("independent_rerank") is not True:
+            raise ValueError("morning record requires independent_rerank=true")
+        if result.get("prior_recommendations_used_for_ranking") is not False:
+            raise ValueError(
+                "morning record requires prior_recommendations_used_for_ranking=false"
+            )
+        result["decision_stage"] = decision_stage
+        result["independent_rerank"] = True
+        result["prior_recommendations_used_for_ranking"] = False
     candidates = result.get("candidates")
     if not isinstance(candidates, list):
         raise ValueError("recommendation record candidates must be a list")
@@ -424,6 +508,21 @@ def validate_payload(payload: dict[str, Any], mode: str | None = None) -> dict[s
         for candidate in candidates[:5]:
             validate_top_five_candidate(candidate)
         validate_quality_selloff_candidate(candidates[6])
+    elif mode == "overnight":
+        for candidate in candidates[:5]:
+            validate_top_five_candidate(
+                candidate,
+                mode="overnight",
+                require_expectation_context=True,
+            )
+        validate_quality_selloff_candidate(candidates[6])
+    elif mode == "trend":
+        for candidate in candidates[:2]:
+            validate_top_five_candidate(
+                candidate,
+                mode="trend",
+                require_expectation_context=True,
+            )
 
     new_theme_candidate = result.get("new_theme_candidate")
     if mode == "morning":
@@ -546,6 +645,30 @@ def validate_payload(payload: dict[str, Any], mode: str | None = None) -> dict[s
                 and new_theme_candidate.get("code") == code
             ),
         )
+        if mode in {"overnight", "trend"}:
+            for field in (
+                "expectation_basis",
+                "trend_state",
+                "capital_retention",
+                "theme_stage",
+            ):
+                require_text(candidate, field, f"{mode} executable focus {code}")
+        if mode == "morning" and code in focus_codes:
+            live_values = [
+                candidate.get("auction_gap_pct"),
+                candidate.get("current_pct"),
+            ]
+            numeric_values = [
+                value for value in live_values if isinstance(value, (int, float))
+            ]
+            if not numeric_values:
+                raise ValueError(
+                    f"morning executable focus {code} requires auction_gap_pct or current_pct"
+                )
+            if max(numeric_values) > 5:
+                raise ValueError(
+                    f"morning executable focus {code} cannot already be above 5 percent"
+                )
     return result
 
 

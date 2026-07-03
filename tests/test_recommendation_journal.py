@@ -8,6 +8,9 @@ from analysis.recommendation_journal import load_journal, record_recommendation,
 def payload(prefix: str) -> dict:
     return {
         "decision_time": "2026-06-18T09:20:00+08:00",
+        "decision_stage": "call_auction",
+        "independent_rerank": True,
+        "prior_recommendations_used_for_ranking": False,
         "market_judgment": f"{prefix} market",
         "data_context": {"snapshot_time": "2026-06-18T09:19:00+08:00"},
         "theme_radar": [],
@@ -37,6 +40,18 @@ def payload(prefix: str) -> dict:
                 "market_confirmation": "auction and theme breadth confirmed",
                 "buyability": "liquid and below the no-chase gap",
                 "next_buyer": "theme followers and trend funds have room to add",
+                "unbuyable_anchor": False,
+                "market_theme_strength": "theme breadth and capacity core are strengthening",
+                "acceptance_evidence": "the stock has its own auction demand and holds support",
+                "not_passive_laggard": True,
+                "previous_session_strength_assessed": "healthy funding confirmation without distribution",
+                "auction_gap_pct": 1.2,
+                "current_pct": 1.5,
+                "next_morning_exit_plan": "exit on a failed high open or the first flat-open recovery",
+                "expectation_basis": "the active theme still has a pending repricing node",
+                "trend_state": "healthy structure above medium-term support",
+                "capital_retention": "turnover stayed active without distribution",
+                "theme_stage": "confirmed",
                 "buy_trigger": "test trigger",
                 "abandon_condition": "test abandon",
                 "t1_survivability": "catalyst and liquidity remain valid through next session",
@@ -91,9 +106,7 @@ def payload(prefix: str) -> dict:
 
 
 def overnight_payload(prefix: str) -> dict:
-    record = payload(prefix)
-    record["candidates"][6]["slot_type"] = "strong_anchor_low_position_acceptance"
-    return record
+    return payload(prefix)
 
 
 def test_record_keeps_revisions_and_seals_latest(tmp_path: Path) -> None:
@@ -119,6 +132,47 @@ def test_morning_record_requires_overseas_and_holding_context(tmp_path: Path) ->
         record_recommendation(path, "morning", "2026-06-18", missing)
 
 
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    [
+        ("decision_stage", "", "decision_stage"),
+        ("independent_rerank", False, "independent_rerank=true"),
+        (
+            "prior_recommendations_used_for_ranking",
+            True,
+            "prior_recommendations_used_for_ranking=false",
+        ),
+    ],
+)
+def test_morning_record_requires_independent_current_snapshot_ranking(
+    tmp_path: Path,
+    field: str,
+    value: object,
+    message: str,
+) -> None:
+    path = tmp_path / "recommendations.json"
+    record = payload("context-reset")
+    record[field] = value
+
+    with pytest.raises(ValueError, match=message):
+        record_recommendation(path, "morning", "2026-06-18", record)
+
+
+def test_ten_oclock_morning_request_is_a_new_independent_rerank(
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "recommendations.json"
+    record = payload("ten-oclock")
+    record["decision_time"] = "2026-06-18T10:00:00+08:00"
+    record["decision_stage"] = "confirmed_morning_session"
+
+    saved = record_recommendation(path, "morning", "2026-06-18", record)
+
+    assert saved["decision_stage"] == "confirmed_morning_session"
+    assert saved["independent_rerank"] is True
+    assert saved["prior_recommendations_used_for_ranking"] is False
+
+
 def test_morning_record_requires_theme_radar(tmp_path: Path) -> None:
     path = tmp_path / "recommendations.json"
     missing = payload("missing-theme")
@@ -135,6 +189,46 @@ def test_morning_record_requires_optional_ninth_slot_field(tmp_path: Path) -> No
 
     with pytest.raises(ValueError, match="new_theme_candidate"):
         record_recommendation(path, "morning", "2026-06-18", missing)
+
+
+def test_morning_top_five_rejects_unbuyable_anchor(tmp_path: Path) -> None:
+    path = tmp_path / "recommendations.json"
+    record = payload("anchor")
+    record["candidates"][0]["unbuyable_anchor"] = True
+
+    with pytest.raises(ValueError, match="unbuyable_anchor=false"):
+        record_recommendation(path, "morning", "2026-06-18", record)
+
+
+def test_morning_top_five_rejects_passive_laggard(tmp_path: Path) -> None:
+    path = tmp_path / "recommendations.json"
+    record = payload("laggard")
+    record["candidates"][0]["not_passive_laggard"] = False
+
+    with pytest.raises(ValueError, match="not_passive_laggard=true"):
+        record_recommendation(path, "morning", "2026-06-18", record)
+
+
+def test_morning_rejects_pick_that_has_already_risen_too_much(tmp_path: Path) -> None:
+    path = tmp_path / "recommendations.json"
+    record = payload("already-up")
+    record["candidates"][0]["current_pct"] = 5.5
+
+    with pytest.raises(ValueError, match="current_pct <= 5"):
+        record_recommendation(path, "morning", "2026-06-18", record)
+
+
+def test_morning_allows_previous_session_strength(tmp_path: Path) -> None:
+    path = tmp_path / "recommendations.json"
+    record = payload("previous-strength")
+    record["candidates"][0]["previous_session_pct"] = 8.2
+    record["candidates"][0]["previous_session_strength_assessed"] = (
+        "strong close and healthy volume confirmed active funding"
+    )
+
+    saved = record_recommendation(path, "morning", "2026-06-18", record)
+
+    assert saved["candidates"][0]["previous_session_pct"] == 8.2
 
 
 def test_new_theme_slot_requires_strict_evidence_and_can_be_focus(
@@ -163,6 +257,7 @@ def test_new_theme_slot_requires_strict_evidence_and_can_be_focus(
         "direct_company_evidence": "公司公告直接取得相关经营业务",
         "market_confirmation": "题材已有直接锚点并获得资金确认",
         "buyability": "非一字，存在可成交窗口",
+        "current_pct": 1.8,
         "next_buyer": "主题扩散资金和趋势资金",
         "buy_trigger": "主题与个股开盘同步确认",
         "abandon_condition": "题材锚点转弱或个股失去均价",
@@ -317,6 +412,10 @@ def test_quality_selloff_b_plus_can_be_promoted_after_live_repair(
             "quality_repair_evidence_count": 3,
             "chain_evidence_level": "tier1_direct",
             "trend_confirmation": "held the selloff low and reclaimed VWAP",
+            "expectation_basis": "the active theme still has a pending demand catalyst",
+            "trend_state": "strong trend reset after a controlled selloff",
+            "capital_retention": "liquidity stayed active and price reclaimed VWAP",
+            "theme_stage": "healthy_divergence",
             "thesis_intact": True,
             "hard_risk_checked": True,
             "selloff_cause_assessed": "crowded unwind without a company negative",
@@ -330,6 +429,96 @@ def test_quality_selloff_b_plus_can_be_promoted_after_live_repair(
 
     assert saved["primary_pick"]["code"] == "600007"
     assert saved["primary_pick"]["execution_path"] == "quality_selloff_reversal"
+
+
+def test_quality_selloff_can_rank_first_before_open_when_full_thesis_is_verified(
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "recommendations.json"
+    record = payload("selloff-first")
+    candidate = record["candidates"][0]
+    candidate.update(
+        {
+            "candidate_path": "quality_selloff_reversal",
+            "materiality_grade": "B+",
+            "freshness_class": "old_fact_new_context",
+            "expectation_basis": "active AI hardware demand and a pending repricing window",
+            "trend_state": "strong trend reset while MA20 and the launch platform held",
+            "capital_retention": "selloff volume stayed controlled and the close recovered from the low",
+            "theme_stage": "healthy_divergence",
+            "selloff_date": "2026-06-17",
+            "selloff_pct": -5.6,
+            "selloff_cause_assessed": "sector rotation without a company negative",
+            "thesis_intact": True,
+            "hard_risk_checked": True,
+            "repair_trigger": "auction remains buyable and the theme leader does not collapse",
+            "structural_invalidation": "break MA20 and the selloff low",
+        }
+    )
+    record["primary_pick"].update(
+        {
+            "materiality_grade": "B+",
+            "freshness_class": "old_fact_new_context",
+            "execution_path": "quality_selloff_reversal",
+            "freshness_lookback_days": 30,
+            "quality_repair_evidence_count": 3,
+            "chain_evidence_level": "tier1_direct",
+            "trend_confirmation": "MA20 and the launch platform held",
+            "expectation_basis": "active AI hardware demand and a pending repricing window",
+            "trend_state": "strong trend reset after a non-fundamental selloff",
+            "capital_retention": "large liquidity remained and the close recovered from the low",
+            "theme_stage": "healthy_divergence",
+            "thesis_intact": True,
+            "hard_risk_checked": True,
+            "selloff_cause_assessed": "sector rotation without a company negative",
+            "repair_confirmation": "premarket thesis complete; auction is a veto check",
+            "max_position_pct": 5,
+        }
+    )
+
+    saved = record_recommendation(path, "morning", "2026-06-18", record)
+
+    assert saved["candidates"][0]["candidate_path"] == "quality_selloff_reversal"
+    assert saved["primary_pick"]["code"] == "600001"
+
+
+def test_expectation_trend_theme_path_can_be_primary_without_company_day_news(
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "recommendations.json"
+    record = payload("expectation-trend")
+    candidate = record["candidates"][0]
+    candidate.update(
+        {
+            "candidate_path": "expectation_trend_theme",
+            "materiality_grade": "B+",
+            "freshness_class": "old_fact_new_context",
+            "expectation_basis": "two industry events point to continued pricing and demand",
+            "trend_state": "small gain above MA5/MA10/MA20 with room below the range high",
+            "capital_retention": "turnover remained active and the close held near the high",
+            "theme_stage": "confirmed",
+        }
+    )
+    record["primary_pick"].update(
+        {
+            "materiality_grade": "B+",
+            "freshness_class": "old_fact_new_context",
+            "execution_path": "expectation_trend_theme",
+            "freshness_lookback_days": 30,
+            "independent_theme_evidence_count": 2,
+            "chain_evidence_level": "tier1_direct",
+            "trend_confirmation": "trend and capital retention are visible before the open",
+            "expectation_basis": "two industry events point to continued pricing and demand",
+            "trend_state": "small gain above MA5/MA10/MA20",
+            "capital_retention": "turnover stayed active and the close held near the high",
+            "theme_stage": "confirmed",
+            "max_position_pct": 5,
+        }
+    )
+
+    saved = record_recommendation(path, "morning", "2026-06-18", record)
+
+    assert saved["primary_pick"]["execution_path"] == "expectation_trend_theme"
 
 
 def test_executable_focus_requires_t1_survivability(tmp_path: Path) -> None:
@@ -502,6 +691,42 @@ def test_trend_mode_is_supported(tmp_path: Path) -> None:
 
     assert saved["mode"] == "trend"
     assert len(saved["candidates"]) == 8
+
+
+def test_overnight_rank_seven_requires_quality_selloff_slot(tmp_path: Path) -> None:
+    path = tmp_path / "recommendations.json"
+    record = overnight_payload("old-anchor")
+    record["candidates"][6]["slot_type"] = "strong_anchor_low_position_acceptance"
+
+    with pytest.raises(ValueError, match="slot_type=quality_selloff_reversal"):
+        record_recommendation(path, "overnight", "2026-06-18", record)
+
+
+def test_overnight_top_five_requires_expectation_context(tmp_path: Path) -> None:
+    path = tmp_path / "recommendations.json"
+    record = overnight_payload("missing-expectation")
+    record["candidates"][0].pop("capital_retention")
+
+    with pytest.raises(ValueError, match="requires capital_retention"):
+        record_recommendation(path, "overnight", "2026-06-18", record)
+
+
+def test_trend_top_two_requires_expectation_context(tmp_path: Path) -> None:
+    path = tmp_path / "recommendations.json"
+    record = payload("trend-context")
+    for field in (
+        "theme_radar",
+        "overseas_sector_context",
+        "holding_actions",
+        "new_theme_candidate",
+        "risk_gate",
+        "primary_pick",
+    ):
+        record.pop(field)
+    record["candidates"][1].pop("expectation_basis")
+
+    with pytest.raises(ValueError, match="requires expectation_basis"):
+        record_recommendation(path, "trend", "2026-06-18", record)
 
 
 def test_review_context_uses_today_morning_and_previous_overnight(tmp_path: Path) -> None:
